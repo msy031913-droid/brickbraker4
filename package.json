@@ -1,0 +1,9 @@
+{
+  "name": "ultimate-brick-breaker-vs",
+  "version": "1.0.0",
+  "description": "Ultimate Brick Breaker - 팀 코드 대결 서버",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=16" },
+  "dependencies": { "ws": "^8.18.0" }
+}
