@@ -199,10 +199,28 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
  </div>
 </div>
 
+<div id="shopMenu" class="overlay">
+ <div class="panel">
+  <h1>🛒 비밀 상점</h1>
+  <p id="shopGold"></p>
+  <div id="shopItems"></div>
+  <button onclick="closeShop()">닫기</button>
+ </div>
+</div>
+
+<div id="doorMenu" class="overlay">
+ <div class="panel">
+  <h1>🚪 비밀 맵의 문</h1>
+  <p id="doorInfo"></p>
+  <button style="background:#92400e" onclick="doorChoose(true)">🗝️ 열쇠로 열기</button>
+  <button onclick="doorChoose(false)">열지 않기</button>
+ </div>
+</div>
+
 <div id="portalMenu" class="overlay">
  <div class="panel">
   <h1>🌀 보스 포탈</h1>
-  <p>10스테이지 보스를 쓰러뜨렸습니다!<br>어느 길로 갈까요?</p>
+  <p id="portalHead">보스를 쓰러뜨렸습니다!<br>어느 길로 갈까요?</p>
   <p id="portalInfo"></p>
   <button style="background:#991b1b" onclick="portalChoose('boss')">👹 보스 구슬 얻기</button>
   <button style="background:#5b21b6" onclick="portalChoose('world')">🌍 다음 세계로</button>
@@ -269,6 +287,8 @@ let keys={};
 let owned={Normal:true},currentBall="Normal",ballLv={},redeemed=[];
 // 🎃 할로윈 이벤트 상태
 let candy=0,buffs={atk:0,wide:0,slow:0,gold2:0},potions={revive:0,blast:0},eventBest=1,evBought={};
+const worldLen=()=>world===2?5:10;   // 2세계는 스테이지가 5개
+let secretKeys=0,secretMode=false,secretShop=null,secretDoor=null,shopStock=null;
 let descendT=0,world=1,portalState=0,portalT=0,portalPos={x:450,y:100};
 let eventMode=false,runCandy=0,runBuff={atk:false,wide:false,slow:false,gold2:false},booting=true,floaters=[];
 
@@ -332,7 +352,7 @@ function toggleSound(){soundOn=!soundOn;updateUI();saveGame()}
 /* ============ 저장 / 불러오기 ============ */
 function saveGame(showMessage=false){
  if(mp.active)return;   // 대결 중에는 임시 능력치가 저장되지 않도록 막음
- const data={world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
+ const data={secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
  try{
   localStorage.setItem("ultimateBrickBreakerSave",JSON.stringify(data));
   localStorage.setItem("brickBreakerHighScore",String(highScore));
@@ -349,6 +369,7 @@ function loadGame(){
   const d=JSON.parse(raw);
   if(Number.isFinite(d.gold))gold=Math.max(0,Math.floor(d.gold));
   if(Number.isFinite(d.damage))damage=Math.max(1,Math.floor(d.damage));
+  if(Number.isFinite(d.secretKeys))secretKeys=Math.max(0,Math.floor(d.secretKeys));
   if(Number.isFinite(d.world))world=Math.max(1,Math.floor(d.world));
   if(Number.isFinite(d.highScore))highScore=Math.max(highScore,d.highScore);
   if(d.owned&&typeof d.owned==="object")owned={Normal:true,...d.owned};
@@ -842,7 +863,7 @@ function stageHazards(){
   if(b.mv)b.x=b.x0+Math.sin(t*b.mv.spd)*b.mv.amp*b.mv.dir;
   if(b.rg&&b.hp<b.cap&&--b.rt<=0){b.hp=Math.min(b.cap,b.hp+1+Math.floor(stage/10));b.ph=b.hp;b.rt=90}
  });
- if(stage>=RULE_STAGE.descend){
+ if(stage>=RULE_STAGE.descend&&!secretMode){
   if(++descendT>=descendInterval()*60){
    descendT=0;
    bricks.forEach(b=>{b.y+=10;b.y0+=10});
@@ -881,7 +902,7 @@ function portalTick(){
  if(portalState!==1)return;
  portalT++;
  if(portalT===1){beep(300,.4,"sine",.06);toast("🌀 포탈이 열렸다!")}
- if(portalT>=100){portalState=2;$("portalMenu").classList.add("open");
+ if(portalT>=100){portalState=2;$("portalMenu").classList.add("open");$("portalHead").innerHTML=`${worldLen()}스테이지 보스를 쓰러뜨렸습니다!<br>어느 길로 갈까요?`;
   const have=!!owned.Boss;
   $("portalInfo").innerHTML=`현재 세계 <b>${world}</b> · 어느 쪽을 선택해도 <b>스테이지 기록이 초기화</b>됩니다.<br><span class="small">${have?"👹 이미 보스 구슬이 있어 선택 시 대신 +"+(500*world)+"G를 받습니다.":"👹 보스 구슬은 포탈에서만 얻을 수 있습니다."}<br>🌍 다음 세계는 벽돌 체력이 ${Math.round(35)}%씩 더 단단해지고 보상 골드 +${300*world}.</span>`}
 }
@@ -910,6 +931,66 @@ function portalChoose(kind){
  toast(msg+"\n📜 스테이지 기록이 초기화되었습니다");
 }
 
+/* ============ 🛒 비밀 상점 / 🚪 비밀 맵의 문 ============ */
+const MYSTERY_POOL=["Phoenix","Galaxy","Pumpkin","Bat","Ghost","Pig","Pigeon"],MYSTERY_PRICE=600,KEY_PRICE=800;
+const hitObj=o=>ball.x+ball.r>o.x&&ball.x-ball.r<o.x+o.w&&ball.y+ball.r>o.y&&ball.y-ball.r<o.y+o.h;
+function specialsTick(){
+ if(secretShop){if(secretShop.cd>0)secretShop.cd--;else if(hitObj(secretShop)){openShop()}}
+ if(secretDoor){if(secretDoor.cd>0)secretDoor.cd--;else if(hitObj(secretDoor)){
+  if(secretKeys<=0){secretDoor=null;return}
+  secretDoor.cd=9999;$("doorInfo").innerHTML=`🗝️ 보유 열쇠 <b>${secretKeys}</b>개<br>열쇠를 사용해 비밀 맵(금 벽돌 보물방)으로 들어갈까요?`;$("doorMenu").classList.add("open");beep(520,.2,"triangle",.05)}}
+}
+function openShop(){
+ secretShop.cd=9999;beep(660,.2,"triangle",.05);renderShop();$("shopMenu").classList.add("open");
+}
+function renderShop(){
+ const own=MYSTERY_POOL.filter(n=>owned[n]).length;
+ $("shopGold").innerHTML=`💰 보유 <b>${gold}</b> G · 🗝️ 열쇠 <b>${secretKeys}</b>`;
+ $("shopItems").innerHTML=
+  `<button onclick="buyMystery()" ${gold<MYSTERY_PRICE?"disabled":""}>🔮 신비한 구슬 상자 — ${MYSTERY_PRICE}G<br><span class="small">한정판 구슬 무작위 (${own}/${MYSTERY_POOL.length} 보유 · 중복 시 ${Math.floor(MYSTERY_PRICE/2)}G 환급)</span></button>`+
+  (shopStock&&shopStock.key?`<button style="background:#92400e" onclick="buyKey()" ${gold<KEY_PRICE?"disabled":""}>🗝️ 비밀 맵의 열쇠 — ${KEY_PRICE}G<br><span class="small">✨ 10% 확률로만 입고되는 희귀 상품!</span></button>`:`<p class="small">오늘은 열쇠가 입고되지 않았습니다.</p>`);
+}
+function buyMystery(){
+ if(gold<MYSTERY_PRICE)return;gold-=MYSTERY_PRICE;
+ const n=MYSTERY_POOL[Math.floor(Math.random()*MYSTERY_POOL.length)];
+ if(owned[n]){gold+=Math.floor(MYSTERY_PRICE/2);toast(`🔮 ${n} 구슬… 이미 있어서 ${Math.floor(MYSTERY_PRICE/2)}G 환급!`)}
+ else{owned[n]=true;ballLv[n]=ballLv[n]||0;toast(`🔮 신비한 구슬 상자에서 ${(ballTypes.find(b=>b.name===n)||{}).icon||""} ${n} 구슬 획득!`)}
+ beep(880,.25,"triangle");saveGame();updateUI();renderShop();
+}
+function buyKey(){
+ if(gold<KEY_PRICE||!shopStock||!shopStock.key)return;gold-=KEY_PRICE;secretKeys++;shopStock.key=false;
+ beep(990,.3,"triangle");toast("🗝️ 비밀 맵의 열쇠 획득! 맵 어딘가에 문이 나타납니다");
+ spawnDoor();saveGame();updateUI();renderShop();
+}
+function closeShop(){$("shopMenu").classList.remove("open");if(secretShop)secretShop.cd=240}
+function doorChoose(open){
+ $("doorMenu").classList.remove("open");
+ if(!secretDoor)return;
+ if(!open){secretDoor.cd=240;return}
+ if(secretKeys<=0)return;
+ secretKeys--;secretDoor=null;secretShop=null;secretMode=true;
+ createBricks();ball.x=450;ball.y=463;ball.dx=Math.abs(ball.dx)||4;ball.dy=-Math.abs(ball.dy||4);
+ saveGame();updateUI();shake=6;beep(300,.3,"sine",.06);toast("🗝️ 비밀 맵 입장!\n금 벽돌을 모두 부수세요 (벽돌당 골드)");
+}
+function drawSpecials(){
+ const c=ctx,t=performance.now()/1000;
+ if(secretShop){const o=secretShop,bob=Math.sin(t*3)*3;c.save();c.translate(o.x+o.w/2,o.y+o.h/2+bob);
+  c.shadowBlur=20;c.shadowColor="#c084fc";const g=c.createLinearGradient(0,-24,0,24);g.addColorStop(0,"#7c3aed");g.addColorStop(1,"#3b0764");
+  rr(-o.w/2,-o.h/2,o.w,o.h,10);c.fillStyle=g;c.fill();c.shadowBlur=0;c.strokeStyle="#e9d5ff";c.lineWidth=2;c.stroke();
+  c.font="26px Arial";c.textAlign="center";c.textBaseline="middle";c.fillText("🛒",0,1);
+  c.font="bold 10px Arial";c.fillStyle="#fde68a";c.fillText("SECRET",0,-o.h/2-8);c.restore();c.textAlign="start";c.textBaseline="alphabetic"}
+ if(secretDoor){const o=secretDoor;c.save();c.translate(o.x,o.y);c.shadowBlur=16;c.shadowColor="#fbbf24";
+  c.fillStyle="#78350f";c.beginPath();c.moveTo(0,o.h);c.lineTo(0,o.w/2);c.arc(o.w/2,o.w/2,o.w/2,Math.PI,0);c.lineTo(o.w,o.h);c.closePath();c.fill();c.shadowBlur=0;
+  c.strokeStyle="#fbbf24";c.lineWidth=2.5;c.stroke();c.fillStyle="#fbbf24";c.beginPath();c.arc(o.w/2,o.h*.55,4,0,Math.PI*2);c.fill();c.fillRect(o.w/2-1.5,o.h*.55,3,9);
+  c.font="bold 10px Arial";c.textAlign="center";c.fillText("🗝️ 비밀의 문",o.w/2,-6);c.restore();c.textAlign="start"}
+}
+function drawGoldBrick(b){
+ const c=ctx,g=c.createLinearGradient(0,b.y,0,b.y+b.h);
+ g.addColorStop(0,b.flash>0?"#fff7c2":"#fde047");g.addColorStop(1,b.flash>0?"#fcd34d":"#b45309");
+ rr(b.x,b.y,b.w,b.h,5);c.fillStyle=g;c.shadowBlur=10;c.shadowColor="#fbbf24";c.fill();c.shadowBlur=0;c.strokeStyle="#fff7c2";c.lineWidth=1.5;c.stroke();
+ c.fillStyle="#451a03";c.font="bold 13px Arial";c.fillText(Math.ceil(b.hp),b.x+b.w/2,b.y+b.h/2+1);
+}
+
 /* ============ UI ============ */
 function updateUI(){
  $("stageText").textContent=(eventMode?"🎃 EVENT ":"STAGE ")+stage;
@@ -922,7 +1003,7 @@ function updateUI(){
   if(!mp.active&&(potions.revive>0||potions.blast>0)){pb.style.display="flex";pb.innerHTML=`<span>💖 부활 ×${potions.revive} (자동)</span><button onclick="useBlast()">💥 폭발 ×${potions.blast} [Q]</button>`}
   else pb.style.display="none"}
  $("goldText").textContent="GOLD: "+Math.floor(gold);
- $("highScoreText").textContent=(world>1?"🌍 세계 "+world+" · ":"")+"최고기록: STAGE "+highScore;
+ $("highScoreText").textContent=(world>1?"🌍 세계 "+world+(world===2?" (5스테이지) · ":" · "):"")+(secretKeys>0?"🗝️×"+secretKeys+" · ":"")+"최고기록: STAGE "+highScore;
  $("damageText").textContent="⚔️ DAMAGE: "+damage;
  $("damageValue").textContent=damage;
  $("upgradeCostValue").textContent=getUpgradeCost()+" GOLD";
@@ -1025,7 +1106,15 @@ function togglePause(){
 
 /* ============ 벽돌 ============ */
 function createBricks(){
- bricks=[];
+ bricks=[];secretShop=null;secretDoor=null;
+ if(secretMode){   // 🗝️ 비밀 맵: 금 벽돌 보물방
+  const hp=6+stage*3;
+  for(let r=0;r<5;r++)for(let c=0;c<9;c++){
+   if(r%2===1&&(c===0||c===8))continue;
+   bricks.push({x:25+c*96,y:65+r*38,w:82,h:27,hp:Math.ceil(hp*(.6+rnd()*.8)),maxHp:hp,dead:false,flash:0,oc:0,hc:0,gb:true});
+  }
+  return;
+ }
  const rows=stage===1?5:Math.min(5+Math.ceil(stage/3),8),cols=9;   // 줄 수는 8줄에서 멈추고, 이후는 규칙으로 어려워짐
  const wm=eventMode?1:1+.35*(world-1);
  const maxHp=Math.round((stage===1?27:Math.min(140,45+(stage-2)*12))*wm);
@@ -1046,8 +1135,18 @@ function createBricks(){
  }
  if(boss){const bh=maxHp*6+stage*10;bricks.push({x:25+3*96,y:65,w:274,h:65,hp:bh,maxHp:bh,dead:false,flash:0,oc:0,hc:0,boss:true})}
  applyStageRules();
+ spawnSpecials();
 }
-const alive=()=>bricks.filter(b=>b.hp>0);
+function spawnSpecials(){
+ if(mp.active||eventMode||secretMode||stage%5===0)return;
+ if(Math.random()<.10){shopStock={ball:true,key:Math.random()<.10};secretShop={x:150+Math.random()*600,y:330,w:56,h:46,cd:0}}   // 10% 비밀 상점
+ if(secretKeys>0)spawnDoor();
+}
+function spawnDoor(){
+ if(secretDoor||secretMode||mp.active||eventMode)return;
+ secretDoor={x:secretShop&&secretShop.x>450?150+Math.random()*200:600+Math.random()*150,y:300,w:44,h:58,cd:0};
+}
+()=>bricks.filter(b=>b.hp>0);
 function reap(){
  bricks.forEach(b=>{if(b.ar&&b.hp>0){if(b.hp<b.ph)b.hp=b.ph-(b.ph-b.hp)*.5;b.ph=b.hp}});   // 🛡️ 강철 벽돌: 받는 피해 50%
  // 폭발·연쇄 등으로 파괴된 벽돌도 모두 집계
@@ -1055,9 +1154,10 @@ function reap(){
   if(b.hp<=0&&!b.dead){
    b.dead=true;bricksBroken++;
    if(eventMode&&b.pk)addCandy(1,b.x+b.w/2,b.y);   // 호박 벽돌 보너스
-   if(b.boss&&stage===10&&!mp.active&&!eventMode&&!portalState){portalState=1;portalT=0;portalPos={x:b.x+b.w/2,y:b.y+b.h/2}}
+   if(b.boss&&stage===worldLen()&&!secretMode&&!mp.active&&!eventMode&&!portalState){portalState=1;portalT=0;portalPos={x:b.x+b.w/2,y:b.y+b.h/2}}
    if(b.boss){const bg=mp.active?0:30*(runBuff.gold2?2:1);gold+=bg;shake=Math.max(shake,12);burst(b.x+b.w/2,b.y+b.h/2,60,"#ef4444");floatText(b.x+b.w/2,b.y+b.h/2,bg?"👹 보스 격파! +"+bg+"G":"👹 보스 격파!","#fca5a5")}
-   burst(b.x+b.w/2,b.y+b.h/2,10,"#fff");
+   if(b.gb){const g=10*world;gold+=g;floatText(b.x+b.w/2,b.y,"+"+g+"G","#fde047")}
+   burst(b.x+b.w/2,b.y+b.h/2,10,b.gb?"#fde047":"#fff");
   }
  });
 }
@@ -1343,6 +1443,17 @@ function moveBall(){
 /* ============ 진행 ============ */
 function clearStage(){
  if(clearRewarded||portalState)return;
+ if(secretMode){
+  clearRewarded=true;secretMode=false;
+  const bonus=800*world;gold+=bonus;
+  let extra="";
+  const pool=["Phoenix","Galaxy","Pumpkin","Bat","Ghost","Pig","Pigeon"].filter(n=>!owned[n]);
+  if(pool.length&&Math.random()<.3){const n=pool[Math.floor(Math.random()*pool.length)];owned[n]=true;ballLv[n]=ballLv[n]||0;extra="\n🔮 보물 구슬 "+n+" 획득!"}
+  createBricks();updateUI();saveGame();
+  shake=10;burst(W/2,H/3,50,"#fde047");beep(880,.3,"triangle");
+  toast(`🗝️ 비밀 맵 클리어!\n💰 보너스 +${bonus}G${extra}\n원래 스테이지로 돌아갑니다`);
+  setTimeout(()=>{clearRewarded=false},300);return;
+ }
  if(eventMode){   // 🎃 이벤트 맵: 클리어마다 사탕 10개
   clearRewarded=true;addCandy(EVENT_CLEAR_CANDY);
   const done=stage;stage++;if(stage>eventBest)eventBest=stage;
@@ -1391,14 +1502,14 @@ function restartGame(startStage,force){
  if(mp.active&&!force)return;      // 대결 중에는 재시작 불가
  saveGame();
  clearInterval(countdownTimer);
- ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu"].forEach(id=>$(id).classList.remove("open"));
+ ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu","shopMenu","doorMenu"].forEach(id=>$(id).classList.remove("open"));
  // 클리어한 스테이지까지 건너뛰어 시작 가능
  stage=(typeof startStage==="number")?Math.max(1,Math.min(maxStart(),Math.floor(startStage))):1;
  gameOver=false;gameStarted=false;clearRewarded=false;bricksBroken=0;speedTimer=0;shake=0;
  // 이번 판에 적용할 버프 (구매한 버프를 1회 소모)
  runBuff={atk:false,wide:false,slow:false,gold2:false};runCandy=0;
  if(!mp.active&&!booting){for(const k in runBuff)if(buffs[k]>0){buffs[k]--;runBuff[k]=true}}
- bluePad.w=170;bluePad.x=365;applyPadWidth();descendT=0;portalState=0;portalT=0;
+ bluePad.w=170;bluePad.x=365;applyPadWidth();descendT=0;portalState=0;portalT=0;secretMode=false;
  ball.x=bluePad.x+bluePad.w/2;ball.y=bluePad.y-ball.r-1;
  {const sp=Math.min(MAX_SPEED,Math.sqrt(32)+.45*(stage-1))*(runBuff.slow?.8:1),fx=(2.5+rnd()*1.5)/Math.sqrt(32);   // 건너뛴 스테이지만큼 공 속도도 반영
   ball.dx=(rnd()<.5?-1:1)*sp*fx;ball.dy=-Math.sqrt(sp*sp-ball.dx*ball.dx)}
@@ -1788,6 +1899,7 @@ function render(){
   if(b.hp<=0)return;
   if(b.pk){drawPumpkinBrick(b);return}
   if(b.boss){drawBossBrick(b);return}
+  if(b.gb){drawGoldBrick(b);return}
   if(b.ar){drawSteelBrick(b);return}
   const ratio=Math.min(1,b.hp/b.maxHp),hue=eventMode?(290+100*ratio)%360:130+170*ratio;   // 이벤트: 보라 → 붉은 → 주황
   const bg=ctx.createLinearGradient(0,b.y,0,b.y+b.h);
@@ -1799,8 +1911,8 @@ function render(){
   if(b.mv){ctx.fillStyle="rgba(255,255,255,.7)";ctx.font="bold 10px Arial";ctx.fillText("↔",b.x+b.w-9,b.y+8);ctx.font="bold 13px Arial"}   // ↔️ 이동
  });
  ctx.textAlign="start";ctx.textBaseline="alphabetic";
- drawPortal();
- if(stage>=RULE_STAGE.descend&&gameStarted&&!gameOver){   // ⬇️ 위험선
+ drawPortal();drawSpecials();
+ if(stage>=RULE_STAGE.descend&&!secretMode&&gameStarted&&!gameOver){   // ⬇️ 위험선
   const dy=bluePad.y-14,sec=Math.max(0,Math.ceil((descendInterval()*60-descendT)/60));
   ctx.save();ctx.setLineDash([10,7]);ctx.strokeStyle="rgba(255,70,70,.55)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,dy);ctx.lineTo(W,dy);ctx.stroke();ctx.setLineDash([]);
   ctx.fillStyle=sec<=3?"#ff6b6b":"rgba(255,150,150,.9)";ctx.font="bold 13px Arial";ctx.textAlign="right";ctx.fillText("⬇ "+sec+"s",W-8,dy-5);ctx.restore();
@@ -1829,7 +1941,7 @@ function step(){
  movePaddles();
  if(!gameOver)moveBall();
  orbitT+=STEP/1000;
- if(gameStarted&&!gameOver){tierPassive();stageHazards();portalTick()}
+ if(gameStarted&&!gameOver){tierPassive();stageHazards();portalTick();specialsTick()}
  if(ball.pgcd>0)ball.pgcd--;
  particles.forEach(p=>{p.x+=p.dx;p.y+=p.dy;p.life--});
  floaters.forEach(f=>{f.y-=.6;f.life--});floaters=floaters.filter(f=>f.life>0);
