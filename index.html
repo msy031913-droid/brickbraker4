@@ -214,19 +214,11 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
  <div class="panel">
   <h1>🛠️ 개발자 패널</h1>
   <p id="devInfo" class="small"></p>
-  <h2>🛒 비밀 상점 / 🚪 비밀 맵</h2>
-  <div>
-   <button onclick="devShop(false)">🛒 비밀 상점 소환</button>
-   <button onclick="devShop(true)">🛒 상점 소환 (열쇠 입고)</button>
-   <button onclick="devDoor()">🗝️ 열쇠 +1 & 문 소환</button>
-   <button onclick="devSecretMap()">🗺️ 비밀 맵 바로 입장</button>
-  </div>
-  <h2>💰 골드</h2>
+  <h2>💰 골드 (1회 최대 10,000)</h2>
   <div>
    <button onclick="devGold(1000)">+1,000</button>
    <button onclick="devGold(10000)">+10,000</button>
-   <button onclick="devGold(100000)">+100,000</button>
-   <input id="devGoldIn" type="number" min="0" placeholder="직접 입력" style="width:110px">
+   <input id="devGoldIn" type="number" min="0" max="10000" placeholder="최대 10000" style="width:110px">
    <button onclick="devGold(+$('devGoldIn').value||0)">추가</button>
   </div>
   <button onclick="closeDev()">닫기</button>
@@ -1068,10 +1060,11 @@ function devInfo(){$("devInfo").innerHTML=`💰 ${gold}G · 🗝️ ${secretKeys
 function openDev(){if(mpBlock())return;devInfo();$("devMenu").classList.add("open")}
 function closeDev(){$("devMenu").classList.remove("open");updateUI()}
 function devOk(){if(mp.active||eventMode||secretMode){toast("이 모드에서는 사용할 수 없어요 (일반 맵에서 사용)");return false}return true}
-function devShop(key){if(!devOk())return;shopStock={ball:true,key};secretShop={x:ball.x>450?200:640,y:380,w:56,h:46,cd:0};closeDev();toast("🛒 비밀 상점 소환!")}
-function devDoor(){if(!devOk())return;secretKeys++;spawnDoor();if(!secretDoor)toast("이미 문이 있습니다");closeDev();saveGame();toast("🗝️ 열쇠 +1 · 문 소환")}
-function devSecretMap(){if(!devOk())return;secretDoor=null;secretShop=null;secretMode=true;createBricks();closeDev();toast("🗺️ 비밀 맵 입장!")}
-function devGold(n){n=Math.floor(n);if(!(n>0))return;gold+=n;saveGame();updateUI();devInfo();beep(880,.1,"triangle")}
+function devShop(key){return;shopStock={ball:true,key};secretShop={x:ball.x>450?200:640,y:380,w:56,h:46,cd:0};closeDev();toast("🛒 비밀 상점 소환!")}
+function devDoor(){return;secretKeys++;spawnDoor();if(!secretDoor)toast("이미 문이 있습니다");closeDev();saveGame();toast("🗝️ 열쇠 +1 · 문 소환")}
+function devSecretMap(){return;secretDoor=null;secretShop=null;secretMode=true;createBricks();closeDev();toast("🗺️ 비밀 맵 입장!")}
+function devGold(n){n=Math.min(10000,Math.floor(n));if(!(n>0))return;   // 1회 최대 10,000
+ gold+=n;saveGame();updateUI();devInfo();beep(880,.1,"triangle")}
 
 /* ============ 🛒 비밀 상점 / 🚪 비밀 맵의 문 ============ */
 const MYSTERY_POOL=["Phoenix","Galaxy","Pumpkin","Bat","Ghost","Pig","Pigeon"],MYSTERY_PRICE=600,KEY_PRICE=800;
