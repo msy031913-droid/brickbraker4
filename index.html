@@ -102,6 +102,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
  <button id="topPause" onclick="togglePause()">⏸ 일시정지</button>
  <button id="topInventory" onclick="openInventory()">🎒 인벤토리</button>
  <button id="topCode" onclick="openCode()">🎁 코드</button>
+ <button id="topCos" onclick="openCos()" style="background:#be185d">✨ 꾸미기</button>
  <button id="topRebirth" onclick="openRebirth()" style="background:#0f766e">♻️ 환생</button>
  <button id="topDev" onclick="openDev()" style="display:none;background:#334155">🛠️ 개발자</button>
  <button id="topSave" onclick="saveGame(true)">💾 저장</button>
@@ -198,6 +199,15 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
   <p class="small">클리어한 스테이지는 건너뛰고 원하는 스테이지부터 시작할 수 있습니다.<br>이미 클리어한 스테이지를 다시 깨도 클리어 보너스 골드는 없습니다.</p>
   <div class="stageGrid" id="stageGrid"></div>
   <button onclick="closeStage()">닫기</button>
+ </div>
+</div>
+
+<div id="cosMenu" class="overlay">
+ <div class="panel" style="max-height:90vh;overflow:auto">
+  <h1>✨ 꾸미기 상점</h1>
+  <p class="small">성장과 <b>전혀 관계없는</b> 재미용 상점입니다. 코인을 마음껏 쓰세요! (환생해도 유지)</p>
+  <div id="cosBody"></div>
+  <button onclick="closeCos()">닫기</button>
  </div>
 </div>
 
@@ -314,6 +324,7 @@ let owned={Normal:true},currentBall="Normal",ballLv={},redeemed=[];
 // 🎃 할로윈 이벤트 상태
 let candy=0,buffs={atk:0,wide:0,slow:0,gold2:0},potions={revive:0,blast:0},eventBest=1,evBought={};
 const worldLen=()=>world===2?5:10;   // 2세계는 스테이지가 5개
+let cos={own:{},eq:{},spent:0,fount:0,pulls:0};   // ✨ 꾸미기 (성장과 무관)
 let rebirth=0;
 const dmgMul=()=>mp.active?1:Math.pow(1.5,rebirth),goldMul=()=>mp.active?1:Math.pow(1.5,rebirth);
 const REBIRTH_REQ=[1000,5000,10000,25000,50000,100000,200000];
@@ -389,7 +400,7 @@ function toggleSound(){soundOn=!soundOn;updateUI();saveGame()}
 /* ============ 저장 / 불러오기 ============ */
 function saveGame(showMessage=false){
  if(mp.active)return;   // 대결 중에는 임시 능력치가 저장되지 않도록 막음
- const data={rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
+ const data={cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
  try{
   localStorage.setItem("ultimateBrickBreakerSave",JSON.stringify(data));
   localStorage.setItem("brickBreakerHighScore",String(highScore));
@@ -407,6 +418,7 @@ function loadGame(){
   if(Number.isFinite(d.gold))gold=Math.max(0,Math.floor(d.gold));
   if(Number.isFinite(d.damage))damage=Math.max(1,Math.floor(d.damage));
   if(d.dev===true)devUnlocked=true;
+  if(d.cos&&typeof d.cos==="object")cos={own:d.cos.own||{},eq:d.cos.eq||{},spent:+d.cos.spent||0,fount:+d.cos.fount||0,pulls:+d.cos.pulls||0};
   if(Number.isFinite(d.rb))rebirth=Math.max(0,Math.floor(d.rb));
   if(Number.isFinite(d.secretKeys))secretKeys=Math.max(0,Math.floor(d.secretKeys));
   if(Number.isFinite(d.world))world=Math.max(1,Math.floor(d.world));
@@ -1028,6 +1040,73 @@ function portalChoose(kind){
  toast(msg+"\n📜 스테이지 기록이 초기화되었습니다");
 }
 
+/* ============ ✨ 꾸미기 상점 (골드 소모처 · 능력치 영향 없음) ============ */
+const COS=[
+ {cat:"☄️ 구슬 꼬리",key:"trail",items:[
+  {id:"t_pink",name:"벚꽃 꼬리",icon:"🌸",price:2000,col:()=>"#f9a8d4"},
+  {id:"t_green",name:"네온 꼬리",icon:"🟢",price:2500,col:()=>"#4ade80"},
+  {id:"t_gold",name:"황금 꼬리",icon:"🌟",price:3000,col:()=>"#fde047"},
+  {id:"t_ice",name:"서리 꼬리",icon:"❄️",price:4000,col:(i,t)=>`hsl(${190+Math.sin(t*3+i*.4)*15},90%,75%)`},
+  {id:"t_rainbow",name:"무지개 꼬리",icon:"🌈",price:8000,col:(i,t)=>`hsl(${(t*150+i*25)%360},95%,62%)`}]},
+ {cat:"🏓 패들 스킨",key:"pad",items:[
+  {id:"p_pink",name:"핑크 패들",icon:"🩷",price:2500,fill:()=>"#ff4fa3",glow:"#ff4fa3"},
+  {id:"p_emerald",name:"에메랄드 패들",icon:"💚",price:4000,fill:()=>"#10b981",glow:"#34d399"},
+  {id:"p_gold",name:"황금 패들",icon:"🟡",price:8000,fill:()=>"#facc15",glow:"#fde047"},
+  {id:"p_rainbow",name:"무지개 패들",icon:"🌈",price:15000,fill:t=>`hsl(${(t*120)%360},95%,60%)`,glow:"#fff"}]},
+ {cat:"🌌 배경 테마",key:"bg",items:[
+  {id:"b_sunset",name:"노을 하늘",icon:"🌇",price:5000,top:"#3b0f2e",bot:"#120414",star:"rgba(255,200,150,.22)"},
+  {id:"b_matrix",name:"매트릭스",icon:"🟩",price:8000,top:"#021a0a",bot:"#010a04",star:"rgba(80,255,120,.3)"},
+  {id:"b_ocean",name:"깊은 바다",icon:"🌊",price:10000,top:"#06385c",bot:"#021428",star:"rgba(150,230,255,.25)"},
+  {id:"b_royal",name:"로열 퍼플",icon:"🔮",price:20000,top:"#2e1065",bot:"#0f0524",star:"rgba(233,213,255,.28)"}]},
+ {cat:"🏷️ 칭호 (상단에 표시)",key:"title",items:[
+  {id:"ti_chick",name:"코인 초보",icon:"🐣",price:500,text:"🐣 코인 초보"},
+  {id:"ti_rich",name:"코인 부자",icon:"💰",price:20000,text:"💰 코인 부자"},
+  {id:"ti_dia",name:"다이아 부자",icon:"💎",price:60000,text:"💎 다이아 부자"},
+  {id:"ti_king",name:"코인 황제",icon:"👑",price:150000,text:"👑 코인 황제"},
+  {id:"ti_waste",name:"탕진왕",icon:"💸",price:400000,text:"💸 탕진왕"}]}
+];
+const COS_ALL=COS.flatMap(c=>c.items.map(it=>({...it,key:c.key})));
+const COS_FUN=[
+ {id:"fountain",name:"코인 분수",icon:"⛲",price:1000,d:"코인을 던지고 소원을 빕니다. (아무 일도 일어나지 않음)"},
+ {id:"gacha",name:"럭키 뽑기",icon:"🎰",price:3000,d:"안 가진 꾸미기 아이템이 무작위로 나옵니다. 꽝도 있어요!"}];
+const cosGet=k=>{const id=cos.eq[k];return id?COS_ALL.find(x=>x.id===id):null};
+function openCos(){if(mpBlock())return;renderCos();$("cosMenu").classList.add("open")}
+function closeCos(){$("cosMenu").classList.remove("open");updateUI()}
+function renderCos(){
+ let h=`<p>💰 보유 <b>${Math.floor(gold)}</b> G · 🧾 총 탕진 <b>${cos.spent}</b> G · ⛲ 분수 ${cos.fount}회 · 🎰 뽑기 ${cos.pulls}회</p>`;
+ h+=`<div class="evCat"><h2>🎉 재미 코너</h2><div class="evGrid">${COS_FUN.map(f=>`<button class="${gold<f.price?"cant":""}" onclick="cosFun('${f.id}')"><strong>${f.icon} ${f.name}</strong><span class="ballDesc">${f.d}</span><span class="evPrice">💰 ${f.price}</span></button>`).join("")}</div></div>`;
+ COS.forEach(c=>{
+  h+=`<div class="evCat"><h2>${c.cat}</h2><div class="evGrid"><button class="${!cos.eq[c.key]?"done":""}" onclick="cosEquip('${c.key}','')"><strong>⚪ 기본</strong><span class="ballDesc">${!cos.eq[c.key]?"착용 중":"기본으로 되돌리기"}</span></button>`;
+  c.items.forEach(it=>{const own=cos.own[it.id],on=cos.eq[c.key]===it.id;
+   h+=`<button class="${on?"done":(!own&&gold<it.price?"cant":"")}" onclick="cosBuy('${it.id}')"><strong>${it.icon} ${it.name}</strong><span class="ballDesc">${on?"착용 중":own?"보유 중 · 눌러서 착용":"미보유"}</span>${own?"":`<span class="evPrice">💰 ${it.price}</span>`}</button>`});
+  h+=`</div></div>`;
+ });
+ $("cosBody").innerHTML=h;
+}
+function cosBuy(id){
+ const it=COS_ALL.find(x=>x.id===id);if(!it)return;
+ if(cos.own[id]){cosEquip(it.key,id);return}
+ if(gold<it.price){toast("💰 골드가 부족합니다");return}
+ gold-=it.price;cos.spent+=it.price;cos.own[id]=true;cos.eq[it.key]=id;
+ beep(880,.2,"triangle");toast(`${it.icon} ${it.name} 구매 · 착용!`);saveGame();updateUI();renderCos();
+}
+function cosEquip(key,id){cos.eq[key]=id;saveGame();updateUI();renderCos()}
+const FOUNT_MSG=["퐁당! 소원이 이루어질지도…","🪙 동전이 반짝이며 가라앉았다","분수의 요정이 고개를 끄덕였다 (그뿐)","아무 일도 일어나지 않았다. 하지만 기분은 좋다","동전 소리가 참 맑다 ✨","부자의 향기가 난다 💸"];
+function cosFun(id){
+ const f=COS_FUN.find(x=>x.id===id);if(gold<f.price){toast("💰 골드가 부족합니다");return}
+ gold-=f.price;cos.spent+=f.price;
+ if(id==="fountain"){cos.fount++;toast("⛲ "+FOUNT_MSG[Math.floor(Math.random()*FOUNT_MSG.length)]);cosRain()}
+ else{cos.pulls++;const pool=COS_ALL.filter(x=>!cos.own[x.id]);
+  if(!pool.length||Math.random()<.25){toast("🎰 꽝! 다음 기회에… (환불 없음)")}
+  else{const it=pool[Math.floor(Math.random()*pool.length)];cos.own[it.id]=true;toast(`🎰 당첨! ${it.icon} ${it.name} 획득 (보유 중 · 눌러서 착용)`);cosRain()}}
+ beep(700,.15,"triangle");saveGame();updateUI();renderCos();
+}
+function cosRain(){
+ for(let i=0;i<22;i++){const e=document.createElement("div");e.textContent=Math.random()<.5?"🪙":"✨";
+  e.style.cssText=`position:fixed;left:${Math.random()*100}vw;top:-30px;font-size:${18+Math.random()*16}px;z-index:99999;pointer-events:none;transition:transform ${1.2+Math.random()}s ease-in,opacity 1.8s`;
+  document.body.appendChild(e);setTimeout(()=>{e.style.transform=`translateY(${window.innerHeight+60}px) rotate(${Math.random()*360}deg)`;e.style.opacity=".2"},30+i*30);setTimeout(()=>e.remove(),2600)}
+}
+
 /* ============ ♻️ 환생 ============ */
 const RB_BALLS=()=>ballTypes.filter(t=>t.rb);
 function openRebirth(){if(mpBlock())return;renderRebirth();$("rebirthMenu").classList.add("open")}
@@ -1153,7 +1232,7 @@ function updateUI(){
   else pb.style.display="none"}
  $("goldText").textContent="GOLD: "+Math.floor(gold);
  $("topDev").style.display=devUnlocked&&!mp.active?"":"none";
- $("highScoreText").textContent=(world>1?"🌍 세계 "+world+(world===2?" (5스테이지) · ":" · "):"")+(secretKeys>0?"🗝️×"+secretKeys+" · ":"")+"최고기록: STAGE "+highScore;
+ $("highScoreText").textContent=(cosGet("title")?cosGet("title").text+" · ":"")+(world>1?"🌍 세계 "+world+(world===2?" (5스테이지) · ":" · "):"")+(secretKeys>0?"🗝️×"+secretKeys+" · ":"")+"최고기록: STAGE "+highScore;
  $("damageText").textContent="⚔️ DAMAGE: "+damage+(rebirth?" (×"+f2(dmgMul())+")":"");
  $("topRebirth").textContent="♻️ 환생"+(rebirth?" "+rebirth:"");
  $("damageValue").textContent=damage;
@@ -1695,7 +1774,7 @@ function restartGame(startStage,force){
  if(mp.active&&!force)return;      // 대결 중에는 재시작 불가
  saveGame();
  clearInterval(countdownTimer);
- ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu","shopMenu","doorMenu","devMenu","rebirthMenu"].forEach(id=>$(id).classList.remove("open"));
+ ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu","shopMenu","doorMenu","devMenu","rebirthMenu","cosMenu"].forEach(id=>$(id).classList.remove("open"));
  // 클리어한 스테이지까지 건너뛰어 시작 가능
  stage=(typeof startStage==="number")?Math.max(1,Math.min(maxStart(),Math.floor(startStage))):1;
  gameOver=false;gameStarted=false;clearRewarded=false;bricksBroken=0;speedTimer=0;shake=0;
@@ -1722,7 +1801,7 @@ function drawBallVisual(c,x,y,r,name,lv,trail,tm,ch){
   trail.forEach((p,i)=>{
    const k=i/trail.length;
    c.beginPath();c.globalAlpha=k*(.3+tier*.07);
-   c.arc(p.x,p.y,r*k*(1+tier*.1),0,Math.PI*2);c.fillStyle=legend?`hsl(${(t*120+i*20)%360},90%,60%)`:c2;c.fill();
+   c.arc(p.x,p.y,r*k*(1+tier*.1),0,Math.PI*2);const ct=cosGet("trail");c.fillStyle=(trail===ball.trail&&ct)?ct.col(i,t):(legend?`hsl(${(t*120+i*20)%360},90%,60%)`:c2);c.fill();
   });
   c.globalAlpha=1;
  }
@@ -2125,9 +2204,9 @@ function render(){
  if(shake>0){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake)}
  if(eventMode)drawHalloweenBg();
  else{
-  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#0b1230");g.addColorStop(1,"#050713");
+  const cb=cosGet("bg"),g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,cb?cb.top:"#0b1230");g.addColorStop(1,cb?cb.bot:"#050713");
   ctx.fillStyle=g;ctx.fillRect(-10,-10,W+20,H+20);
-  ctx.fillStyle="rgba(255,255,255,.1)";stars.forEach(s=>ctx.fillRect(s.x,s.y,s.s,s.s));
+  ctx.fillStyle=cb?cb.star:"rgba(255,255,255,.1)";stars.forEach(s=>ctx.fillRect(s.x,s.y,s.s,s.s));
  }
 
  // 벽돌
@@ -2157,7 +2236,7 @@ function render(){
 
  // 패들
  ctx.shadowBlur=18;
- ctx.shadowColor="#1877ff";ctx.fillStyle="#176cff";rr(bluePad.x,bluePad.y,bluePad.w,bluePad.h,7);ctx.fill();
+ const cp=cosGet("pad"),tt=performance.now()/1000;ctx.shadowColor=cp?cp.glow:"#1877ff";ctx.fillStyle=cp?cp.fill(tt):"#176cff";rr(bluePad.x,bluePad.y,bluePad.w,bluePad.h,7);ctx.fill();
  ctx.shadowBlur=0;
 
  drawStamps();
