@@ -134,7 +134,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 <div id="codeMenu" class="overlay">
  <div class="panel">
   <h1>🎁 코드 입력</h1>
-  <p class="small">받은 코드를 입력하면 골드나 <b>한정판 구슬</b>이 지급됩니다.<br>각 코드는 한 번만 사용할 수 있습니다.</p>
+  <p class="small">받은 코드를 입력하면 골드나 <b>한정판 구슬</b>이 지급됩니다.<br>모든 코드는 여러 번 입력할 수 있습니다.</p>
   <input id="codeInput" type="text" maxlength="32" autocomplete="off" spellcheck="false" placeholder="코드 입력">
   <div><button onclick="redeemCode()">받기</button><button onclick="closeCode()">닫기</button></div>
   <p id="codeMsg" style="min-height:48px;line-height:1.6"></p>
@@ -514,7 +514,7 @@ function redeemCode(){
  if(raw==="DEVPANEL"){devUnlocked=true;saveGame();updateUI();msg.style.color="#86efac";msg.textContent="🛠️ 개발자 패널 활성화! 상단 🛠️ 버튼을 확인하세요";beep(660,.2,"triangle");return}
  let c=CODES[raw];
  if(!c)return fail("❌ 존재하지 않는 코드입니다.");
- if(!c.all&&redeemed.includes(raw))return fail("⚠️ 이미 사용한 코드입니다.");
+ // 모든 코드는 여러 번 입력할 수 있습니다
  if(c.all){
   // 모든 코드의 보상 + 모든 구슬(Lv.20) + 개발자 패널. 여러 번 입력 가능 (사용 처리되지 않음)
   const m={gold:0,dmg:0,candy:0,ball:[],lv:{},buff:{},potion:{},noComp:true,dev:true,msg:c.msg},keys=Object.keys(CODES).filter(k=>k!==raw);
@@ -526,8 +526,7 @@ function redeemCode(){
   ballTypes.forEach(t=>{if(t.name!=="Normal")m.ball.push(t.name);m.lv[t.name]=MAX_BALL_LV});
   m.msg="모든 코드 보상 + 모든 구슬 Lv."+MAX_BALL_LV+" + 개발자 패널 (반복 입력 가능)";c=m;
  }
- if(!c.dev)redeemed.push(raw);
- const got=[];
+  const got=[];
  if(c.dev){devUnlocked=true;got.push("🛠️ 개발자 패널")}
  if(c.gold){gold+=c.gold;got.push(`💰 ${c.gold} GOLD`)}
  if(c.candy){candy+=c.candy;got.push(`🍬 ${c.candy} 사탕`)}
@@ -987,7 +986,7 @@ function renderRebirth(){
   `<p>현재 환생 <b>${rebirth}회</b> · 데미지 ×${f2(dmgMul())} · 골드 ×${f2(goldMul())}</p>
    <p>다음 환생 조건: 💰 <b>${req}</b> 골드 <span class="small">(보유 ${Math.floor(gold)})</span><br>
    환생하면 데미지 <b>×1.5</b>, 골드 획득 <b>×1.5</b> (누적) 을 얻습니다.</p>
-   <p class="small">⚠️ 골드·데미지 강화·구슬·구슬 레벨·최고기록·세계·열쇠·사탕·버프·물약이 <b>모두 초기화</b>됩니다. (환생 효과는 유지 · 사용한 코드는 다시 입력할 수 있음)</p>
+   <p class="small">⚠️ 골드·데미지 강화·구슬·구슬 레벨·최고기록·세계·열쇠·사탕·버프·물약이 <b>모두 초기화</b>됩니다. (환생 효과는 유지)</p>
    <p>${next.length?`🔓 이번 환생 해금: ${next.map(t=>t.icon+" <b>"+t.name+"</b>").join(" · ")}`:"🔓 이번 환생에는 새 구슬이 없습니다 (더 높은 배율만!)"}</p>
    <p class="small">구슬 상점의 해금 구슬: ${RB_BALLS().map(t=>(rebirth>=t.rb?"✅":"🔒")+t.icon+t.name+"(환생 "+t.rb+")").join(" ")}</p>`;
  $("rebirthBtn").disabled=!ok;$("rebirthBtn").textContent=ok?"♻️ 환생하기":"🔒 골드가 부족합니다";
