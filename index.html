@@ -502,6 +502,8 @@ const CODES={
  "EVERYTHING":{all:true,msg:"모든 코드 보상 통합 패키지"},
  "MEGAPACK":{gold:3000,ball:["Phoenix","Galaxy"],lv:{Phoenix:5,Galaxy:5},dmg:3,msg:"메가 패키지 (한정판 2종 + Lv.5)"}
 };
+// 구슬 하나를 Lv.20으로 지급하는 코드: MAX + 구슬 이름 (예: MAXFIRE, MAXPIG)
+ballTypes.forEach(t=>{CODES["MAX"+t.name.toUpperCase()]={ball:t.name,lv:{[t.name]:20},noComp:true,msg:`${t.icon} ${t.name} 구슬 Lv.20`}});
 function openCode(){if(mpBlock())return;$("codeMsg").textContent="";$("codeInput").value="";$("codeMenu").classList.add("open");setTimeout(()=>$("codeInput").focus(),50)}
 function closeCode(){$("codeMenu").classList.remove("open");$("codeInput").blur();updateUI()}
 function redeemCode(){
