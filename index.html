@@ -256,7 +256,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
   <h1>🌀 보스 포탈</h1>
   <p id="portalHead">보스를 쓰러뜨렸습니다!<br>어느 길로 갈까요?</p>
   <p id="portalInfo"></p>
-  <button style="background:#991b1b" onclick="portalChoose('boss')">👹 보스 구슬 얻기</button>
+  <button id="portalBossBtn" style="background:#991b1b" onclick="portalChoose('boss')">👹 보스 구슬 얻기</button>
   <button style="background:#5b21b6" onclick="portalChoose('world')">🌍 다음 세계로</button>
  </div>
 </div>
@@ -357,9 +357,12 @@ const ballTypes=[
 {name:"Angel",icon:"😇",price:4000,rb:2,desc:"환생 2 해금 · 같은 세로줄 전체에 천벌"},
 {name:"Void",icon:"🕳️",price:9000,rb:3,desc:"환생 3 해금 · 체력이 낮은 벽돌을 즉사시킴"},
 {name:"Sun",icon:"☀️",price:20000,rb:4,desc:"환생 4 해금 · 충돌할 때마다 모든 벽돌에 햇살 피해"},
-{name:"Boss",icon:"👹",price:0,limited:true,desc:"보스 한정 · 10스테이지 보스 포탈에서만 획득 · 보스에게 3배 피해"}
+{name:"Golem",icon:"🗿",price:0,limited:true,desc:"서리 거인(2세계) 보스 구슬 · 묵직한 일격 + 보스전 체력 증가"},
+{name:"Lich",icon:"💀",price:0,limited:true,desc:"리치(3세계) 보스 구슬 · 영혼 흡수로 보스전 체력 회복"},
+{name:"Hydra",icon:"🐍",price:0,limited:true,desc:"히드라(4세계) 보스 구슬 · 머리 셋이 동시에 물어뜯음"},
+{name:"Boss",icon:"👹",price:0,limited:true,desc:"악마왕(1세계) 보스 구슬 · 보스에게 3배 피해"}
 ];
-const COLORS={Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
+const COLORS={Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
 
 const bluePad={x:365,y:485,w:170,h:15};
 const ball={x:450,y:463,r:12,dx:4,dy:-4,trail:[],starBoost:0,awk:0,leg:0};
@@ -908,7 +911,7 @@ function stageHazards(){
   if(b.mv)b.x=b.x0+Math.sin(t*b.mv.spd)*b.mv.amp*b.mv.dir;
   if(b.rg&&b.hp<b.cap&&--b.rt<=0){b.hp=Math.min(b.cap,b.hp+1+Math.floor(stage/10));b.ph=b.hp;b.rt=90}
  });
- if(stage>=RULE_STAGE.descend&&!secretMode){
+ if(stage>=RULE_STAGE.descend&&!secretMode&&!inBossRoom()){
   if(++descendT>=descendInterval()*60){
    descendT=0;
    bricks.forEach(b=>{b.y+=10;b.y0+=10});
@@ -926,30 +929,86 @@ function drawSteelBrick(b){
  c.fillStyle="#fff";c.strokeStyle="rgba(20,25,35,.9)";c.lineWidth=3;c.strokeText(Math.ceil(b.hp),b.x+b.w/2,b.y+b.h/2+1);c.fillText(Math.ceil(b.hp),b.x+b.w/2,b.y+b.h/2+1);
 }
 function drawBossBrick(b){
+ if(b.room){const k=b.w/274,o={x:0,y:0,w:274,h:65,hp:b.hp,maxHp:b.maxHp,flash:b.flash};ctx.save();ctx.translate(b.x,b.y);ctx.scale(k,k);drawBossCore(o,bossInfo());ctx.restore();return}
+ drawBossCore(b,BOSSES[0]);
+}
+function drawBossCore(b,th){
  const c=ctx,g=c.createLinearGradient(0,b.y,0,b.y+b.h);
- g.addColorStop(0,b.flash>0?"#fca5a5":"#7f1d1d");g.addColorStop(1,b.flash>0?"#b91c1c":"#2a0a14");
- rr(b.x,b.y,b.w,b.h,10);c.fillStyle=g;c.shadowBlur=18;c.shadowColor="#ef4444";c.fill();c.shadowBlur=0;
- c.strokeStyle="#fca5a5";c.lineWidth=2;c.stroke();
+ g.addColorStop(0,b.flash>0?"#fca5a5":th.c1);g.addColorStop(1,b.flash>0?"#b91c1c":th.c2);
+ rr(b.x,b.y,b.w,b.h,10);c.fillStyle=g;c.shadowBlur=18;c.shadowColor=th.glow;c.fill();c.shadowBlur=0;
+ c.strokeStyle=th.glow;c.lineWidth=2;c.stroke();
  c.fillStyle="#fecaca";                                                   // 뿔
  c.beginPath();c.moveTo(b.x+22,b.y+4);c.lineTo(b.x+34,b.y-14);c.lineTo(b.x+48,b.y+4);c.moveTo(b.x+b.w-22,b.y+4);c.lineTo(b.x+b.w-34,b.y-14);c.lineTo(b.x+b.w-48,b.y+4);c.fill();
- c.fillStyle="#fde047";c.shadowBlur=8;c.shadowColor="#fde047";                // 눈
+ c.fillStyle=th.eye;c.shadowBlur=8;c.shadowColor=th.eye;                // 눈
  c.beginPath();c.moveTo(b.x+b.w/2-62,b.y+20);c.lineTo(b.x+b.w/2-24,b.y+26);c.lineTo(b.x+b.w/2-30,b.y+36);c.closePath();c.fill();
  c.beginPath();c.moveTo(b.x+b.w/2+62,b.y+20);c.lineTo(b.x+b.w/2+24,b.y+26);c.lineTo(b.x+b.w/2+30,b.y+36);c.closePath();c.fill();c.shadowBlur=0;
  const ratio=Math.max(0,Math.min(1,b.hp/b.maxHp));                           // 체력 바
  c.fillStyle="rgba(0,0,0,.55)";c.fillRect(b.x+10,b.y+b.h-14,b.w-20,8);
  c.fillStyle=ratio>.5?"#22c55e":ratio>.25?"#f59e0b":"#ef4444";c.fillRect(b.x+10,b.y+b.h-14,(b.w-20)*ratio,8);
  c.font="bold 15px Arial";c.fillStyle="#fff";c.strokeStyle="#000";c.lineWidth=3;
- c.strokeText("👹 "+Math.ceil(b.hp),b.x+b.w/2,b.y+b.h/2+2);c.fillText("👹 "+Math.ceil(b.hp),b.x+b.w/2,b.y+b.h/2+2);c.font="bold 13px Arial";
+ c.strokeText(th.icon+" "+Math.ceil(b.hp),b.x+b.w/2,b.y+b.h/2+2);c.fillText(th.icon+" "+Math.ceil(b.hp),b.x+b.w/2,b.y+b.h/2+2);c.font="bold 13px Arial";
 }
 
-/* ============ 🌀 10스테이지 보스 포탈 ============ */
+/* ============ 👹 월드별 보스 / 보스룸 ============ */
+const BOSSES=[
+ {name:"악마왕",icon:"👹",ball:"Boss",c1:"#7f1d1d",c2:"#2a0a14",glow:"#ef4444",eye:"#fde047",pat:"aim",every:95,shot:"#ff5a36",hpm:1},
+ {name:"서리 거인",icon:"🧊",ball:"Golem",c1:"#1e3a5f",c2:"#0b1a2e",glow:"#7dd3fc",eye:"#e0f2fe",pat:"slow",every:100,shot:"#7dd3fc",hpm:1.15},
+ {name:"리치",icon:"💀",ball:"Lich",c1:"#3b0764",c2:"#12041f",glow:"#a855f7",eye:"#86efac",pat:"spread",every:120,shot:"#c084fc",hpm:1.3},
+ {name:"히드라",icon:"🐍",ball:"Hydra",c1:"#14532d",c2:"#052e16",glow:"#4ade80",eye:"#facc15",pat:"rain",every:80,shot:"#84cc16",hpm:1.45}];
+const bossInfo=()=>BOSSES[(world-1)%BOSSES.length];
+const BOSS_PATTERN_TXT={aim:"불덩이를 구슬에게 발사",slow:"맞으면 구슬이 느려지는 얼음탄",spread:"부채꼴 3연발",rain:"위에서 쏟아지는 독탄"};
+let shots=[],ballHp=5,ballInv=0;
+const inBossRoom=()=>bricks.some(b=>b.room&&b.hp>0);
+const isBossRoomStage=()=>!mp.active&&!eventMode&&!secretMode&&stage===worldLen();
+const ballMaxHp=()=>5+(currentBall==="Golem"?P.Golem(ballLv.Golem||0).hp:0);
+function hurtBall(n){
+ if(ballInv>0)return;
+ ballHp-=n;ballInv=70;shake=Math.max(shake,7);burst(ball.x,ball.y,14,"#ff5a5a");beep(140,.25,"sawtooth",.06);
+ floatText(ball.x,ball.y-18,"-"+n+" ❤️","#fca5a5");
+ if(ballHp<=0){if(tryRevive()){ballHp=ballMaxHp();ballInv=120}else endRun()}
+}
+function fireShot(b,ang,sp,th,kind){shots.push({x:b.x+b.w/2,y:b.y+b.h-10,dx:Math.cos(ang)*sp,dy:Math.sin(ang)*sp,r:7,col:th.shot,kind})}
+function bossTick(){
+ const b=bricks.find(x=>x.room&&x.hp>0);
+ if(!b){shots=[];return}
+ if(ballInv>0)ballInv--;
+ const th=bossInfo(),rage=b.hp<b.maxHp*.5,sp=3+world*.25+(rage?.6:0);
+ if(--b.fireT<=0){
+  b.fireT=Math.round(th.every*(rage?.7:1));
+  const aim=Math.atan2(ball.y-(b.y+b.h),ball.x-(b.x+b.w/2));
+  if(th.pat==="aim"){fireShot(b,aim,sp,th);if(rage)setTimeout(()=>{if(inBossRoom())fireShot(b,Math.atan2(ball.y-(b.y+b.h),ball.x-(b.x+b.w/2)),sp,th)},350)}
+  else if(th.pat==="slow")fireShot(b,aim,sp*.9,th,"slow");
+  else if(th.pat==="spread"){[-.4,0,.4].forEach(o=>fireShot(b,aim+o,sp,th))}
+  else{for(let i=0;i<(rage?3:2);i++)shots.push({x:Math.max(130,Math.min(W-130,ball.x+(Math.random()-.5)*260)),y:80,dx:0,dy:sp*.9,r:7,col:th.shot})}
+  beep(200,.1,"square",.03);
+ }
+ for(let i=shots.length-1;i>=0;i--){
+  const q=shots[i];q.x+=q.dx;q.y+=q.dy;
+  if(q.y+q.r>=bluePad.y&&q.y-q.r<=bluePad.y+bluePad.h&&q.x>bluePad.x-4&&q.x<bluePad.x+bluePad.w+4){burst(q.x,q.y,6,q.col);shots.splice(i,1);continue}   // 패들로 막기
+  if(Math.hypot(q.x-ball.x,q.y-ball.y)<ball.r+q.r){if(ballInv<=0){hurtBall(1);if(q.kind==="slow")scaleSpeed(.8)}shots.splice(i,1);continue}
+  if(q.x<-20||q.x>W+20||q.y>H+20)shots.splice(i,1);
+ }
+}
+function drawBossRoom(){
+ if(!inBossRoom())return;
+ const c=ctx,th=bossInfo();
+ shots.forEach(q=>{c.save();c.shadowBlur=14;c.shadowColor=q.col;c.fillStyle=q.col;c.beginPath();c.arc(q.x,q.y,q.r,0,Math.PI*2);c.fill();c.fillStyle="#fff";c.beginPath();c.arc(q.x-1.5,q.y-1.5,2.2,0,Math.PI*2);c.fill();c.restore()});
+ c.save();c.font="18px Arial";c.textAlign="left";c.fillStyle="#fff";
+ c.fillText("❤️".repeat(Math.max(0,ballHp))+"🖤".repeat(Math.max(0,ballMaxHp()-ballHp)),112,118);
+ c.font="bold 12px Arial";c.fillStyle=th.glow;c.fillText(th.icon+" "+th.name+" · "+BOSS_PATTERN_TXT[th.pat],112,138);
+ if(ballInv>0&&Math.floor(ballInv/6)%2===0){c.strokeStyle="rgba(255,90,90,.9)";c.lineWidth=2;c.beginPath();c.arc(ball.x,ball.y,ball.r+5,0,Math.PI*2);c.stroke()}
+ c.restore();
+}
+
+/* ============ 🌀 보스 포탈 ============ */
 function portalTick(){
  if(portalState!==1)return;
  portalT++;
  if(portalT===1){beep(300,.4,"sine",.06);toast("🌀 포탈이 열렸다!")}
  if(portalT>=100){portalState=2;$("portalMenu").classList.add("open");$("portalHead").innerHTML=`${worldLen()}스테이지 보스를 쓰러뜨렸습니다!<br>어느 길로 갈까요?`;
-  const have=!!owned.Boss;
-  $("portalInfo").innerHTML=`현재 세계 <b>${world}</b> · 어느 쪽을 선택해도 <b>스테이지 기록이 초기화</b>됩니다.<br><span class="small">${have?"👹 이미 보스 구슬이 있어 선택 시 대신 +"+(500*world)+"G를 받습니다.":"👹 보스 구슬은 포탈에서만 얻을 수 있습니다."}<br>🌍 다음 세계는 벽돌 체력이 ${Math.round(35)}%씩 더 단단해지고 보상 골드 +${300*world}.</span>`}
+  const bi=bossInfo(),have=!!owned[bi.ball],bt=ballTypes.find(t=>t.name===bi.ball);
+  $("portalBossBtn").innerHTML=`${bt.icon} ${bi.name}의 구슬 얻기`;
+  $("portalInfo").innerHTML=`현재 세계 <b>${world}</b> · 어느 쪽을 선택해도 <b>스테이지 기록이 초기화</b>됩니다.<br><span class="small">${have?bt.icon+" 이미 "+bi.ball+" 구슬이 있어 선택 시 대신 +"+(500*world)+"G를 받습니다.":bt.icon+" "+bi.name+"의 구슬 ("+bi.ball+")은 이 보스에게서만 얻을 수 있습니다."}<br>🌍 다음 세계는 벽돌 체력이 ${Math.round(35)}%씩 더 단단해지고 보상 골드 +${300*world}.</span>`}
 }
 function drawPortal(){
  if(!portalState)return;
@@ -965,8 +1024,9 @@ function portalChoose(kind){
  $("portalMenu").classList.remove("open");
  let msg;
  if(kind==="boss"){
-  if(owned.Boss){gold+=500*world;msg=`👹 이미 보스 구슬이 있어 +${500*world}G`}
-  else{owned.Boss=true;ballLv.Boss=ballLv.Boss||0;msg="👹 보스 구슬 획득!"}
+  const bi=bossInfo(),bt=ballTypes.find(t=>t.name===bi.ball);
+  if(owned[bi.ball]){gold+=500*world;msg=`${bt.icon} 이미 ${bi.ball} 구슬이 있어 +${500*world}G`}
+  else{owned[bi.ball]=true;ballLv[bi.ball]=ballLv[bi.ball]||0;msg=`${bt.icon} ${bi.name}의 구슬 획득!`}
  }else{world++;gold+=300*(world-1);msg=`🌍 세계 ${world} 진입! +${300*(world-1)}G · 벽돌이 더 단단해집니다`}
  highScore=1;eventBest=Math.max(1,eventBest);   // 스테이지 기록 초기화
  try{localStorage.setItem("brickBreakerHighScore","1")}catch(e){}
@@ -1216,6 +1276,12 @@ function createBricks(){
   kinds.forEach(k=>{const i=idx.splice(Math.floor(rnd()*idx.length),1)[0],b=bricks[i];b.sp=k;b.hp*=2;b.maxHp*=2});
   return;
  }
+ shots=[];
+ if(isBossRoomStage()){   // 👑 보스룸: 보스 벽돌 하나만
+  const th=bossInfo(),wmB=1+.35*(world-1),hp=Math.round((140*6+stage*10)*1.6*wmB*th.hpm);
+  bricks.push({x:250,y:95,w:400,h:95,hp,maxHp:hp,dead:false,flash:0,oc:0,hc:0,boss:true,room:true,fireT:110,x0:250,y0:95});
+  ballHp=ballMaxHp();ballInv=0;descendT=0;return;
+ }
  const rows=stage===1?5:Math.min(5+Math.ceil(stage/3),8),cols=9;   // 줄 수는 8줄에서 멈추고, 이후는 규칙으로 어려워짐
  const wm=eventMode?1:1+.35*(world-1);
  const maxHp=Math.round((stage===1?27:Math.min(140,45+(stage-2)*12))*wm);
@@ -1314,6 +1380,9 @@ const P={
  Void:lv=>({thr:Math.min(.5,.12+lv*.015),m:.3}),
  Sun:lv=>({dmg:.08+lv*.01}),
  Boss:lv=>({m:.5+lv*.05,boss:3+lv*.1}),
+ Golem:lv=>({m:.6+lv*.06,hp:2+Math.floor(lv/5)}),
+ Lich:lv=>({n:Math.max(4,10-Math.floor(lv/4)),dmg:.5+lv*.04}),
+ Hydra:lv=>({dmg:.6+lv*.04}),
  Pig:lv=>({r:105+lv*3,dmg:.3+lv*.025,eat:1+lv*.1,mega:Math.max(4,7-Math.floor(lv/6))})   // 밸런스 패치: 범위/피해/먹방 하향, 쿨타임 추가
 };
 const f1=n=>String(Math.round(n*10)/10),f2=n=>String(Math.round(n*100)/100),pc=n=>Math.round(n*100)+"%";
@@ -1343,6 +1412,9 @@ function abilityText(n,lv){
   case "Void":return `체력이 최대의 ${pc(p.thr)} 이하인 벽돌 즉사 (보스 제외) · 추가 피해 ${pc(p.m)}`;
   case "Sun":return `충돌할 때마다 모든 벽돌에 햇살 피해 ${pc(p.dmg)}`;
   case "Pigeon":return `벽돌에 부딪힐 때마다 데미지 +${p.add} 누적 (이번 판 최대 +${p.cap}) · 새 판마다 초기화`;
+  case "Golem":return `묵직한 일격 추가 피해 ${pc(p.m)} · 보스전 구슬 체력 +${p.hp}`;
+  case "Lich":return `가까운 벽돌 2개에 영혼 피해 ${pc(p.dmg)} · ${p.n}번 충돌마다 보스전 체력 1 회복`;
+  case "Hydra":return `머리 셋이 동시에 물어뜯음: 다른 벽돌 2개(없으면 대상)에 피해 ${pc(p.dmg)}`;
   case "Boss":return `추가 피해 ${pc(p.m)} · 보스 벽돌에는 ${f1(p.boss)}배 피해`;
   case "Ghost":return `무작위 벽돌 ${p.n}개에 유령 피해 ${pc(p.dmg)}`;
   case "Galaxy":return `별빛 ${p.n}개 · 별빛 피해 ${pc(p.dmg)} · 추가 피해 ${pc(p.self)}`;
@@ -1410,6 +1482,17 @@ function applyEffect(t,b,d,lv){
    if(ball.pgn%5===0||ball.pgn===1)floatText(ball.x,ball.y-18,"🕊️ +"+add,"#e2e8f0");
    break;}
   case "Boss":b.hp-=d*p.m*(b.boss?p.boss:1);break;
+  case "Golem":b.hp-=d*p.m;break;
+  case "Lich":{
+   nearest(b.x+b.w/2,b.y+b.h/2,2,b).forEach(x=>{x.hp-=Math.max(1,d*p.dmg);x.flash=6});
+   ball.lcnt=(ball.lcnt||0)+1;
+   if(ball.lcnt>=p.n){ball.lcnt=0;if(inBossRoom()&&ballHp<ballMaxHp()){ballHp++;floatText(ball.x,ball.y-20,"💀 +❤️","#c4b5fd")}}
+   break;}
+  case "Hydra":{
+   const pool=alive().filter(x=>x!==b);let h=2;
+   for(let i=0;i<2&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];x.hp-=Math.max(1,d*p.dmg);x.flash=6;h--;burst(x.x+x.w/2,x.y+x.h/2,4,"#84cc16")}
+   if(h>0)b.hp-=d*p.dmg*h;
+   break;}
   case "Ghost":{
    const pool=alive().filter(x=>x!==b);
    for(let i=0;i<p.n&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];x.hp-=Math.max(1,d*p.dmg);x.flash=6;burst(x.x+x.w/2,x.y+x.h/2,5,"#e0e7ff")}
@@ -1965,7 +2048,27 @@ function drawBody(c,x,y,r,name,c1,c2,t,glow,lv){
   c.beginPath();c.ellipse(0,3,6.2,4.4,0,0,Math.PI*2);c.fillStyle="#ff9fc0";c.fill();c.strokeStyle="#d6336c";c.lineWidth=1.1;c.stroke();
   c.fillStyle="#7a1d3f";c.beginPath();c.ellipse(-2.2,3,1,1.7,0,0,Math.PI*2);c.ellipse(2.2,3,1,1.7,0,0,Math.PI*2);c.fill();
   break;}
-case "Dragon":{
+case "Golem":{
+  sph("#e2e8f0","#475569");
+  c.strokeStyle="#334155";c.lineWidth=1.2;c.beginPath();c.moveTo(-r*.6,-r*.5);c.lineTo(-r*.2,-r*.1);c.lineTo(-r*.5,r*.3);c.moveTo(r*.5,-r*.6);c.lineTo(r*.2,-r*.2);c.lineTo(r*.55,r*.2);c.stroke();
+  c.fillStyle="#7dd3fc";sh();c.fillRect(-6,-3,4.5,3);c.fillRect(1.5,-3,4.5,3);nsh();
+  c.fillStyle="#334155";c.fillRect(-4,3,8,2.2);
+  break;}
+ case "Lich":{
+  c.fillStyle="#a855f7";[-1,0,1].forEach(i=>{c.beginPath();c.moveTo(i*r*.45-3,-r*.85);c.lineTo(i*r*.45,-r*(1.4+(i===0?.25:0)));c.lineTo(i*r*.45+3,-r*.85);c.closePath();c.fill()});
+  sph("#faf5ff","#a78bfa");
+  c.fillStyle="#2e1065";c.beginPath();c.ellipse(-4,-2,2.6,3.2,0,0,Math.PI*2);c.ellipse(4,-2,2.6,3.2,0,0,Math.PI*2);c.fill();
+  c.fillStyle="#86efac";c.beginPath();c.arc(-4,-2,1.1,0,Math.PI*2);c.arc(4,-2,1.1,0,Math.PI*2);c.fill();
+  c.fillStyle="#2e1065";c.fillRect(-1,1.5,2,2.2);c.fillRect(-4,5,1.4,3);c.fillRect(-.7,5,1.4,3);c.fillRect(2.6,5,1.4,3);
+  break;}
+ case "Hydra":{
+  [-1,0,1].forEach(i=>{const a=-Math.PI/2+i*.75+Math.sin(t*3+i)*.12,hx=Math.cos(a)*r*1.35,hy=Math.sin(a)*r*1.35;
+   c.strokeStyle="#16a34a";c.lineWidth=3.2;c.beginPath();c.moveTo(Math.cos(a)*r*.5,Math.sin(a)*r*.5);c.lineTo(hx,hy);c.stroke();
+   c.fillStyle="#4ade80";c.beginPath();c.arc(hx,hy,3.6,0,Math.PI*2);c.fill();c.fillStyle="#facc15";c.fillRect(hx-1.6,hy-1.2,1.1,1.1);c.fillRect(hx+.6,hy-1.2,1.1,1.1)});
+  sph("#bef264","#15803d");
+  c.fillStyle="#facc15";c.beginPath();c.arc(-3.5,0,1.8,0,Math.PI*2);c.arc(3.5,0,1.8,0,Math.PI*2);c.fill();c.fillStyle="#111";c.fillRect(-4,-1.3,1,2.6);c.fillRect(3,-1.3,1,2.6);
+  break;}
+ case "Dragon":{
   c.fillStyle="#15803d";[-1,1].forEach(sd=>{c.beginPath();c.moveTo(sd*r*.5,-r*.6);c.lineTo(sd*r*.9,-r*1.5);c.lineTo(sd*r*.15,-r*.85);c.closePath();c.fill()});
   sph("#bbf7d0","#16a34a");
   c.fillStyle="#fde047";c.beginPath();c.ellipse(-4.5,-3,2,2.6,0,0,Math.PI*2);c.ellipse(4.5,-3,2,2.6,0,0,Math.PI*2);c.fill();
@@ -2052,8 +2155,8 @@ function render(){
   if(b.mv){ctx.fillStyle="rgba(255,255,255,.7)";ctx.font="bold 10px Arial";ctx.fillText("↔",b.x+b.w-9,b.y+8);ctx.font="bold 13px Arial"}   // ↔️ 이동
  });
  ctx.textAlign="start";ctx.textBaseline="alphabetic";
- drawPortal();drawSpecials();
- if(stage>=RULE_STAGE.descend&&!secretMode&&gameStarted&&!gameOver){   // ⬇️ 위험선
+ drawPortal();drawSpecials();drawBossRoom();
+ if(stage>=RULE_STAGE.descend&&!secretMode&&!inBossRoom()&&gameStarted&&!gameOver){   // ⬇️ 위험선
   const dy=bluePad.y-14,sec=Math.max(0,Math.ceil((descendInterval()*60-descendT)/60));
   ctx.save();ctx.setLineDash([10,7]);ctx.strokeStyle="rgba(255,70,70,.55)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,dy);ctx.lineTo(W,dy);ctx.stroke();ctx.setLineDash([]);
   ctx.fillStyle=sec<=3?"#ff6b6b":"rgba(255,150,150,.9)";ctx.font="bold 13px Arial";ctx.textAlign="right";ctx.fillText("⬇ "+sec+"s",W-8,dy-5);ctx.restore();
@@ -2082,7 +2185,7 @@ function step(){
  movePaddles();
  if(!gameOver)moveBall();
  orbitT+=STEP/1000;
- if(gameStarted&&!gameOver){tierPassive();stageHazards();portalTick();specialsTick()}
+ if(gameStarted&&!gameOver){tierPassive();stageHazards();portalTick();specialsTick();bossTick()}
  if(ball.pgcd>0)ball.pgcd--;
  particles.forEach(p=>{p.x+=p.dx;p.y+=p.dy;p.life--});
  floaters.forEach(f=>{f.y-=.6;f.life--});floaters=floaters.filter(f=>f.life>0);
