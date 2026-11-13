@@ -20,6 +20,8 @@ body{margin:0;background:radial-gradient(circle at top,#18204b,#060816 70%);colo
 #buffText{border-color:#a78bfa!important}
 body.halloween{background:radial-gradient(circle at top,#3b1058,#12040a 70%)}
 canvas.halloween{border-color:#f97316;box-shadow:0 0 34px #7c2d12}
+body.xmas{background:radial-gradient(circle at top,#0b3d2e,#06121f 70%)}
+canvas.xmas{border-color:#4ade80;box-shadow:0 0 34px #14532d,0 0 12px #ef4444}
 #potionBar{position:fixed;left:10px;bottom:10px;z-index:3;display:none;gap:8px;align-items:center;padding:8px 12px;border-radius:12px;background:rgba(10,14,40,.85);border:1px solid #5d6dcc;font-size:13px}
 #potionBar button{margin:0;padding:6px 10px;background:#7c2d12}
 .evStart{background:#ea580c!important}
@@ -187,10 +189,10 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 
 <div id="eventMenu" class="overlay">
  <div class="panel">
-  <h1>🎃 할로윈 이벤트</h1>
+  <h1>🎃🎄 이벤트 (할로윈 · 크리스마스)</h1>
   <p class="small">이벤트 맵을 <b>클리어할 때마다 🍬 사탕 10개!</b> 호박 벽돌(🎃)을 부수면 보너스 +1.<br>사탕으로 한정판 구슬 · 버프 · 물약 · 코인을 구매할 수 있어요.</p>
   <div id="evStatus"></div>
-  <div><button class="evStart" onclick="startEventMap()">🎃 이벤트 맵 시작</button><button onclick="leaveEventMap()">🗺️ 일반 맵으로</button><button onclick="closeEvent()">닫기</button></div>
+  <div><button class="evStart" onclick="startEventMap('halloween')">🎃 할로윈 맵 시작</button><button class="evStart" style="background:#15803d" onclick="startEventMap('xmas')">🎄 크리스마스 맵 시작</button><button onclick="leaveEventMap()">🗺️ 일반 맵으로</button><button onclick="closeEvent()">닫기</button></div>
   <div id="evShop"></div>
  </div>
 </div>
@@ -371,6 +373,7 @@ const REBIRTH_REQ=[1000,5000,10000,25000,50000,100000,200000];
 const rebirthReq=()=>rebirth<REBIRTH_REQ.length?REBIRTH_REQ[rebirth]:REBIRTH_REQ[REBIRTH_REQ.length-1]*Math.pow(2,rebirth-REBIRTH_REQ.length+1);
 let dev2Unlocked=false,devUnlocked=false,secretKeys=0,secretMode=false,secretShop=null,secretDoor=null,shopStock=null;
 let descendT=0,world=1,portalState=0,portalT=0,portalPos={x:450,y:100};
+let eventTheme="halloween";const evIcon=()=>eventTheme==="xmas"?"🎄":"🎃";
 let eventMode=false,runCandy=0,runBuff={atk:false,wide:false,slow:false,gold2:false},booting=true,floaters=[];
 
 const ballTypes=[
@@ -761,6 +764,17 @@ const EV_SHAPES={
  skull:[".XXXXXXX.","XXXXXXXXX","XX..X..XX","XX..X..XX","XXXXXXXXX",".XXX.XXX.","..X.X.X..","..XXXXX.."],
  hat:["....X....","...XXX...","...XXX...","..XXXXX..","..XXXXX..",".XXXXXXX.","XXXXXXXXX","XXXXXXXXX"]
 };
+const XM_SHAPES={
+ tree:["....X....","...XXX...","..XXXXX..","...XXX...","..XXXXX..",".XXXXXXX.","XXXXXXXXX","....X....","...XXX..."],
+ snowman:["...XXX...","..XXXXX..","...XXX...","..XXXXX..",".XXXXXXX.","XXXXXXXXX","XXXXXXXXX",".XXXXXXX.","..XXXXX.."],
+ star:["....X....","....X....","XXXXXXXXX",".XXXXXXX.","..XXXXX..","..XXXXX..",".XXX.XXX.",".XX...XX."],
+ bell:["....X....","...XXX...","..XXXXX..","..XXXXX..",".XXXXXXX.",".XXXXXXX.","XXXXXXXXX","....X...."],
+ gift:["XX.....XX",".XX...XX.","..XX.XX..","XXXXXXXXX","XXXXXXXXX","XXXX.XXXX","XXXXXXXXX","XXXX.XXXX","XXXXXXXXX"]
+};
+const XM_ORDER=["tree","snowman","star","bell","gift"];
+const XM_NAMES={tree:"트리",snowman:"눈사람",star:"별",bell:"종",gift:"선물"};
+const evShapeKey=st=>eventTheme==="xmas"?XM_ORDER[(st-1)%XM_ORDER.length]:EV_ORDER[(st-1)%EV_ORDER.length];
+const evShapeName=st=>eventTheme==="xmas"?XM_NAMES[evShapeKey(st)]:EV_NAMES[evShapeKey(st)];
 const EV_ORDER=["pumpkin","bat","ghost","skull","hat"];
 const EV_NAMES={pumpkin:"호박",bat:"박쥐",ghost:"유령",skull:"해골",hat:"마녀 모자"};
 const BUFF_ICON={atk:"⚔️",wide:"🛡️",slow:"🐢",gold2:"💰"};
@@ -769,6 +783,9 @@ const EVENT_SHOP=[
   {id:"b_pumpkin",icon:"🎃",name:"Pumpkin 구슬",desc:"호박 불꽃 폭발 · 이벤트 맵 사탕 획득",price:80,ball:"Pumpkin"},
   {id:"b_bat",icon:"🦇",name:"Bat 구슬",desc:"치명타 + 가속",price:120,ball:"Bat"},
   {id:"b_ghost",icon:"👻",name:"Ghost 구슬",desc:"무작위 벽돌 유령 피해",price:160,ball:"Ghost"}]},
+ {cat:"🎄 크리스마스 한정 구슬",items:[
+  {id:"b_snowman",icon:"⛄",name:"Snowman 구슬",desc:"눈덩이를 벽돌에 발사",price:180,ball:"Snowman"},
+  {id:"b_santa",icon:"🎅",name:"Santa 구슬",desc:"선물 폭탄 투하",price:240,ball:"Santa"}]},
  {cat:"✨ 버프 (다음 판 1회 적용)",items:[
   {id:"atk",icon:"⚔️",name:"공격력 +3",desc:"다음 판 기본 데미지 +3",price:15,buff:"atk"},
   {id:"wide",icon:"🛡️",name:"넓은 패들",desc:"다음 판 패들 폭 +50%",price:10,buff:"wide"},
@@ -798,7 +815,7 @@ function openEvent(){
  renderEvent();$("eventMenu").classList.add("open");
 }
 function closeEvent(){$("eventMenu").classList.remove("open");updateUI()}
-function startEventMap(){eventMode=true;closeEvent();restartGame(1);toast("🎃 이벤트 맵 시작!\n클리어할 때마다 🍬 +"+EVENT_CLEAR_CANDY)}
+function startEventMap(theme){eventTheme=theme==="xmas"?"xmas":"halloween";eventMode=true;closeEvent();restartGame(1);toast(evIcon()+" 이벤트 맵 시작!\n클리어할 때마다 🍬 +"+EVENT_CLEAR_CANDY)}
 function leaveEventMap(){eventMode=false;closeEvent();restartGame(1)}
 function renderEvent(){
  const have=Object.keys(buffs).filter(k=>buffs[k]>0).map(k=>BUFF_ICON[k]+"×"+buffs[k]).join(" ")||"없음";
@@ -865,6 +882,38 @@ function drawHalloweenBg(){
  c.strokeStyle="rgba(255,255,255,.18)";c.lineWidth=1;
  [[0,0,1],[W,0,-1]].forEach(q=>{for(let i=1;i<=4;i++){c.beginPath();c.moveTo(q[0],q[1]);c.lineTo(q[0]+q[2]*i*28,q[1]);c.moveTo(q[0],q[1]);c.lineTo(q[0],q[1]+i*28);c.stroke()}
   for(let r2=30;r2<=110;r2+=26){c.beginPath();c.arc(q[0],q[1],r2,q[2]>0?0:Math.PI/2,q[2]>0?Math.PI/2:Math.PI);c.stroke()}});
+}
+function drawChristmasBg(){
+ const c=ctx,t=performance.now()/1000;
+ const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,"#06182e");g.addColorStop(.55,"#0c2a3f");g.addColorStop(1,"#0a2a24");
+ c.fillStyle=g;c.fillRect(-10,-10,W+20,H+20);
+ // 오로라
+ c.save();c.globalAlpha=.16;for(let i=0;i<3;i++){const ag=c.createLinearGradient(0,60,0,260);ag.addColorStop(0,"rgba(80,255,170,0)");ag.addColorStop(.5,i%2?"rgba(120,200,255,.9)":"rgba(80,255,170,.9)");ag.addColorStop(1,"rgba(80,255,170,0)");
+  c.fillStyle=ag;c.beginPath();c.moveTo(0,120+i*30);for(let x=0;x<=W;x+=30)c.lineTo(x,120+i*30+Math.sin(x*.012+t*.6+i*2)*26);c.lineTo(W,300);c.lineTo(0,300);c.closePath();c.fill()}c.restore();
+ // 별 + 달
+ c.fillStyle="rgba(255,255,255,.35)";stars.forEach((q,i)=>{c.globalAlpha=.4+.6*Math.abs(Math.sin(t*1.5+i));c.fillRect(q.x,q.y,q.s,q.s)});c.globalAlpha=1;
+ c.save();c.shadowBlur=50;c.shadowColor="#e0f2fe";c.fillStyle="#f0f9ff";c.beginPath();c.arc(780,520,46,0,Math.PI*2);c.fill();c.restore();
+ // 눈 덮인 언덕 + 전나무
+ c.fillStyle="#e8f1f8";c.beginPath();c.moveTo(0,H);c.lineTo(0,H-70);c.quadraticCurveTo(220,H-130,450,H-85);c.quadraticCurveTo(700,H-40,W,H-110);c.lineTo(W,H);c.closePath();c.fill();
+ c.fillStyle="rgba(12,56,40,.9)";[[90,H-95,1],[170,H-105,.7],[720,H-75,1.1],[830,H-100,.8]].forEach(q=>{const x=q[0],y=q[1],k=q[2];
+  for(let i=0;i<3;i++){c.beginPath();c.moveTo(x,y-50*k-i*26*k);c.lineTo(x-24*k-i*6*k,y-i*26*k);c.lineTo(x+24*k+i*6*k,y-i*26*k);c.closePath();c.fill()}
+  c.fillStyle="rgba(240,248,255,.7)";c.beginPath();c.moveTo(x,y-50*k);c.lineTo(x-9*k,y-34*k);c.lineTo(x+9*k,y-34*k);c.closePath();c.fill();c.fillStyle="rgba(12,56,40,.9)"});
+ // 전구 장식
+ c.strokeStyle="rgba(255,255,255,.25)";c.lineWidth=1.5;c.beginPath();c.moveTo(0,8);for(let x=0;x<=W;x+=10)c.lineTo(x,8+Math.sin(x*.04)*6+6);c.stroke();
+ for(let x=15;x<W;x+=45){const y=14+Math.sin(x*.04)*6,col=["#ef4444","#22c55e","#fde047","#60a5fa"][(x/45|0)%4],on=Math.sin(t*3+x)>-.3;
+  c.fillStyle=on?col:"rgba(255,255,255,.12)";if(on){c.shadowBlur=10;c.shadowColor=col}c.beginPath();c.arc(x,y+4,4,0,Math.PI*2);c.fill();c.shadowBlur=0}
+ // 눈 내리기
+ c.fillStyle="rgba(255,255,255,.85)";
+ for(let i=0;i<70;i++){const sp=22+(i%5)*10,x=((i*53.7)%W+Math.sin(t*.8+i)*18+W)%W,y=((t*sp+i*97)%(H+20))-10,r=1+(i%3)*.7;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()}
+}
+function drawGiftBrick(b){
+ const c=ctx,x=b.x,y=b.y,w=b.w,h=b.h,fl=b.flash>0;
+ const g=c.createLinearGradient(0,y,0,y+h);g.addColorStop(0,fl?"#fecaca":"#ef4444");g.addColorStop(1,fl?"#f87171":"#991b1b");
+ rr(x,y,w,h,4);c.fillStyle=g;c.shadowBlur=10;c.shadowColor="#fde047";c.fill();c.shadowBlur=0;
+ c.fillStyle="#22c55e";c.fillRect(x+w/2-5,y,10,h);c.fillRect(x,y+h/2-3,w,6);
+ c.fillStyle="#fde047";c.beginPath();c.arc(x+w/2-6,y-1,5,0,Math.PI*2);c.arc(x+w/2+6,y-1,5,0,Math.PI*2);c.fill();
+ c.fillStyle="#fff";c.strokeStyle="rgba(60,0,0,.9)";c.lineWidth=3;c.font="bold 13px Arial";
+ c.strokeText(Math.ceil(b.hp),x+w/2,y+h/2+1);c.fillText(Math.ceil(b.hp),x+w/2,y+h/2+1);
 }
 function drawPumpkinBrick(b){
  const c=ctx,x=b.x,y=b.y,w=b.w,h=b.h,fl=b.flash>0;
@@ -1358,10 +1407,10 @@ function drawGoldBrick(b){
 
 /* ============ UI ============ */
 function updateUI(){
- $("stageText").textContent=(eventMode?"🎃 EVENT ":"STAGE ")+stage;
+ $("stageText").textContent=(eventMode?evIcon()+" EVENT ":"STAGE ")+stage;
  document.querySelectorAll(".skipBtn").forEach(b=>{b.style.display=maxStart()>1?"":"none";b.textContent="⏭ STAGE "+maxStart()+"부터 시작"});
  $("candyText").textContent="🍬 "+candy;
- canvas.classList.toggle("halloween",eventMode);document.body.classList.toggle("halloween",eventMode);
+ {const hw=eventMode&&eventTheme!=="xmas",xm=eventMode&&eventTheme==="xmas";canvas.classList.toggle("halloween",hw);document.body.classList.toggle("halloween",hw);canvas.classList.toggle("xmas",xm);document.body.classList.toggle("xmas",xm)}
  {const bi=Object.keys(runBuff).filter(k=>runBuff[k]).map(k=>BUFF_ICON[k]).join(" "),bt=$("buffText");bt.style.display=bi?"":"none";bt.textContent="버프 "+bi}
  {const rt=$("ruleText"),rb=ruleBadges();rt.style.display=rb?"":"none";rt.textContent="난이도 "+rb;rt.title="🛡️강철 💚재생 ↔️이동 ⬇️하강 📏좁은 패들 👹보스"}
  {const pb=$("potionBar");
@@ -1455,7 +1504,7 @@ function openStage(){
  for(let i=1;i<=mx;i++){
   const b=document.createElement("button");
   b.className=(i===mx)?"next":"";
-  b.textContent=(i<mx?"✅ ":"🆕 ")+(eventMode?"🎃 ":"")+"STAGE "+i;
+  b.textContent=(i<mx?"✅ ":"🆕 ")+(eventMode?evIcon()+" ":"")+"STAGE "+i;
   b.onclick=()=>restartGame(i);
   g.appendChild(b);
  }
@@ -1496,11 +1545,11 @@ function createBricks(){
  const wm=eventMode?1:1+.35*(world-1);
  const maxHp=Math.round((stage===1?27:Math.min(140,45+(stage-2)*12))*wm);
  if(eventMode){   // 🎃 이벤트 맵: 스테이지마다 다른 모양 (호박 → 박쥐 → 유령 → 해골 → 마녀 모자)
-  EV_SHAPES[EV_ORDER[(stage-1)%EV_ORDER.length]].forEach((row,r)=>{
+  (eventTheme==="xmas"?XM_SHAPES:EV_SHAPES)[evShapeKey(stage)].forEach((row,r)=>{
    for(let c=0;c<row.length;c++){
     if(row[c]!=="X")continue;
     const pk=rnd()<.12,hp=Math.floor(rnd()*maxHp)+1;
-    bricks.push({x:25+c*96,y:65+r*38,w:82,h:27,hp:pk?Math.ceil(hp*1.5):hp,maxHp,dead:false,flash:0,oc:0,hc:0,pk});
+    bricks.push({x:25+c*96,y:65+r*38,w:82,h:27,hp:pk?Math.ceil(hp*1.5):hp,maxHp,dead:false,flash:0,oc:0,hc:0,pk,cr:(c+r)%2});
    }
   });
   applyStageRules();return;
@@ -1881,7 +1930,7 @@ function clearStage(){
   const done=stage;stage++;if(stage>eventBest)eventBest=stage;
   addSpeed(.45);applyPadWidth();createBricks();updateUI();saveGame();
   shake=8;burst(W/2,H/3,40,"#fb923c");beep(880,.25,"triangle");
-  toast(`🎃 이벤트 STAGE ${done} CLEAR!\n🍬 사탕 +${EVENT_CLEAR_CANDY}  (다음: ${EV_NAMES[EV_ORDER[(stage-1)%EV_ORDER.length]]} 맵)`+ruleNote(stage));
+  toast(`${evIcon()} 이벤트 STAGE ${done} CLEAR!\n🍬 사탕 +${EVENT_CLEAR_CANDY}  (다음: ${evShapeName(stage)} 맵)`+ruleNote(stage));
   setTimeout(()=>{clearRewarded=false},300);return;
  }
  clearRewarded=true;const first=stage>=highScore;const bonus=Math.floor((first?(runBuff.gold2?80:40):0)*goldMul());gold+=bonus;stage++;   // 이미 클리어한 스테이지를 다시 깨면 보너스 골드 없음
@@ -1901,7 +1950,7 @@ function endRun(){
  const earn=Math.floor((20+brickReward)*mulG*goldMul());gold+=earn;
  updateUI();saveGame();beep(150,.4,"sawtooth",.06);
  $("gameOverText").innerHTML=
-  `${eventMode?`🎃 이벤트 <b>STAGE ${stage}</b> / 이벤트 최고 <b>STAGE ${eventBest}</b><br>🍬 이번 판 사탕 <b>+${runCandy}</b> (보유 ${candy})`:`도달 <b>STAGE ${stage}</b> / 최고기록 <b>STAGE ${highScore}</b>`}<br>
+  `${eventMode?`${evIcon()} 이벤트 <b>STAGE ${stage}</b> / 이벤트 최고 <b>STAGE ${eventBest}</b><br>🍬 이번 판 사탕 <b>+${runCandy}</b> (보유 ${candy})`:`도달 <b>STAGE ${stage}</b> / 최고기록 <b>STAGE ${highScore}</b>`}<br>
    플레이 보상 <b>+20 GOLD</b><br>
    부순 벽돌 <b>${bricksBroken}개</b> × 0.5 = <b>+${brickReward} GOLD</b><br>
    총 획득 <b>+${earn} GOLD</b>${mulG>1?" (💰 골드 2배 버프)":""}${rebirth&&!mp.active?" (♻️ 환생 ×"+f2(goldMul())+")":""}`;
@@ -2366,7 +2415,7 @@ function render(){
  ctx.setTransform(1,0,0,1,0,0);
  ctx.clearRect(0,0,W,H);
  if(shake>0){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake)}
- if(eventMode)drawHalloweenBg();
+ if(eventMode)(eventTheme==="xmas"?drawChristmasBg:drawHalloweenBg)();
  else{
   const cb=cosGet("bg"),g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,cb?cb.top:"#0b1230");g.addColorStop(1,cb?cb.bot:"#050713");
   ctx.fillStyle=g;ctx.fillRect(-10,-10,W+20,H+20);
@@ -2377,11 +2426,11 @@ function render(){
  ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.textBaseline="middle";
  bricks.forEach(b=>{
   if(b.hp<=0)return;
-  if(b.pk){drawPumpkinBrick(b);return}
+  if(b.pk){(eventTheme==="xmas"?drawGiftBrick:drawPumpkinBrick)(b);return}
   if(b.boss){drawBossBrick(b);return}
   if(b.gb){drawGoldBrick(b);return}
   if(b.ar){drawSteelBrick(b);return}
-  const ratio=Math.min(1,b.hp/b.maxHp),hue=eventMode?(290+100*ratio)%360:130+170*ratio;   // 이벤트: 보라 → 붉은 → 주황
+  const ratio=Math.min(1,b.hp/b.maxHp),hue=eventMode?(eventTheme==="xmas"?(b.cr?135:355):(290+100*ratio)%360):130+170*ratio;   // 이벤트: 보라 → 붉은 → 주황
   const bg=ctx.createLinearGradient(0,b.y,0,b.y+b.h);
   bg.addColorStop(0,`hsl(${hue},70%,${b.flash>0?75:55}%)`);bg.addColorStop(1,`hsl(${hue+30},60%,${b.flash>0?55:32}%)`);
   rr(b.x,b.y,b.w,b.h,5);ctx.fillStyle=bg;ctx.fill();
