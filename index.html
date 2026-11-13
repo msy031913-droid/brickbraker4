@@ -1047,38 +1047,44 @@ const COS=[
   {id:"t_green",name:"네온 꼬리",icon:"🟢",price:2500,col:()=>"#4ade80"},
   {id:"t_gold",name:"황금 꼬리",icon:"🌟",price:3000,col:()=>"#fde047"},
   {id:"t_ice",name:"서리 꼬리",icon:"❄️",price:4000,col:(i,t)=>`hsl(${190+Math.sin(t*3+i*.4)*15},90%,75%)`},
-  {id:"t_rainbow",name:"무지개 꼬리",icon:"🌈",price:8000,col:(i,t)=>`hsl(${(t*150+i*25)%360},95%,62%)`}]},
+  {id:"t_rainbow",name:"무지개 꼬리",icon:"🌈",price:8000,col:(i,t)=>`hsl(${(t*150+i*25)%360},95%,62%)`},
+  {id:"t_galaxy",name:"은하 파괴자 꼬리",icon:"☄️",price:1e15,col:(i,t)=>`hsl(${(t*300+i*40)%360},100%,${55+Math.sin(t*8+i)*20}%)`}]},
  {cat:"🏓 패들 스킨",key:"pad",items:[
   {id:"p_pink",name:"핑크 패들",icon:"🩷",price:2500,fill:()=>"#ff4fa3",glow:"#ff4fa3"},
   {id:"p_emerald",name:"에메랄드 패들",icon:"💚",price:4000,fill:()=>"#10b981",glow:"#34d399"},
   {id:"p_gold",name:"황금 패들",icon:"🟡",price:8000,fill:()=>"#facc15",glow:"#fde047"},
-  {id:"p_rainbow",name:"무지개 패들",icon:"🌈",price:15000,fill:t=>`hsl(${(t*120)%360},95%,60%)`,glow:"#fff"}]},
+  {id:"p_rainbow",name:"무지개 패들",icon:"🌈",price:15000,fill:t=>`hsl(${(t*120)%360},95%,60%)`,glow:"#fff"},
+  {id:"p_ufo",name:"우주 함선 패들",icon:"🛸",price:1e20,fill:t=>`hsl(${(200+Math.sin(t*4)*40)},100%,${60+Math.sin(t*10)*15}%)`,glow:"#a5f3fc"}]},
  {cat:"🌌 배경 테마",key:"bg",items:[
   {id:"b_sunset",name:"노을 하늘",icon:"🌇",price:5000,top:"#3b0f2e",bot:"#120414",star:"rgba(255,200,150,.22)"},
   {id:"b_matrix",name:"매트릭스",icon:"🟩",price:8000,top:"#021a0a",bot:"#010a04",star:"rgba(80,255,120,.3)"},
   {id:"b_ocean",name:"깊은 바다",icon:"🌊",price:10000,top:"#06385c",bot:"#021428",star:"rgba(150,230,255,.25)"},
-  {id:"b_royal",name:"로열 퍼플",icon:"🔮",price:20000,top:"#2e1065",bot:"#0f0524",star:"rgba(233,213,255,.28)"}]},
+  {id:"b_royal",name:"로열 퍼플",icon:"🔮",price:20000,top:"#2e1065",bot:"#0f0524",star:"rgba(233,213,255,.28)"},
+  {id:"b_bigbang",name:"빅뱅 배경",icon:"🌠",price:1e25,top:"#5b1a00",bot:"#000000",star:"rgba(255,230,120,.5)"}]},
  {cat:"🏷️ 칭호 (상단에 표시)",key:"title",items:[
   {id:"ti_chick",name:"코인 초보",icon:"🐣",price:500,text:"🐣 코인 초보"},
   {id:"ti_rich",name:"코인 부자",icon:"💰",price:20000,text:"💰 코인 부자"},
   {id:"ti_dia",name:"다이아 부자",icon:"💎",price:60000,text:"💎 다이아 부자"},
   {id:"ti_king",name:"코인 황제",icon:"👑",price:150000,text:"👑 코인 황제"},
-  {id:"ti_waste",name:"탕진왕",icon:"💸",price:400000,text:"💸 탕진왕"}]}
+  {id:"ti_waste",name:"탕진왕",icon:"💸",price:400000,text:"💸 탕진왕"},
+  {id:"ti_cosmos",name:"우주의 지배자",icon:"🌌",price:1e30,text:"🌌 우주의 지배자"}]}
 ];
 const COS_ALL=COS.flatMap(c=>c.items.map(it=>({...it,key:c.key})));
 const COS_FUN=[
  {id:"fountain",name:"코인 분수",icon:"⛲",price:1000,d:"코인을 던지고 소원을 빕니다. (아무 일도 일어나지 않음)"},
- {id:"gacha",name:"럭키 뽑기",icon:"🎰",price:3000,d:"안 가진 꾸미기 아이템이 무작위로 나옵니다. 꽝도 있어요!"}];
+ {id:"gacha",name:"럭키 뽑기",icon:"🎰",price:3000,d:"안 가진 꾸미기 아이템이 무작위로 나옵니다. 꽝도 있어요!"},
+ {id:"blackhole",name:"블랙홀 기부",icon:"🕳️",price:1e35,d:"모든 골드를 블랙홀에 바칩니다. (전설의 사치품 · 사실상 구매 불가)"}];
+const fmtP=n=>n>=1e9?n.toExponential(1).replace("e+","e+"):String(n);
 const cosGet=k=>{const id=cos.eq[k];return id?COS_ALL.find(x=>x.id===id):null};
 function openCos(){if(mpBlock())return;renderCos();$("cosMenu").classList.add("open")}
 function closeCos(){$("cosMenu").classList.remove("open");updateUI()}
 function renderCos(){
- let h=`<p>💰 보유 <b>${Math.floor(gold)}</b> G · 🧾 총 탕진 <b>${cos.spent}</b> G · ⛲ 분수 ${cos.fount}회 · 🎰 뽑기 ${cos.pulls}회</p>`;
- h+=`<div class="evCat"><h2>🎉 재미 코너</h2><div class="evGrid">${COS_FUN.map(f=>`<button class="${gold<f.price?"cant":""}" onclick="cosFun('${f.id}')"><strong>${f.icon} ${f.name}</strong><span class="ballDesc">${f.d}</span><span class="evPrice">💰 ${f.price}</span></button>`).join("")}</div></div>`;
+ let h=`<p>💰 보유 <b>${Math.floor(gold)}</b> G · 🧾 총 탕진 <b>${cos.spent>=1e9?cos.spent.toExponential(2):cos.spent}</b> G · ⛲ 분수 ${cos.fount}회 · 🎰 뽑기 ${cos.pulls}회</p>`;
+ h+=`<div class="evCat"><h2>🎉 재미 코너</h2><div class="evGrid">${COS_FUN.map(f=>`<button class="${gold<f.price?"cant":""}" onclick="cosFun('${f.id}')"><strong>${f.icon} ${f.name}</strong><span class="ballDesc">${f.d}</span><span class="evPrice">💰 ${fmtP(f.price)}</span></button>`).join("")}</div></div>`;
  COS.forEach(c=>{
   h+=`<div class="evCat"><h2>${c.cat}</h2><div class="evGrid"><button class="${!cos.eq[c.key]?"done":""}" onclick="cosEquip('${c.key}','')"><strong>⚪ 기본</strong><span class="ballDesc">${!cos.eq[c.key]?"착용 중":"기본으로 되돌리기"}</span></button>`;
   c.items.forEach(it=>{const own=cos.own[it.id],on=cos.eq[c.key]===it.id;
-   h+=`<button class="${on?"done":(!own&&gold<it.price?"cant":"")}" onclick="cosBuy('${it.id}')"><strong>${it.icon} ${it.name}</strong><span class="ballDesc">${on?"착용 중":own?"보유 중 · 눌러서 착용":"미보유"}</span>${own?"":`<span class="evPrice">💰 ${it.price}</span>`}</button>`});
+   h+=`<button class="${on?"done":(!own&&gold<it.price?"cant":"")}" onclick="cosBuy('${it.id}')"><strong>${it.icon} ${it.name}</strong><span class="ballDesc">${on?"착용 중":own?"보유 중 · 눌러서 착용":"미보유"}</span>${own?"":`<span class="evPrice">💰 ${fmtP(it.price)}</span>`}</button>`});
   h+=`</div></div>`;
  });
  $("cosBody").innerHTML=h;
@@ -1095,8 +1101,9 @@ const FOUNT_MSG=["퐁당! 소원이 이루어질지도…","🪙 동전이 반�
 function cosFun(id){
  const f=COS_FUN.find(x=>x.id===id);if(gold<f.price){toast("💰 골드가 부족합니다");return}
  gold-=f.price;cos.spent+=f.price;
- if(id==="fountain"){cos.fount++;toast("⛲ "+FOUNT_MSG[Math.floor(Math.random()*FOUNT_MSG.length)]);cosRain()}
- else{cos.pulls++;const pool=COS_ALL.filter(x=>!cos.own[x.id]);
+ if(id==="blackhole"){toast("🕳️ 블랙홀이 모든 것을 삼켰다… 당신은 전설이 되었다");cosRain()}
+ else if(id==="fountain"){cos.fount++;toast("⛲ "+FOUNT_MSG[Math.floor(Math.random()*FOUNT_MSG.length)]);cosRain()}
+ else{cos.pulls++;const pool=COS_ALL.filter(x=>!cos.own[x.id]&&x.price<1e9);
   if(!pool.length||Math.random()<.25){toast("🎰 꽝! 다음 기회에… (환불 없음)")}
   else{const it=pool[Math.floor(Math.random()*pool.length)];cos.own[it.id]=true;toast(`🎰 당첨! ${it.icon} ${it.name} 획득 (보유 중 · 눌러서 착용)`);cosRain()}}
  beep(700,.15,"triangle");saveGame();updateUI();renderCos();
