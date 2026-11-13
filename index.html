@@ -418,6 +418,8 @@ let bricks=[],particles=[];
 
 /* ============ 유틸 ============ */
 const bonus=n=>0;   // 구슬 강화는 능력만 강화합니다. 기본 데미지는 "일반 강화"로만 오릅니다.
+let ballUse={};   // 구슬별 "사용 레벨" (보유 레벨보다 낮게 설정 가능)
+const useLv=n=>{const l=ballLv[n]||0,u=ballUse[n];return u===undefined?l:Math.min(l,u)};
 const ballUpCost=n=>35+(ballLv[n]||0)*10;
 const getUpgradeCost=()=>20+(damage-1)*5;
 const isPaused=()=>!!document.querySelector(".overlay.open");
@@ -445,7 +447,7 @@ function toggleSound(){soundOn=!soundOn;updateUI();saveGame()}
 /* ============ 저장 / 불러오기 ============ */
 function saveGame(showMessage=false){
  if(mp.active)return;   // 대결 중에는 임시 능력치가 저장되지 않도록 막음
- const data={dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
+ const data={ballUse,dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
  try{
   localStorage.setItem("ultimateBrickBreakerSave",JSON.stringify(data));
   localStorage.setItem("brickBreakerHighScore",String(highScore));
@@ -471,6 +473,7 @@ function loadGame(){
   if(Number.isFinite(d.highScore))highScore=Math.max(highScore,d.highScore);
   if(d.owned&&typeof d.owned==="object")owned={Normal:true,...d.owned};
   if(d.ballLv&&typeof d.ballLv==="object")ballLv={...ballLv,...d.ballLv};
+  if(d.ballUse&&typeof d.ballUse==="object")ballUse={...d.ballUse};
   if(typeof d.soundOn==="boolean")soundOn=d.soundOn;
   if(Array.isArray(d.redeemed))redeemed=d.redeemed.filter(x=>typeof x==="string");
   if(Number.isFinite(d.candy))candy=Math.max(0,Math.floor(d.candy));
@@ -1096,7 +1099,7 @@ const BOSS_PATTERN_TXT={aim:"불덩이를 구슬에게 발사",slow:"맞으면 �
 let shots=[],ballHp=5,ballInv=0;
 const inBossRoom=()=>bricks.some(b=>b.room&&b.hp>0);
 const isBossRoomStage=()=>!mp.active&&!eventMode&&!secretMode&&stage===worldLen();
-const ballMaxHp=()=>5+(currentBall==="Golem"?P.Golem(ballLv.Golem||0).hp:0);
+const ballMaxHp=()=>5+(currentBall==="Golem"?P.Golem(useLv("Golem")).hp:0);
 function hurtBall(n){
  if(ballInv>0)return;
  ballHp-=n;ballInv=70;shake=Math.max(shake,7);burst(ball.x,ball.y,14,"#ff5a5a");beep(140,.25,"sawtooth",.06);
@@ -1303,7 +1306,7 @@ function doRebirth(){
  if(mp.active||gold<rebirthReq())return;
  if(!confirm("정말 환생할까요? 모든 진행이 초기화됩니다."))return;
  rebirth++;
- redeemed=[];gold=0;damage=1;highScore=1;owned={Normal:true};currentBall="Normal";ballLv={};candy=0;buffs={atk:0,wide:0,slow:0,gold2:0};potions={revive:0,blast:0};eventBest=1;evBought={};world=1;secretKeys=0;eventMode=false;secretMode=false;
+ ballUse={};redeemed=[];gold=0;damage=1;highScore=1;owned={Normal:true};currentBall="Normal";ballLv={};candy=0;buffs={atk:0,wide:0,slow:0,gold2:0};potions={revive:0,blast:0};eventBest=1;evBought={};world=1;secretKeys=0;eventMode=false;secretMode=false;
  try{localStorage.setItem("brickBreakerHighScore","1")}catch(e){}
  saveGame();closeRebirth();restartGame(1);refreshMenus();
  const nb=RB_BALLS().filter(t=>t.rb===rebirth);
@@ -1424,7 +1427,7 @@ function updateUI(){
  $("topRebirth").textContent="♻️ 환생"+(rebirth?" "+rebirth:"");
  $("damageValue").textContent=damage;
  $("upgradeCostValue").textContent=getUpgradeCost()+" GOLD";
- const t=ballTypes.find(x=>x.name===currentBall),lv=ballLv[currentBall]||0;
+ const t=ballTypes.find(x=>x.name===currentBall),lv=useLv(currentBall);
  $("ballText").textContent=t.icon+" "+t.name.toUpperCase()+(lv?" Lv."+lv+" · "+TIER_NAMES[tierOf(lv)]:"");
  $("shopGold").textContent="보유 골드: "+Math.floor(gold);
  $("topSound").textContent=soundOn?"🔊":"🔇";
@@ -1462,9 +1465,15 @@ function renderBallUpgrade(){
    +`현재 능력: <b>${abilityText(n,lv)}</b><br>`
    +`<div class="tierList">${[1,2,3,4,5].map(i=>{const on=tn>=i;return `<div class="${on?"on":"off"}">${on?"✅":"🔒"} <b>${TIER_ABIL[i].icon} ${TIER_NAMES[i]} · ${TIER_ABIL[i].n}</b> <span class="small">(Lv.${TIER_LV[i]}~)</span><br><span class="small">${TIER_ABIL[i].txt(Math.max(lv,TIER_LV[i]))}</span></div>`}).join("")}</div>`
    +(maxed?`<b>✨ 최대 레벨</b>`:`다음 Lv.${lv+1}: <b>${abilityText(n,lv+1)}</b> `)
-   +`<br><button ${(gold<c||maxed)?"disabled":""}>${maxed?"MAX":"⚒️ 강화하기 ("+c+"G)"}</button>`;
-  el.querySelector("button").onclick=upgradeBall;
+   +`<div style="margin:8px 0;padding:6px;border:1px dashed #64748b;border-radius:8px">🎚️ <b>사용 레벨</b>: <button class="lvCtl" onclick="setUseLv('${n}',${useLv(n)-1})" ${useLv(n)<=0?"disabled":""}>−</button> <b style="font-size:18px">Lv.${useLv(n)}</b> <button class="lvCtl" onclick="setUseLv('${n}',${useLv(n)+1})" ${useLv(n)>=lv?"disabled":""}>＋</button> <button class="lvCtl" onclick="setUseLv('${n}',0)">Lv.0</button> <button class="lvCtl" onclick="setUseLv('${n}',${lv})">MAX</button><br><span class="small">보유 Lv.${lv} · 실제 전투에는 사용 레벨의 능력·외형이 적용됩니다${useLv(n)<lv?" (⚠️ 낮춰서 사용 중)":""}</span></div>`
+   +`<br><button class="upBtn" ${(gold<c||maxed)?"disabled":""}>${maxed?"MAX":"⚒️ 강화하기 ("+c+"G)"}</button>`;
+  el.querySelector("button.upBtn").onclick=upgradeBall;
  });
+}
+function setUseLv(n,v){
+ const max=ballLv[n]||0;v=Math.max(0,Math.min(max,Math.floor(v)));
+ if(v>=max)delete ballUse[n];else ballUse[n]=v;
+ saveGame();refreshMenus();
 }
 function refreshMenus(){
  buildShop();renderInventory("inventory");renderInventory("inventoryStandalone");renderBallUpgrade();updateUI();
@@ -1773,7 +1782,7 @@ function applyEffect(t,b,d,lv){
  }
 }
 function hitBrick(b){
- const t=currentBall,lv=ballLv[t]||0,d=effDamage();   // 기본 피해는 일반 강화로만 증가
+ const t=currentBall,lv=useLv(t),d=effDamage();   // 기본 피해는 일반 강화로만 증가
  let dealt=d,crit=false;
  if(t==="Normal"){const c=P.Normal(lv);if(Math.random()<c.crit){dealt=d*c.mul;crit=true}}
  b.hp-=dealt;b.flash=6;
@@ -1823,7 +1832,7 @@ function tierOnHit(b,d,lv){
 }
 // 매 프레임 발동하는 단계 능력 (궤도 구슬 / 별 후광)
 function tierPassive(){
- const lv=ballLv[currentBall]||0,tier=tierOf(lv);if(tier<2)return;
+ const lv=useLv(currentBall),tier=tierOf(lv);if(tier<2)return;
  const d=effDamage(),c2=(COLORS[currentBall]||COLORS.Normal)[1],n=ORB[tier];
  for(let i=0;i<n;i++){
   const [ox,oy]=orbiterPos(tier,i,n,orbitT);
@@ -2460,7 +2469,7 @@ function render(){
  ctx.textAlign="start";ctx.globalAlpha=1;
 
  // 공 (구슬 레벨에 따라 외형이 진화)
- drawBallVisual(ctx,ball.x,ball.y,ball.r,currentBall,ballLv[currentBall]||0,ball.trail,orbitT,{a:ball.awk/6,l:ball.leg/10});
+ drawBallVisual(ctx,ball.x,ball.y,ball.r,currentBall,useLv(currentBall),ball.trail,orbitT,{a:ball.awk/6,l:ball.leg/10});
  if(ball.starBoost>0){ctx.strokeStyle="#ffd84d";ctx.lineWidth=2;ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r+4,0,Math.PI*2);ctx.stroke()}
 }
 
