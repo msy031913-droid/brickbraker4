@@ -102,6 +102,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
  <button id="topPause" onclick="togglePause()">⏸ 일시정지</button>
  <button id="topInventory" onclick="openInventory()">🎒 인벤토리</button>
  <button id="topCode" onclick="openCode()">🎁 코드</button>
+ <button id="topXmas" onclick="openXmas()" style="background:#15803d">🎄 크리스마스</button>
  <button id="topCos" onclick="openCos()" style="background:#be185d">✨ 꾸미기</button>
  <button id="topRebirth" onclick="openRebirth()" style="background:#0f766e">♻️ 환생</button>
  <button id="topDev2" onclick="openDev2()" style="display:none;background:#7c2d12">🛠️ 개발자2</button>
@@ -200,6 +201,21 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
   <p class="small">클리어한 스테이지는 건너뛰고 원하는 스테이지부터 시작할 수 있습니다.<br>이미 클리어한 스테이지를 다시 깨도 클리어 보너스 골드는 없습니다.</p>
   <div class="stageGrid" id="stageGrid"></div>
   <button onclick="closeStage()">닫기</button>
+ </div>
+</div>
+
+<div id="xmasMenu" class="overlay">
+ <div class="panel" style="max-height:90vh;overflow:auto;border-color:#16a34a">
+  <h1>🎄 크리스마스 이벤트 상자</h1>
+  <p id="xmasInfo"></p>
+  <div>
+   <button style="background:#b91c1c" onclick="xmasPull(1)">🎁 1회 뽑기<br><span class="small">600G</span></button>
+   <button style="background:#15803d" onclick="xmasPull(10)">🎁 10회 뽑기<br><span class="small">6,000G</span></button>
+   <button style="background:#7c3aed" onclick="xmasPull(100)">🎁 100회 뽑기<br><span class="small">60,000G</span></button>
+  </div>
+  <div id="xmasRes" style="margin:10px 0;max-height:34vh;overflow:auto"></div>
+  <p class="small" id="xmasRates"></p>
+  <button onclick="closeXmas()">닫기</button>
  </div>
 </div>
 
@@ -348,7 +364,7 @@ let owned={Normal:true},currentBall="Normal",ballLv={},redeemed=[];
 // 🎃 할로윈 이벤트 상태
 let candy=0,buffs={atk:0,wide:0,slow:0,gold2:0},potions={revive:0,blast:0},eventBest=1,evBought={};
 const worldLen=()=>world===2?5:10;   // 2세계는 스테이지가 5개
-let cos={own:{},eq:{},spent:0,fount:0,pulls:0};   // ✨ 꾸미기 (성장과 무관)
+let cos={own:{},eq:{},spent:0,fount:0,pulls:0,xp:0};   // ✨ 꾸미기 (성장과 무관)
 let rebirth=0;
 const dmgMul=()=>mp.active?1:Math.pow(1.5,rebirth),goldMul=()=>mp.active?1:Math.pow(1.5,rebirth);
 const REBIRTH_REQ=[1000,5000,10000,25000,50000,100000,200000];
@@ -384,12 +400,14 @@ const ballTypes=[
 {name:"Angel",icon:"😇",price:4000,rb:2,desc:"환생 2 해금 · 같은 세로줄 전체에 천벌"},
 {name:"Void",icon:"🕳️",price:9000,rb:3,desc:"환생 3 해금 · 체력이 낮은 벽돌을 즉사시킴"},
 {name:"Sun",icon:"☀️",price:20000,rb:4,desc:"환생 4 해금 · 충돌할 때마다 모든 벽돌에 햇살 피해"},
+{name:"Snowman",icon:"⛄",price:0,limited:true,desc:"🎄 크리스마스 한정 · 충돌할 때마다 눈덩이를 벽돌에 발사"},
+{name:"Santa",icon:"🎅",price:0,limited:true,desc:"🎄 크리스마스 한정 · 충돌할 때마다 선물을 던져 폭발 (가끔 금빛 선물!)"},
 {name:"Golem",icon:"🗿",price:0,limited:true,desc:"서리 거인(2세계) 보스 구슬 · 묵직한 일격 + 보스전 체력 증가"},
 {name:"Lich",icon:"💀",price:0,limited:true,desc:"리치(3세계) 보스 구슬 · 영혼 흡수로 보스전 체력 회복"},
 {name:"Hydra",icon:"🐍",price:0,limited:true,desc:"히드라(4세계) 보스 구슬 · 머리 셋이 동시에 물어뜯음"},
 {name:"Boss",icon:"👹",price:0,limited:true,desc:"악마왕(1세계) 보스 구슬 · 보스에게 3배 피해"}
 ];
-const COLORS={Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
+const COLORS={Snowman:["#ffffff","#93c5fd"],Santa:["#fecaca","#b91c1c"],Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
 
 const bluePad={x:365,y:485,w:170,h:15};
 const ball={x:450,y:463,r:12,dx:4,dy:-4,trail:[],starBoost:0,awk:0,leg:0};
@@ -443,7 +461,7 @@ function loadGame(){
   if(Number.isFinite(d.damage))damage=Math.max(1,Math.floor(d.damage));
   if(d.dev===true)devUnlocked=true;
   if(d.dev2===true)dev2Unlocked=true;
-  if(d.cos&&typeof d.cos==="object")cos={own:d.cos.own||{},eq:d.cos.eq||{},spent:+d.cos.spent||0,fount:+d.cos.fount||0,pulls:+d.cos.pulls||0};
+  if(d.cos&&typeof d.cos==="object")cos={own:d.cos.own||{},eq:d.cos.eq||{},spent:+d.cos.spent||0,fount:+d.cos.fount||0,pulls:+d.cos.pulls||0,xp:+d.cos.xp||0};
   if(Number.isFinite(d.rb))rebirth=Math.max(0,Math.floor(d.rb));
   if(Number.isFinite(d.secretKeys))secretKeys=Math.max(0,Math.floor(d.secretKeys));
   if(Number.isFinite(d.world))world=Math.max(1,Math.floor(d.world));
@@ -526,6 +544,10 @@ const CODES={
  "BOOMPACK":{potion:{blast:5},msg:"폭발 물약 5개"},
  "GRANDOPENING":{gold:1000,candy:100,dmg:1,msg:"그랜드 오픈 기념"},
  "PIG":{ball:"Pig",msg:"한정판 돼지 구슬 🐷"},
+ "FROSTY":{ball:"Snowman",msg:"한정판 눈사람 구슬 ⛄"},
+ "SANTA":{ball:"Santa",msg:"한정판 산타 구슬 🎅"},
+ "MERRYXMAS":{gold:3600,msg:"메리 크리스마스! 상자 6회분 골드"},
+ "HOHOHO":{gold:6000,msg:"호호호! 상자 10회분 골드"},
  "PIGEON":{ball:"Pigeon",msg:"한정판 비둘기 구슬 🕊️"},
  "COOCOO":{gold:300,ball:"Pigeon",msg:"구구! 비둘기 구슬 + 300G"},
  "PEACE":{gold:700,msg:"평화의 선물"},
@@ -979,6 +1001,41 @@ function drawBossCore(b,th){
  c.strokeText(th.icon+" "+Math.ceil(b.hp),b.x+b.w/2,b.y+b.h/2+2);c.fillText(th.icon+" "+Math.ceil(b.hp),b.x+b.w/2,b.y+b.h/2+2);c.font="bold 13px Arial";
 }
 
+/* ============ 🎄 크리스마스: 눈덩이 / 선물 발사체 ============ */
+let proj=[];
+function launch(kind,x,y,target,dmg,rad,gold){
+ const dur=kind==="gift"?34:20;
+ proj.push({kind,x0:x,y0:y,x:x,y:y,target,dmg,rad,gold,t:0,dur});
+}
+function projTick(){
+ for(let i=proj.length-1;i>=0;i--){
+  const q=proj[i];q.t++;
+  const k=q.t/q.dur,tx=q.target.x+q.target.w/2,ty=q.target.y+q.target.h/2;
+  q.x=q.x0+(tx-q.x0)*k;q.y=q.y0+(ty-q.y0)*k-(q.kind==="gift"?Math.sin(Math.PI*k)*90:0);
+  if(q.t>=q.dur){
+   proj.splice(i,1);
+   if(q.kind==="snow"){
+    if(q.target.hp>0){q.target.hp-=q.dmg;q.target.flash=6}
+    burst(tx,ty,8,"#e0f2fe");
+   }else{
+    alive().forEach(x=>{if(Math.hypot(x.x+x.w/2-tx,x.y+x.h/2-ty)<q.rad){x.hp-=q.dmg;x.flash=6}});
+    burst(tx,ty,18,q.gold?"#fde047":"#ef4444");burst(tx,ty,10,"#22c55e");shake=Math.max(shake,3);
+    if(q.gold){const g=Math.floor(15*Math.max(1,world)*goldMul());gold+=g;floatText(tx,ty-14,"🎁 +"+g+"G","#fde047")}
+    beep(300+Math.random()*80,.08,"triangle",.04);
+   }
+  }
+ }
+}
+function drawProj(){
+ const c=ctx;
+ proj.forEach(q=>{
+  if(q.kind==="snow"){c.save();c.shadowBlur=10;c.shadowColor="#bae6fd";c.fillStyle="#fff";c.beginPath();c.arc(q.x,q.y,6,0,Math.PI*2);c.fill();c.restore()}
+  else{c.save();c.translate(q.x,q.y);c.rotate(q.t*.25);const col=q.gold?"#facc15":"#dc2626";
+   c.fillStyle=col;c.shadowBlur=8;c.shadowColor=col;c.fillRect(-8,-8,16,16);c.shadowBlur=0;c.fillStyle=q.gold?"#92400e":"#fff";c.fillRect(-1.5,-8,3,16);c.fillRect(-8,-1.5,16,3);
+   c.fillStyle="#16a34a";c.beginPath();c.arc(-3,-10,3,0,Math.PI*2);c.arc(3,-10,3,0,Math.PI*2);c.fill();c.restore()}
+ });
+}
+
 /* ============ 👹 월드별 보스 / 보스룸 ============ */
 const BOSSES=[
  {name:"악마왕",icon:"👹",ball:"Boss",c1:"#7f1d1d",c2:"#2a0a14",glow:"#ef4444",eye:"#fde047",pat:"aim",every:95,shot:"#ff5a36",hpm:1},
@@ -1064,6 +1121,44 @@ function portalChoose(kind){
  saveGame();
  restartGame(1);
  toast(msg+"\n📜 스테이지 기록이 초기화되었습니다");
+}
+
+/* ============ 🎄 크리스마스 이벤트 상자 ============ */
+const XMAS_COST=600,XMAS_RARE_RATE=.015,XMAS_RARE=["Snowman","Santa"];
+const xmasCommon=()=>ballTypes.filter(t=>!t.limited&&!t.rb&&t.name!=="Normal").map(t=>t.name);
+const ballIcon=n=>(ballTypes.find(t=>t.name===n)||{}).icon||"🔮";
+function openXmas(){if(mpBlock())return;$("xmasRes").innerHTML="";renderXmas();$("xmasMenu").classList.add("open")}
+function closeXmas(){$("xmasMenu").classList.remove("open");updateUI()}
+function renderXmas(){
+ $("xmasInfo").innerHTML=`💰 보유 <b>${Math.floor(gold)}</b> G · 🎁 누적 뽑기 <b>${cos.xp}</b>회<br><span class="small">상자 1개 = ${XMAS_COST}G (10회 6,000G · 100회 60,000G)</span>`;
+ const cm=xmasCommon();
+ $("xmasRates").innerHTML=`⭐ <b>한정판 ${(XMAS_RARE_RATE*100).toFixed(1)}%</b>: ${XMAS_RARE.map(n=>ballIcon(n)+n+(owned[n]?"✅":"")).join(" · ")}<br>🎁 일반 ${(100-XMAS_RARE_RATE*100).toFixed(1)}%: ${cm.map(n=>ballIcon(n)).join(" ")} (균등)<br>이미 가진 구슬이 나오면 골드로 환급: 일반 150G · 한정판 3,000G`;
+}
+function xmasRoll(){
+ if(Math.random()<XMAS_RARE_RATE)return {n:XMAS_RARE[Math.floor(Math.random()*XMAS_RARE.length)],rare:true};
+ const cm=xmasCommon();return {n:cm[Math.floor(Math.random()*cm.length)],rare:false};
+}
+function xmasPull(cnt){
+ const cost=XMAS_COST*cnt;
+ if(gold<cost){toast("💰 골드가 부족합니다 ("+cost+"G 필요)");return}
+ gold-=cost;cos.xp+=cnt;
+ const tally={},fresh=[];let refund=0,rares=[];
+ for(let i=0;i<cnt;i++){
+  const r=xmasRoll();
+  if(owned[r.n]){const g=r.rare?3000:150;refund+=g;tally[r.n]=(tally[r.n]||0)+1;if(r.rare)rares.push(r.n)}
+  else{owned[r.n]=true;ballLv[r.n]=ballLv[r.n]||0;fresh.push(r.n);tally[r.n]=(tally[r.n]||0)+1;if(r.rare)rares.push(r.n)}
+ }
+ gold+=refund;
+ let h=`<p>🎉 <b>${cnt}회</b> 결과</p>`;
+ if(cnt===1){const r=Object.keys(tally)[0];h+=`<p style="font-size:26px">${ballIcon(r)} <b>${r}</b> ${fresh.includes(r)?"<span style='color:#86efac'>NEW!</span>":"<span class='small'>(중복 +"+refund+"G)</span>"}${rares.length?" ⭐":""}</p>`}
+ else{
+  h+=`<p>${Object.keys(tally).sort((a,b)=>(XMAS_RARE.includes(b)?1:0)-(XMAS_RARE.includes(a)?1:0)).map(n=>`<span style="display:inline-block;margin:2px 6px;${XMAS_RARE.includes(n)?"color:#fde047;font-weight:bold":""}">${ballIcon(n)}${n}×${tally[n]}${fresh.includes(n)?" 🆕":""}</span>`).join("")}</p>`;
+  h+=`<p class="small">새 구슬 ${fresh.length}종 · 중복 환급 +${refund}G${rares.length?` · ⭐ 한정판 ${rares.length}개!`:""}</p>`;
+ }
+ $("xmasRes").innerHTML=h;
+ if(rares.length){toast("🎄⭐ 한정판 "+[...new Set(rares)].map(n=>ballIcon(n)+n).join(" ")+" 당첨!");cosRain();beep(1100,.4,"triangle",.07)}
+ else beep(660,.12,"triangle",.04);
+ saveGame();updateUI();renderXmas();
 }
 
 /* ============ ✨ 꾸미기 상점 (골드 소모처 · 능력치 영향 없음) ============ */
@@ -1380,7 +1475,7 @@ function togglePause(){
 
 /* ============ 벽돌 ============ */
 function createBricks(){
- bricks=[];secretShop=null;secretDoor=null;
+ bricks=[];secretShop=null;secretDoor=null;proj=[];
  if(secretMode){   // 🗝️ 비밀 맵: 금 벽돌 보물방
   const hp=6+stage*3;
   for(let r=0;r<5;r++)for(let c=0;c<9;c++){
@@ -1391,7 +1486,7 @@ function createBricks(){
   kinds.forEach(k=>{const i=idx.splice(Math.floor(rnd()*idx.length),1)[0],b=bricks[i];b.sp=k;b.hp*=2;b.maxHp*=2});
   return;
  }
- shots=[];
+ shots=[];proj=[];
  if(isBossRoomStage()){   // 👑 보스룸: 보스 벽돌 하나만
   const th=bossInfo(),wmB=1+.35*(world-1),hp=Math.round((140*6+stage*10)*1.6*wmB*th.hpm);
   bricks.push({x:250,y:95,w:400,h:95,hp,maxHp:hp,dead:false,flash:0,oc:0,hc:0,boss:true,room:true,fireT:110,x0:250,y0:95});
@@ -1495,6 +1590,8 @@ const P={
  Void:lv=>({thr:Math.min(.5,.12+lv*.015),m:.3}),
  Sun:lv=>({dmg:.08+lv*.01}),
  Boss:lv=>({m:.5+lv*.05,boss:3+lv*.1}),
+ Snowman:lv=>({n:2+Math.floor(lv/5),dmg:.8+lv*.05}),
+ Santa:lv=>({n:1+Math.floor(lv/7),dmg:1.2+lv*.07,r:70+lv*2,gold:.15}),
  Golem:lv=>({m:.6+lv*.06,hp:2+Math.floor(lv/5)}),
  Lich:lv=>({n:Math.max(4,10-Math.floor(lv/4)),dmg:.5+lv*.04}),
  Hydra:lv=>({dmg:.6+lv*.04}),
@@ -1527,6 +1624,8 @@ function abilityText(n,lv){
   case "Void":return `체력이 최대의 ${pc(p.thr)} 이하인 벽돌 즉사 (보스 제외) · 추가 피해 ${pc(p.m)}`;
   case "Sun":return `충돌할 때마다 모든 벽돌에 햇살 피해 ${pc(p.dmg)}`;
   case "Pigeon":return `벽돌에 부딪힐 때마다 데미지 +${p.add} 누적 (이번 판 최대 +${p.cap}) · 새 판마다 초기화`;
+  case "Snowman":return `충돌할 때마다 눈덩이 ${p.n}개를 무작위 벽돌에 발사 (각 피해 ${pc(p.dmg)})`;
+  case "Santa":return `충돌할 때마다 선물 ${p.n}개를 던져 폭발 (반경 ${p.r} · 피해 ${pc(p.dmg)}) · ${pc(p.gold)} 확률로 금빛 선물(골드 보너스)`;
   case "Golem":return `묵직한 일격 추가 피해 ${pc(p.m)} · 보스전 구슬 체력 +${p.hp}`;
   case "Lich":return `가까운 벽돌 2개에 영혼 피해 ${pc(p.dmg)} · ${p.n}번 충돌마다 보스전 체력 1 회복`;
   case "Hydra":return `머리 셋이 동시에 물어뜯음: 다른 벽돌 2개(없으면 대상)에 피해 ${pc(p.dmg)}`;
@@ -1598,6 +1697,14 @@ function applyEffect(t,b,d,lv){
    break;}
   case "Boss":b.hp-=d*p.m*(b.boss?p.boss:1);break;
   case "Golem":b.hp-=d*p.m;break;
+  case "Snowman":{
+   const pool=alive().filter(x=>x!==b);
+   for(let i=0;i<p.n&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];launch("snow",ball.x,ball.y,x,Math.max(1,d*p.dmg),0,0)}
+   break;}
+  case "Santa":{
+   const pool=alive().filter(x=>x!==b);
+   for(let i=0;i<p.n&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];launch("gift",ball.x,ball.y,x,Math.max(1,d*p.dmg),p.r,Math.random()<p.gold?1:0)}
+   break;}
   case "Lich":{
    nearest(b.x+b.w/2,b.y+b.h/2,2,b).forEach(x=>{x.hp-=Math.max(1,d*p.dmg);x.flash=6});
    ball.lcnt=(ball.lcnt||0)+1;
@@ -1817,7 +1924,7 @@ function restartGame(startStage,force){
  if(mp.active&&!force)return;      // 대결 중에는 재시작 불가
  saveGame();
  clearInterval(countdownTimer);
- ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu","shopMenu","doorMenu","devMenu","dev2Menu","rebirthMenu","cosMenu"].forEach(id=>$(id).classList.remove("open"));
+ ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu","shopMenu","doorMenu","devMenu","dev2Menu","rebirthMenu","cosMenu","xmasMenu"].forEach(id=>$(id).classList.remove("open"));
  // 클리어한 스테이지까지 건너뛰어 시작 가능
  stage=(typeof startStage==="number")?Math.max(1,Math.min(maxStart(),Math.floor(startStage))):1;
  gameOver=false;gameStarted=false;clearRewarded=false;bricksBroken=0;speedTimer=0;shake=0;
@@ -2163,7 +2270,21 @@ function drawBody(c,x,y,r,name,c1,c2,t,glow,lv){
   c.beginPath();c.ellipse(0,3,6.2,4.4,0,0,Math.PI*2);c.fillStyle="#ff9fc0";c.fill();c.strokeStyle="#d6336c";c.lineWidth=1.1;c.stroke();
   c.fillStyle="#7a1d3f";c.beginPath();c.ellipse(-2.2,3,1,1.7,0,0,Math.PI*2);c.ellipse(2.2,3,1,1.7,0,0,Math.PI*2);c.fill();
   break;}
-case "Golem":{
+case "Snowman":{
+  sph("#ffffff","#bfdbfe");
+  c.fillStyle="#111";c.beginPath();c.arc(-4,-3,1.5,0,Math.PI*2);c.arc(4,-3,1.5,0,Math.PI*2);c.arc(-3.5,4,.9,0,Math.PI*2);c.arc(0,5,.9,0,Math.PI*2);c.arc(3.5,4,.9,0,Math.PI*2);c.fill();
+  c.fillStyle="#f97316";c.beginPath();c.moveTo(0,-1);c.lineTo(8,1);c.lineTo(0,2.5);c.closePath();c.fill();
+  c.fillStyle="#dc2626";c.fillRect(-r*.8,r*.35,r*1.6,3.2);
+  c.fillStyle="#1f2937";c.fillRect(-r*.65,-r*1.05,r*1.3,3);c.fillRect(-r*.4,-r*1.65,r*.8,r*.65);c.fillStyle="#dc2626";c.fillRect(-r*.4,-r*1.2,r*.8,2.4);
+  break;}
+ case "Santa":{
+  sph("#fecaca","#fca5a5");
+  c.fillStyle="#dc2626";c.beginPath();c.moveTo(-r*.95,-r*.35);c.quadraticCurveTo(0,-r*1.7,r*.95,-r*.35);c.closePath();c.fill();
+  c.fillStyle="#fff";c.fillRect(-r*.98,-r*.45,r*1.96,5);c.beginPath();c.arc(r*.55,-r*1.25,3.2,0,Math.PI*2);c.fill();
+  c.beginPath();c.moveTo(-r*.8,r*.05);c.quadraticCurveTo(0,r*1.5,r*.8,r*.05);c.quadraticCurveTo(0,r*.5,-r*.8,r*.05);c.fill();
+  c.fillStyle="#111";c.beginPath();c.arc(-4,-2,1.4,0,Math.PI*2);c.arc(4,-2,1.4,0,Math.PI*2);c.fill();c.fillStyle="#f87171";c.beginPath();c.arc(0,1,1.8,0,Math.PI*2);c.fill();
+  break;}
+ case "Golem":{
   sph("#e2e8f0","#475569");
   c.strokeStyle="#334155";c.lineWidth=1.2;c.beginPath();c.moveTo(-r*.6,-r*.5);c.lineTo(-r*.2,-r*.1);c.lineTo(-r*.5,r*.3);c.moveTo(r*.5,-r*.6);c.lineTo(r*.2,-r*.2);c.lineTo(r*.55,r*.2);c.stroke();
   c.fillStyle="#7dd3fc";sh();c.fillRect(-6,-3,4.5,3);c.fillRect(1.5,-3,4.5,3);nsh();
@@ -2282,7 +2403,7 @@ function render(){
  const cp=cosGet("pad"),tt=performance.now()/1000;ctx.shadowColor=cp?cp.glow:"#1877ff";ctx.fillStyle=cp?cp.fill(tt):"#176cff";rr(bluePad.x,bluePad.y,bluePad.w,bluePad.h,7);ctx.fill();
  ctx.shadowBlur=0;
 
- drawStamps();
+ drawStamps();drawProj();
  // 파티클
  particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/28);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,p.s,p.s)});
  ctx.globalAlpha=1;
@@ -2305,6 +2426,7 @@ function step(){
  particles.forEach(p=>{p.x+=p.dx;p.y+=p.dy;p.life--});
  floaters.forEach(f=>{f.y-=.6;f.life--});floaters=floaters.filter(f=>f.life>0);
  stamps.forEach(s=>s.life--);stamps=stamps.filter(s=>s.life>0);
+ projTick();
  particles=particles.filter(p=>p.life>0);
  bricks.forEach(b=>{if(b.flash>0)b.flash--;if(b.oc>0)b.oc--;if(b.hc>0)b.hc--});
  if(shake>0)shake=Math.max(0,shake-.5);
