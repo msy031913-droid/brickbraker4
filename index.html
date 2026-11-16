@@ -29,6 +29,8 @@ canvas.xmas{border-color:#4ade80;box-shadow:0 0 34px #14532d,0 0 12px #ef4444}
 .evGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .evGrid button{margin:0;min-height:84px;line-height:1.35;background:#2b1840;border:1px solid #6b3fa0}
 .evGrid button.done{opacity:.5}
+.evGrid button.eq{opacity:1;border-color:#fde047;box-shadow:0 0 10px #fde04788}
+.cosThumb{display:block;margin:0 auto 4px;border-radius:6px;border:1px solid #6b3fa0;width:100%;max-width:150px;height:auto}
 .evGrid button.cant{opacity:.65}
 .evPrice{display:block;margin-top:4px;color:#fdba74;font-size:13px}
 #evStatus{margin:8px 0;line-height:1.7}
@@ -98,7 +100,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 <div id="top">
  <span id="stageText">STAGE 1</span>
  <button id="topRestart" onclick="restartGame()">재시작</button>
- <button id="topEvent" onclick="openEvent()">🎃 이벤트</button>
+ <button id="topEvent" onclick="openEvent()">🎃 할로윈</button>
  <button id="topVs" onclick="openVs()">⚔️ 대결하기</button>
  <button id="topStage" onclick="openStage()">⏭ 스테이지</button>
  <button id="topPause" onclick="togglePause()">⏸ 일시정지</button>
@@ -134,6 +136,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
   <button onclick="openStage()">스테이지 선택</button>
   <button style="background:#be123c" onclick="openVs()">⚔️ 대결하기</button>
   <button style="background:#c2410c" onclick="openEvent()">🎃 할로윈 이벤트</button>
+  <button style="background:#15803d" onclick="openXmas()">🎄 크리스마스 이벤트</button>
  </div>
 </div>
 
@@ -189,11 +192,12 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 <div id="potionBar"></div>
 
 <div id="eventMenu" class="overlay">
- <div class="panel">
-  <h1>🎃🎄 이벤트 (할로윈 · 크리스마스)</h1>
-  <p class="small">이벤트 맵을 <b>클리어할 때마다 🍬 사탕 10개!</b> 호박 벽돌(🎃)을 부수면 보너스 +1.<br>사탕으로 한정판 구슬 · 버프 · 물약 · 코인을 구매할 수 있어요.</p>
+ <div class="panel" style="max-height:90vh;overflow:auto;border-color:#ea580c">
+  <h1>🎃 할로윈 이벤트</h1>
+  <p class="small">할로윈 맵을 <b>클리어할 때마다 🍬 사탕 10개!</b> 호박 벽돌(🎃)을 부수면 보너스 +1.<br>사탕으로 한정판 구슬 · 버프 · 물약 · 코인 · <b>꾸미기(배경/꼬리/패들/이펙트/장식/칭호)</b>를 구매할 수 있어요.<br>🎄 크리스마스 맵은 <b>크리스마스 창</b>에서 시작합니다.</p>
   <div id="evStatus"></div>
-  <div><button class="evStart" onclick="startEventMap('halloween')">🎃 할로윈 맵 시작</button><button class="evStart" style="background:#15803d" onclick="startEventMap('xmas')">🎄 크리스마스 맵 시작</button><button onclick="leaveEventMap()">🗺️ 일반 맵으로</button><button onclick="closeEvent()">닫기</button></div>
+  <div><button class="evStart" onclick="startEventMap('halloween')">🎃 할로윈 맵 시작</button><button onclick="leaveEventMap()">🗺️ 일반 맵으로</button><button onclick="closeEvent()">닫기</button></div>
+  <div><button style="background:#be185d" onclick="document.getElementById('cos_halloween').scrollIntoView({behavior:'smooth'})">🎨 할로윈 꾸미기 상점 바로가기</button></div>
   <div id="evShop"></div>
  </div>
 </div>
@@ -218,7 +222,11 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 
 <div id="xmasMenu" class="overlay">
  <div class="panel" style="max-height:90vh;overflow:auto;border-color:#16a34a">
-  <h1>🎄 크리스마스 이벤트 상자</h1>
+  <h1>🎄 크리스마스 이벤트</h1>
+  <div id="xmStatus"></div>
+  <div><button class="evStart" style="background:#15803d!important" onclick="startEventMap('xmas')">🎄 크리스마스 맵 시작</button><button onclick="leaveEventMap()">🗺️ 일반 맵으로</button></div>
+  <div><button style="background:#be185d" onclick="document.getElementById('cos_xmas').scrollIntoView({behavior:'smooth'})">🎨 크리스마스 꾸미기 상점 바로가기</button></div>
+  <h2 style="margin:14px 0 4px">🎁 크리스마스 이벤트 상자</h2>
   <p id="xmasInfo"></p>
   <div>
    <button style="background:#b91c1c" onclick="xmasPull(1)">🎁 1회 뽑기<br><span class="small">600G</span></button>
@@ -227,6 +235,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
   </div>
   <div id="xmasRes" style="margin:10px 0;max-height:34vh;overflow:auto"></div>
   <p class="small" id="xmasRates"></p>
+  <div id="xmShop"></div>
   <button onclick="closeXmas()">닫기</button>
  </div>
 </div>
@@ -325,6 +334,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
   <button onclick="openUpgrade()">강화 / 구슬 상점</button>
   <button style="background:#be123c" onclick="openVs()">⚔️ 대결하기</button>
   <button style="background:#c2410c" onclick="openEvent()">🎃 할로윈 이벤트</button>
+  <button style="background:#15803d" onclick="openXmas()">🎄 크리스마스 이벤트</button>
  </div>
 </div>
 
@@ -418,6 +428,13 @@ const ballTypes=[
 {name:"Blizzard",icon:"🌨️",price:0,limited:true,desc:"🧪 합성 한정(눈사람+얼음) · 주기적으로 모든 벽돌에 눈보라"},
 {name:"Elemental",icon:"☯️",price:0,limited:true,desc:"🧪 합성 한정(불+얼음) · 충돌마다 불꽃/냉기 폭발이 번갈아 터짐"},
 {name:"SkyPig",icon:"🐖",price:0,limited:true,desc:"🧪 합성 한정(돼지+비둘기) · 하늘에서 거대 발도장이 주기적으로 쾅!"},
+{name:"Tempest",icon:"🌩️",price:0,limited:true,desc:"🧪 합성 한정(전기+바람) · 충돌마다 번개가 여러 벽돌에 연쇄 + 가속"},
+{name:"Magma",icon:"🌋",price:0,limited:true,desc:"🧪 합성 한정(폭탄+불) · 충돌마다 용암 폭발 + 직접 맞힌 벽돌 화상"},
+{name:"Plague",icon:"🦠",price:0,limited:true,desc:"🧪 합성 한정(독+유령) · 맞힌 벽돌 주변으로 역병이 번져 모두 중독"},
+{name:"Prism",icon:"🔆",price:0,limited:true,desc:"🧪 합성 한정(크리스탈+레이저) · 강한 단일 레이저 + 빛 조각이 사방으로 퍼짐"},
+{name:"Eclipse",icon:"🌘",price:0,limited:true,desc:"🧪 합성 한정(중력+그림자) · 충돌마다 일식 그림자가 주변을 짓누르고 가속"},
+{name:"Nightmare",icon:"🎃",price:0,limited:true,event:true,desc:"🧪 합성 한정(호박+박쥐) · 호박 폭발 + 치명타, 이벤트 맵에서 사탕 획득"},
+{name:"Noel",icon:"🎄",price:0,limited:true,desc:"🧪 합성 한정(산타+눈사람) · 눈덩이와 선물을 동시에 던짐"},
 {name:"Snowman",icon:"⛄",price:0,limited:true,desc:"🎄 크리스마스 한정 · 충돌할 때마다 눈덩이를 벽돌에 발사"},
 {name:"Santa",icon:"🎅",price:0,limited:true,desc:"🎄 크리스마스 한정 · 충돌할 때마다 선물을 던져 폭발 (가끔 금빛 선물!)"},
 {name:"Golem",icon:"🗿",price:0,limited:true,desc:"서리 거인(2세계) 보스 구슬 · 묵직한 일격 + 보스전 체력 증가"},
@@ -425,7 +442,7 @@ const ballTypes=[
 {name:"Hydra",icon:"🐍",price:0,limited:true,desc:"히드라(4세계) 보스 구슬 · 머리 셋이 동시에 물어뜯음"},
 {name:"Boss",icon:"👹",price:0,limited:true,desc:"악마왕(1세계) 보스 구슬 · 보스에게 3배 피해"}
 ];
-const COLORS={Rudolph:["#d6a36a","#7c4a1d"],Dream:["#fde68a","#dc2626"],Blizzard:["#e0f2fe","#38bdf8"],Elemental:["#fb923c","#38bdf8"],SkyPig:["#fbcfe8","#ec4899"],Snowman:["#ffffff","#93c5fd"],Santa:["#fecaca","#b91c1c"],Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
+const COLORS={Tempest:["#e9d5ff","#7c3aed"],Magma:["#fdba74","#b91c1c"],Plague:["#bef264","#4d7c0f"],Prism:["#ffffff","#22d3ee"],Eclipse:["#fde68a","#1e1b4b"],Nightmare:["#fdba74","#581c87"],Noel:["#fecaca","#15803d"],Rudolph:["#d6a36a","#7c4a1d"],Dream:["#fde68a","#dc2626"],Blizzard:["#e0f2fe","#38bdf8"],Elemental:["#fb923c","#38bdf8"],SkyPig:["#fbcfe8","#ec4899"],Snowman:["#ffffff","#93c5fd"],Santa:["#fecaca","#b91c1c"],Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
 
 const bluePad={x:365,y:485,w:170,h:15};
 const ball={x:450,y:463,r:12,dx:4,dy:-4,trail:[],starBoost:0,awk:0,leg:0};
@@ -496,7 +513,8 @@ function loadGame(){
   if(d.potions&&typeof d.potions==="object")for(const k in potions)if(Number.isFinite(d.potions[k]))potions[k]=Math.max(0,Math.floor(d.potions[k]));
   if(Number.isFinite(d.eventBest))eventBest=Math.max(1,Math.floor(d.eventBest));
   if(d.evBought&&typeof d.evBought==="object")evBought={...d.evBought};
-  if(typeof d.currentBall==="string"&&owned[d.currentBall])currentBall=d.currentBall;
+  delete owned.Gatling;delete ballLv.Gatling;
+  if(typeof d.currentBall==="string"&&owned[d.currentBall]&&ballTypes.some(t=>t.name===d.currentBall))currentBall=d.currentBall;
  }catch(e){console.warn("저장 데이터를 불러오지 못했습니다.",e)}
 }
 
@@ -835,15 +853,64 @@ function openEvent(){
  renderEvent();$("eventMenu").classList.add("open");
 }
 function closeEvent(){$("eventMenu").classList.remove("open");updateUI()}
-function startEventMap(theme){eventTheme=theme==="xmas"?"xmas":"halloween";eventMode=true;closeEvent();restartGame(1);toast(evIcon()+" 이벤트 맵 시작!\n클리어할 때마다 🍬 +"+EVENT_CLEAR_CANDY)}
-function leaveEventMap(){eventMode=false;closeEvent();restartGame(1)}
-function renderEvent(){
+function startEventMap(theme){eventTheme=theme==="xmas"?"xmas":"halloween";eventMode=true;closeEvent();closeXmas();restartGame(1);toast(evIcon()+" 이벤트 맵 시작!\n클리어할 때마다 🍬 +"+EVENT_CLEAR_CANDY)}
+function leaveEventMap(){eventMode=false;closeEvent();closeXmas();restartGame(1)}
+const CANDY_CAT={bg:"🖼️ 배경 (사탕 전용)",trail:"☄️ 구슬 꼬리",pad:"🏓 패들 스킨",fx:"💥 타격 이펙트",acc:"🎩 구슬 장식",title:"🏷️ 칭호"};
+function evStatusHTML(){
  const have=Object.keys(buffs).filter(k=>buffs[k]>0).map(k=>BUFF_ICON[k]+"×"+buffs[k]).join(" ")||"없음";
  const pots=`💖×${potions.revive} 💥×${potions.blast}`;
- $("evStatus").innerHTML=`🍬 보유 사탕 <b style="font-size:22px;color:#fdba74">${candy}</b> · 이벤트 최고 <b>STAGE ${eventBest}</b><br><span class="small">버프: ${have} · 물약: ${pots} · 현재 맵: <b>${eventMode?"🎃 이벤트 맵":"🗺️ 일반 맵"}</b></span>`;
- $("evShop").innerHTML=EVENT_SHOP.map(c=>`<div class="evCat"><h2>${c.cat}</h2><div class="evGrid">${c.items.map(it=>{
-  const n=evBought[it.id]||0,owned1=it.ball&&owned[it.ball],capped=it.max&&n>=it.max,done=owned1||capped;
-  return `<button class="${done?"done":(candy<it.price?"cant":"")}" onclick="eventBuy('${it.id}')"><strong>${it.icon} ${it.name}</strong><span class="ballDesc">${it.desc}</span><span class="evPrice">${done?(owned1?"✅ 보유 중":"✅ 구매 완료"):"🍬 "+it.price+(it.max?` (${n}/${it.max})`:"")}</span></button>`}).join("")}</div></div>`).join("");
+ return `🍬 보유 사탕 <b style="font-size:22px;color:#fdba74">${candy}</b> · 이벤트 최고 <b>STAGE ${eventBest}</b><br><span class="small">버프: ${have} · 물약: ${pots} · 현재 맵: <b>${eventMode?(eventTheme==="xmas"?"🎄 크리스마스 맵":"🎃 할로윈 맵"):"🗺️ 일반 맵"}</b></span>`;
+}
+function evItemBtn(it){
+ const n=evBought[it.id]||0,owned1=it.ball&&owned[it.ball],capped=it.max&&n>=it.max,done=owned1||capped;
+ return `<button class="${done?"done":(candy<it.price?"cant":"")}" onclick="eventBuy('${it.id}')"><strong>${it.icon} ${it.name}</strong><span class="ballDesc">${it.desc}</span><span class="evPrice">${done?(owned1?"✅ 보유 중":"✅ 구매 완료"):"🍬 "+it.price+(it.max?` (${n}/${it.max})`:"")}</span></button>`;
+}
+function evCosHTML(theme){
+ let h="";
+ Object.keys(CANDY_CAT).forEach(k=>{
+  const list=EV_COS.filter(x=>x.ev===theme&&x.key===k);if(!list.length)return;
+  h+=`<div class="evCat"><h2>${theme==="xmas"?"🎄":"🎃"} ${CANDY_CAT[k]}</h2><div class="evGrid">${list.map(it=>{
+   const own=cos.own[it.id],on=cos.eq[k]===it.id;
+   return `<button class="${on?"eq":(!own&&candy<it.price?"cant":"")}" onclick="evCosAct('${it.id}')">${k==="title"?`<span style="display:block;font-size:17px;margin:6px 0">${it.text}</span>`:`<canvas class="cosThumb" width="150" height="${k==="bg"?108:64}" data-id="${it.id}"></canvas>`}<strong>${it.icon} ${it.name}</strong><span class="ballDesc">${it.desc||""}</span><span class="evPrice">${on?"✅ 착용 중 (눌러서 해제)":own?"보유 중 · 눌러서 착용":"🍬 "+it.price}</span></button>`}).join("")}</div></div>`;
+ });
+ return h;
+}
+function drawThumbs(root){
+ root.querySelectorAll("canvas.cosThumb").forEach(cv=>{
+  const it=EV_COS.find(x=>x.id===cv.dataset.id);if(!it)return;
+  const c=cv.getContext("2d"),w=cv.width,h=cv.height,t=1.7;c.save();
+  try{
+   if(it.key==="bg"){c.scale(w/W,h/H);const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,it.top);g.addColorStop(1,it.bot);c.fillStyle=g;c.fillRect(0,0,W,H);it.scene(c,3.1)}
+   else{
+    const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,"#0b1230");g.addColorStop(1,"#050713");c.fillStyle=g;c.fillRect(0,0,w,h);
+    const ball=(x,y,r)=>{const gg=c.createRadialGradient(x-r*.3,y-r*.3,1,x,y,r);gg.addColorStop(0,"#fff");gg.addColorStop(1,"#9db4ff");c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fillStyle=gg;c.fill()};
+    if(it.key==="trail"){for(let i=0;i<22;i++){const k=i/22,x=14+k*105,y=40-Math.sin(k*5)*14;c.globalAlpha=.25+k*.6;c.fillStyle=it.col(i,t);c.beginPath();c.arc(x,y,2+k*7,0,Math.PI*2);c.fill()}c.globalAlpha=1;ball(122,40-Math.sin(5)*14,8)}
+    else if(it.key==="pad"){const p={x:20,y:26,w:110,h:14};c.shadowBlur=14;c.shadowColor=it.glow;c.fillStyle=it.fill(t);c.beginPath();c.roundRect(p.x,p.y,p.w,p.h,7);c.fill();c.shadowBlur=0;if(it.deco){c.save();c.beginPath();c.roundRect(p.x,p.y,p.w,p.h,7);c.clip();it.deco(c,p,t);c.restore()}ball(75,14,6)}
+    else if(it.key==="fx"){for(let i=0;i<26;i++){const a=i*2.4,d=6+(i%7)*5;c.fillStyle=it.pick();c.fillRect(75+Math.cos(a)*d*1.7,32+Math.sin(a)*d*.9,3,3)}}
+    else if(it.key==="acc"){ball(75,38,13);drawAcc(c,75,38,13,it,t)}
+   }
+  }catch(e){}
+  c.restore();
+ });
+}
+function renderEventShop(el,theme){
+ const balls=EVENT_SHOP[theme==="xmas"?1:0],common=EVENT_SHOP.slice(2);
+ const sec=c=>`<div class="evCat"><h2>${c.cat}</h2><div class="evGrid">${c.items.map(evItemBtn).join("")}</div></div>`;
+ el.innerHTML=`<div id="cos_${theme}" style="margin-top:8px;padding:6px;border:2px dashed ${theme==="xmas"?"#16a34a":"#ea580c"};border-radius:12px"><h1 style="font-size:20px">${theme==="xmas"?"🎄 크리스마스 꾸미기 상점":"🎃 할로윈 꾸미기 상점"} <span class="small">(🍬 사탕으로 구매)</span></h1><p class="small">맵을 클리어할 때마다 🍬 10개! 샀다면 눌러서 착용 · 한 번 더 누르면 해제</p>${evCosHTML(theme)}</div>`+sec(balls)+common.map(sec).join("");
+ drawThumbs(el);
+}
+function renderEvent(){
+ $("evStatus").innerHTML=evStatusHTML();
+ renderEventShop($("evShop"),"halloween");
+}
+function renderEvAll(){renderEvent();renderXmas()}
+function evCosAct(id){
+ if(mpBlock())return;
+ const it=EV_COS.find(x=>x.id===id);if(!it)return;
+ if(cos.own[id]){cos.eq[it.key]=cos.eq[it.key]===id?"":id;beep(660,.08,"triangle");saveGame();updateUI();renderEvAll();return}
+ if(candy<it.price){toast(`🍬 사탕이 부족합니다\n필요 ${it.price} / 보유 ${candy}`);beep(180,.15,"sawtooth");return}
+ candy-=it.price;cos.own[id]=true;cos.eq[it.key]=id;
+ beep(880,.2,"triangle");toast(`${it.icon} ${it.name} 구매 · 착용!`);saveGame();updateUI();renderEvAll();
 }
 function eventBuy(id){
  if(mpBlock())return;
@@ -858,7 +925,7 @@ function eventBuy(id){
  else if(it.potion)potions[it.potion]++;
  else if(it.gold)gold+=it.gold;
  else if(it.perm==="dmg")damage++;
- saveGame();refreshMenus();renderEvent();beep(740,.15,"triangle");
+ saveGame();refreshMenus();renderEvAll();beep(740,.15,"triangle");
  toast(`${it.icon} ${it.name} 구매!${it.ball?"\n(자동 장착)":it.buff?"\n다음 판에 적용됩니다":""}`);
 }
 /* 물약 */
@@ -1112,7 +1179,7 @@ function drawSleighs(){
 /* ============ 🎄 크리스마스: 눈덩이 / 선물 발사체 ============ */
 let proj=[];
 function launch(kind,x,y,target,dmg,rad,gold){
- const dur=kind==="gift"?34:20;
+ const dur=kind==="gift"?34:kind==="bullet"?6:20;
  proj.push({kind,x0:x,y0:y,x:x,y:y,target,dmg,rad,gold,t:0,dur});
 }
 function projTick(){
@@ -1122,7 +1189,10 @@ function projTick(){
   q.x=q.x0+(tx-q.x0)*k;q.y=q.y0+(ty-q.y0)*k-(q.kind==="gift"?Math.sin(Math.PI*k)*90:0);
   if(q.t>=q.dur){
    proj.splice(i,1);
-   if(q.kind==="snow"){
+   if(q.kind==="bullet"){
+    if(q.target.hp>0){q.target.hp-=q.dmg;q.target.flash=3}
+    burst(tx,ty,2,"#fde047");
+   }else if(q.kind==="snow"){
     if(q.target.hp>0){q.target.hp-=q.dmg;q.target.flash=6}
     burst(tx,ty,8,"#e0f2fe");
    }else{
@@ -1137,7 +1207,9 @@ function projTick(){
 function drawProj(){
  const c=ctx;
  proj.forEach(q=>{
-  if(q.kind==="snow"){c.save();c.shadowBlur=10;c.shadowColor="#bae6fd";c.fillStyle="#fff";c.beginPath();c.arc(q.x,q.y,6,0,Math.PI*2);c.fill();c.restore()}
+  if(q.kind==="bullet"){const k=Math.max(0,q.t-1)/q.dur,tx0=q.x0+(q.target.x+q.target.w/2-q.x0)*k,ty0=q.y0+(q.target.y+q.target.h/2-q.y0)*k;
+   c.save();c.strokeStyle="#fde047";c.lineWidth=2.4;c.shadowBlur=8;c.shadowColor="#f59e0b";c.beginPath();c.moveTo(tx0,ty0);c.lineTo(q.x,q.y);c.stroke();c.restore()}
+  else if(q.kind==="snow"){c.save();c.shadowBlur=10;c.shadowColor="#bae6fd";c.fillStyle="#fff";c.beginPath();c.arc(q.x,q.y,6,0,Math.PI*2);c.fill();c.restore()}
   else{c.save();c.translate(q.x,q.y);c.rotate(q.t*.25);const col=q.gold?"#facc15":"#dc2626";
    c.fillStyle=col;c.shadowBlur=8;c.shadowColor=col;c.fillRect(-8,-8,16,16);c.shadowBlur=0;c.fillStyle=q.gold?"#92400e":"#fff";c.fillRect(-1.5,-8,3,16);c.fillRect(-8,-1.5,16,3);
    c.fillStyle="#16a34a";c.beginPath();c.arc(-3,-10,3,0,Math.PI*2);c.arc(3,-10,3,0,Math.PI*2);c.fill();c.restore()}
@@ -1236,7 +1308,14 @@ const FUSIONS=[
  {a:"Santa",b:"Rudolph",r:"Dream",base:3000},
  {a:"Snowman",b:"Ice",r:"Blizzard",base:2000},
  {a:"Fire",b:"Ice",r:"Elemental",base:1500},
- {a:"Pig",b:"Pigeon",r:"SkyPig",base:2500}];
+ {a:"Pig",b:"Pigeon",r:"SkyPig",base:2500},
+ {a:"Electric",b:"Wind",r:"Tempest",base:1800},
+ {a:"Bomb",b:"Fire",r:"Magma",base:2200},
+ {a:"Poison",b:"Ghost",r:"Plague",base:2400},
+ {a:"Crystal",b:"Laser",r:"Prism",base:2600},
+ {a:"Gravity",b:"Shadow",r:"Eclipse",base:2300},
+ {a:"Pumpkin",b:"Bat",r:"Nightmare",base:2800},
+ {a:"Santa",b:"Snowman",r:"Noel",base:3200}];
 const isLimitedBall=n=>!!(ballTypes.find(t=>t.name===n)||{}).limited;
 function fuseCost(f){const la=ballLv[f.a]||0,lb=ballLv[f.b]||0;return {base:f.base,lv:200*(la+lb),lim:1500*((isLimitedBall(f.a)?1:0)+(isLimitedBall(f.b)?1:0)),get total(){return this.base+this.lv+this.lim}}}
 function openFuse(){if(mpBlock())return;renderFuse();$("fuseMenu").classList.add("open")}
@@ -1275,6 +1354,7 @@ const ballIcon=n=>(ballTypes.find(t=>t.name===n)||{}).icon||"🔮";
 function openXmas(){if(mpBlock())return;$("xmasRes").innerHTML="";renderXmas();$("xmasMenu").classList.add("open")}
 function closeXmas(){$("xmasMenu").classList.remove("open");updateUI()}
 function renderXmas(){
+ $("xmStatus").innerHTML=evStatusHTML();renderEventShop($("xmShop"),"xmas");
  $("xmasInfo").innerHTML=`💰 보유 <b>${Math.floor(gold)}</b> G · 🎁 누적 뽑기 <b>${cos.xp}</b>회<br><span class="small">상자 1개 = ${XMAS_COST}G (10회 6,000G · 100회 60,000G)</span>`;
  const cm=xmasCommon();
  $("xmasRates").innerHTML=`⭐ <b>한정판 ${(XMAS_RARE_RATE*100).toFixed(1)}%</b>: ${XMAS_RARE.map(n=>ballIcon(n)+n+(owned[n]?"✅":"")).join(" · ")}<br>🎁 일반 ${(100-XMAS_RARE_RATE*100).toFixed(1)}%: ${cm.map(n=>ballIcon(n)).join(" ")} (균등)<br>이미 가진 구슬이 나오면 골드로 환급: 일반 150G · 한정판 3,000G`;
@@ -1335,7 +1415,155 @@ const COS=[
   {id:"ti_waste",name:"탕진왕",icon:"💸",price:400000,text:"💸 탕진왕"},
   {id:"ti_cosmos",name:"우주의 지배자",icon:"🌌",price:1e30,text:"🌌 우주의 지배자"}]}
 ];
-const COS_ALL=COS.flatMap(c=>c.items.map(it=>({...it,key:c.key})));
+COS.push(
+ {cat:"💥 타격 이펙트",key:"fx",items:[
+  {id:"f_star",name:"별가루 파편",icon:"✨",price:3000,desc:"벽돌이 부서질 때 별가루",pick:()=>["#fde047","#fff","#fbbf24"][Math.random()*3|0]},
+  {id:"f_heart",name:"하트 파편",icon:"💗",price:5000,desc:"사랑스러운 분홍 파편",pick:()=>["#f9a8d4","#fb7185","#fff"][Math.random()*3|0]},
+  {id:"f_rainbow",name:"무지개 파편",icon:"🌈",price:9000,desc:"파편이 무지개색",pick:()=>`hsl(${Math.random()*360|0},95%,62%)`}]},
+ {cat:"🎩 구슬 장식",key:"acc",items:[
+  {id:"a_shades",name:"선글라스",icon:"🕶️",price:6000,desc:"쿨한 구슬",draw:"shades"},
+  {id:"a_crown",name:"황금 왕관",icon:"👑",price:20000,desc:"구슬 머리 위 왕관",draw:"crown"}]}
+);
+/* ---- 🍬 사탕 전용 꾸미기 (할로윈 / 크리스마스) ---- */
+const _rn=(i,k=1)=>{const v=Math.sin(i*127.1+k*311.7)*43758.5453;return v-Math.floor(v)};
+const _pick=a=>()=>a[Math.random()*a.length|0];
+function _cloudBar(c,t,col,y){c.fillStyle=col;for(let i=0;i<4;i++){const x=((t*14+i*260)%(W+300))-150;c.beginPath();c.ellipse(x,y+i*22,120,12,0,0,Math.PI*2);c.fill()}}
+function _snowFall(c,t,n,wind,sz){c.fillStyle="rgba(255,255,255,.85)";for(let i=0;i<n;i++){const sp=40+_rn(i)*70,x=(((_rn(i,2)*W+t*wind*sp*.4)%W)+W)%W,y=((t*sp+_rn(i,3)*H)%(H+20))-10;c.beginPath();c.arc(x,y,sz*(.6+_rn(i,4)),0,Math.PI*2);c.fill()}}
+function _house(c,x,y,w,h,col,win,t,i){c.fillStyle=col;c.fillRect(x,y,w,h);c.beginPath();c.moveTo(x-8,y);c.lineTo(x+w/2,y-h*.55);c.lineTo(x+w+8,y);c.closePath();c.fill();
+ c.fillStyle="rgba(255,255,255,.85)";c.beginPath();c.moveTo(x-8,y);c.lineTo(x+w/2,y-h*.55);c.lineTo(x+w+8,y);c.lineTo(x+w+2,y-3);c.lineTo(x+w/2,y-h*.55+8);c.lineTo(x-2,y-3);c.closePath();c.fill();
+ c.fillStyle=Math.sin(t*2+i*3)>-.8?win:"#33291a";c.fillRect(x+w*.2,y+h*.25,w*.22,h*.28);c.fillRect(x+w*.6,y+h*.25,w*.22,h*.28)}
+const EV_COS=[
+ /* ===== 🎃 할로윈 ===== */
+ {ev:"halloween",key:"bg",id:"hb_mansion",name:"유령의 저택",icon:"🏚️",price:60,desc:"창문이 깜빡이는 저택과 떠다니는 유령",top:"#1a0b30",bot:"#05020c",star:"rgba(220,200,255,.25)",
+  scene(c,t){c.save();c.globalAlpha=.9;c.fillStyle="#fef3c7";c.shadowBlur=40;c.shadowColor="#fde68a";c.beginPath();c.arc(150,130,42,0,Math.PI*2);c.fill();c.restore();
+   c.fillStyle="#0a0414";c.fillRect(540,400,260,250);c.fillRect(520,330,70,320);c.fillRect(760,350,60,300);
+   [[505,330,105],[745,350,90]].forEach(q=>{c.beginPath();c.moveTo(q[0],q[1]);c.lineTo(q[0]+q[2]/2,q[1]-70);c.lineTo(q[0]+q[2],q[1]);c.closePath();c.fill()});
+   c.beginPath();c.moveTo(530,400);c.lineTo(670,320);c.lineTo(810,400);c.closePath();c.fill();
+   for(let i=0;i<8;i++){c.fillStyle=Math.sin(t*3+i*5)>-.5?"#fbbf24":"#3b2a0a";c.fillRect(560+(i%4)*55,430+(i/4|0)*70,22,32)}
+   c.fillRect(540,630,260,20);
+   c.save();c.globalAlpha=.2;c.fillStyle="#fff";for(let i=0;i<3;i++){const gx=120+i*260+Math.sin(t*.7+i)*50,gy=400+Math.sin(t*1.4+i*2)*24;c.beginPath();c.moveTo(gx-18,gy+26);c.lineTo(gx-18,gy-4);c.arc(gx,gy-4,18,Math.PI,0);c.lineTo(gx+18,gy+26);c.lineTo(gx+9,gy+18);c.lineTo(gx,gy+26);c.lineTo(gx-9,gy+18);c.closePath();c.fill()}c.restore();
+   _cloudBar(c,t,"rgba(140,110,190,.08)",560)}},
+ {ev:"halloween",key:"bg",id:"hb_cave",name:"박쥐 동굴",icon:"🦇",price:90,desc:"종유석 사이를 나는 박쥐 떼",top:"#1c1028",bot:"#06030c",star:"rgba(190,140,255,.2)",
+  scene(c,t){c.fillStyle="#0b0614";for(let i=0;i<14;i++){const x=i*66+_rn(i)*20,h=40+_rn(i,2)*110;c.beginPath();c.moveTo(x-22,-4);c.lineTo(x+4,h);c.lineTo(x+30,-4);c.closePath();c.fill()}
+   for(let i=0;i<9;i++){const x=i*105+_rn(i,5)*30,h=30+_rn(i,6)*70;c.beginPath();c.moveTo(x-26,H+4);c.lineTo(x+4,H-h);c.lineTo(x+34,H+4);c.closePath();c.fill()}
+   for(let i=0;i<6;i++){const x=80+i*150,y=H-26-_rn(i,9)*20;c.save();c.shadowBlur=22;c.shadowColor="#a855f7";c.fillStyle=`rgba(192,132,252,${.5+.3*Math.sin(t*2+i)})`;c.beginPath();c.moveTo(x,y-26);c.lineTo(x+9,y);c.lineTo(x,y+6);c.lineTo(x-9,y);c.closePath();c.fill();c.restore()}
+   c.fillStyle="#020106";for(let i=0;i<5;i++){const x=((t*(50+i*14)+i*190)%(W+200))-100,y=170+i*70+Math.sin(t*2+i*2)*28;miniBat(c,x,y,10+(i%3)*3,Math.sin(t*14+i)*.35)}}},
+ {ev:"halloween",key:"bg",id:"hb_blood",name:"붉은 달밤",icon:"🌕",price:120,desc:"거대한 붉은 달과 앙상한 나무",top:"#3b0a14",bot:"#0d0206",star:"rgba(255,170,150,.28)",
+  scene(c,t){c.save();c.shadowBlur=90;c.shadowColor="#ef4444";const g=c.createRadialGradient(440,190,10,450,190,100);g.addColorStop(0,"#fecaca");g.addColorStop(.6,"#f87171");g.addColorStop(1,"#b91c1c");c.fillStyle=g;c.beginPath();c.arc(450,190,100,0,Math.PI*2);c.fill();c.restore();
+   c.fillStyle="rgba(120,20,30,.4)";[[420,165,16],[480,215,12],[455,150,8]].forEach(q=>{c.beginPath();c.arc(q[0],q[1],q[2],0,Math.PI*2);c.fill()});
+   _cloudBar(c,t,"rgba(30,4,10,.55)",170);
+   c.strokeStyle="#080204";c.lineCap="round";c.lineWidth=14;c.beginPath();c.moveTo(110,H);c.lineTo(120,360);c.stroke();
+   [[120,430,40,330,6],[118,390,200,300,5],[120,360,60,270,5],[160,320,230,240,4],[60,320,10,260,3]].forEach(q=>{c.lineWidth=q[4];c.beginPath();c.moveTo(q[0],q[1]);c.lineTo(q[2],q[3]);c.stroke()});
+   c.fillStyle="#080204";c.beginPath();c.moveTo(0,H);c.lineTo(0,H-50);c.quadraticCurveTo(450,H-110,W,H-40);c.lineTo(W,H);c.fill()}},
+ {ev:"halloween",key:"bg",id:"hb_patch",name:"호박밭",icon:"🎃",price:150,desc:"잭오랜턴이 빛나는 밭과 반딧불",top:"#2a1138",bot:"#110711",star:"rgba(255,190,110,.25)",
+  scene(c,t){c.fillStyle="#0c0510";c.beginPath();c.moveTo(0,H);c.lineTo(0,H-90);c.quadraticCurveTo(300,H-150,560,H-100);c.quadraticCurveTo(760,H-60,W,H-110);c.lineTo(W,H);c.fill();
+   [[90,H-70,1],[250,H-95,.8],[470,H-85,1.2],[700,H-90,.9],[820,H-60,1.1]].forEach((q,i)=>{const [x,y,k]=q,fl=.75+.25*Math.sin(t*7+i*2);c.save();c.translate(x,y);c.scale(k,k);c.shadowBlur=26*fl;c.shadowColor="#fb923c";
+    c.fillStyle="#ea580c";c.beginPath();c.ellipse(0,0,30,24,0,0,Math.PI*2);c.fill();c.fillStyle="#c2410c";c.beginPath();c.ellipse(-14,0,12,23,0,0,Math.PI*2);c.ellipse(14,0,12,23,0,0,Math.PI*2);c.fill();c.shadowBlur=0;
+    c.fillStyle="#15803d";c.fillRect(-3,-32,6,10);c.fillStyle=`rgba(253,224,71,${fl})`;c.beginPath();c.moveTo(-15,-8);c.lineTo(-6,-8);c.lineTo(-10,-1);c.moveTo(6,-8);c.lineTo(15,-8);c.lineTo(10,-1);c.moveTo(-14,7);c.lineTo(-7,11);c.lineTo(0,7);c.lineTo(7,11);c.lineTo(14,7);c.lineTo(10,14);c.lineTo(0,10);c.lineTo(-10,14);c.fill();c.restore()});
+   for(let i=0;i<18;i++){const x=(_rn(i)*W+Math.sin(t*.7+i)*40+W)%W,y=H*.35+_rn(i,2)*H*.55+Math.sin(t*1.1+i*2)*20;c.fillStyle=`rgba(253,224,71,${.35+.5*Math.sin(t*3+i)**2})`;c.shadowBlur=8;c.shadowColor="#fde047";c.beginPath();c.arc(x,y,2,0,Math.PI*2);c.fill();c.shadowBlur=0}}},
+ {ev:"halloween",key:"trail",id:"ht_flame",name:"호박불 꼬리",icon:"🔥",price:40,desc:"주황빛 도깨비불",col:(i,t)=>`hsl(${18+Math.sin(t*6+i*.5)*16},100%,${55+Math.sin(i)*8}%)`},
+ {ev:"halloween",key:"trail",id:"ht_ghost",name:"유령 안개 꼬리",icon:"👻",price:55,desc:"창백한 푸른 안개",col:(i,t)=>`hsl(${180+Math.sin(t*3+i*.4)*30},60%,${78+Math.sin(i*.8)*10}%)`},
+ {ev:"halloween",key:"trail",id:"ht_candy",name:"사탕 소용돌이 꼬리",icon:"🍭",price:70,desc:"분홍·보라가 번갈아",col:(i,t)=>i%2?"#f472b6":"#a78bfa"},
+ {ev:"halloween",key:"pad",id:"hp_pumpkin",name:"호박 패들",icon:"🎃",price:70,desc:"주황빛 호박 모양",fill:()=>"#f97316",glow:"#fb923c",
+  deco(c,p){c.fillStyle="rgba(124,45,18,.55)";for(let i=1;i<6;i++)c.fillRect(p.x+p.w*i/6-1,p.y,2,p.h);c.fillStyle="#15803d";c.fillRect(p.x+p.w/2-4,p.y-3,8,5)}},
+ {ev:"halloween",key:"pad",id:"hp_web",name:"거미줄 패들",icon:"🕸️",price:85,desc:"검은 바탕에 흰 거미줄",fill:()=>"#1f1235",glow:"#c4b5fd",
+  deco(c,p,t){c.strokeStyle="rgba(255,255,255,.75)";c.lineWidth=1;c.beginPath();for(let x=p.x-20;x<p.x+p.w+20;x+=16){c.moveTo(x,p.y);c.lineTo(x+p.h,p.y+p.h);c.moveTo(x+p.h,p.y);c.lineTo(x,p.y+p.h)}c.moveTo(p.x,p.y+p.h/2);c.lineTo(p.x+p.w,p.y+p.h/2);c.stroke()}},
+ {ev:"halloween",key:"fx",id:"hf_flame",name:"호박 불꽃 파편",icon:"🎃",price:50,desc:"파편이 주황·노랑 불꽃색",pick:_pick(["#f97316","#fbbf24","#ef4444","#fde047"])},
+ {ev:"halloween",key:"fx",id:"hf_ghost",name:"유령 혼불 파편",icon:"👻",price:60,desc:"파편이 푸른 혼불색",pick:_pick(["#a5f3fc","#e9d5ff","#ffffff","#c4b5fd"])},
+ {ev:"halloween",key:"acc",id:"ha_witch",name:"마녀 모자",icon:"🧙",price:90,desc:"구슬이 마녀 모자를 씁니다",draw:"witch"},
+ {ev:"halloween",key:"acc",id:"ha_wings",name:"박쥐 날개",icon:"🦇",price:110,desc:"구슬 양옆에 펄럭이는 날개",draw:"wings"},
+ {ev:"halloween",key:"title",id:"hti_hunter",name:"호박 사냥꾼",icon:"🎃",price:30,desc:"상단에 표시",text:"🎃 호박 사냥꾼"},
+ {ev:"halloween",key:"title",id:"hti_night",name:"한밤의 지배자",icon:"🦇",price:70,desc:"상단에 표시",text:"🦇 한밤의 지배자"},
+ /* ===== 🎄 크리스마스 ===== */
+ {ev:"xmas",key:"bg",id:"xb_cabin",name:"눈보라 산장",icon:"🏔️",price:60,desc:"눈보라 속 따뜻한 산장",top:"#0a1a30",bot:"#1d3350",star:"rgba(220,240,255,.3)",
+  scene(c,t){c.fillStyle="#0f2238";c.beginPath();c.moveTo(0,H-120);c.lineTo(160,H-300);c.lineTo(300,H-170);c.lineTo(470,H-340);c.lineTo(650,H-160);c.lineTo(780,H-280);c.lineTo(W,H-140);c.lineTo(W,H);c.lineTo(0,H);c.fill();
+   c.fillStyle="#e8f1f8";c.beginPath();c.moveTo(0,H-50);c.quadraticCurveTo(300,H-110,560,H-60);c.quadraticCurveTo(760,H-30,W,H-70);c.lineTo(W,H);c.lineTo(0,H);c.fill();
+   c.fillStyle="#3b2412";c.fillRect(620,H-150,150,90);c.fillStyle="#f1f5f9";c.beginPath();c.moveTo(605,H-148);c.lineTo(695,H-210);c.lineTo(785,H-148);c.closePath();c.fill();
+   c.fillStyle="#2a190c";c.fillRect(735,H-210,16,40);c.fillStyle=Math.sin(t*4)>-.7?"#fbbf24":"#b45309";c.shadowBlur=18;c.shadowColor="#f59e0b";c.fillRect(640,H-130,34,30);c.shadowBlur=0;
+   c.fillStyle="rgba(255,255,255,.3)";for(let i=0;i<4;i++){c.beginPath();c.arc(743+Math.sin(t+i)*10+i*6,H-225-i*22-((t*14)%20),7+i*2,0,Math.PI*2);c.fill()}
+   c.strokeStyle="rgba(255,255,255,.55)";c.lineWidth=1.4;c.beginPath();for(let i=0;i<140;i++){const sp=140+_rn(i)*160,x=(((_rn(i,2)*W-t*sp*.7)%W)+W)%W,y=((t*sp+_rn(i,3)*H)%(H+30))-15;c.moveTo(x,y);c.lineTo(x+10,y-5)}c.stroke()}},
+ {ev:"xmas",key:"bg",id:"xb_village",name:"산타 마을",icon:"🏘️",price:100,desc:"불 켜진 집들과 하늘을 나는 산타",top:"#0e1a44",bot:"#0a0f2c",star:"rgba(255,255,255,.35)",
+  scene(c,t){_snowFall(c,t,60,6,2);
+   [[40,H-150,100,80,"#3b1d28"],[190,H-170,110,95,"#1e3a2f"],[370,H-140,90,70,"#3a2a52"],[510,H-165,110,90,"#3b1d28"],[690,H-150,100,80,"#1e3a2f"]].forEach((q,i)=>_house(c,q[0],q[1],q[2],q[3],q[4],"#fde68a",t,i));
+   c.fillStyle="#e8f1f8";c.fillRect(0,H-70,W,70);
+   c.strokeStyle="rgba(255,255,255,.3)";c.beginPath();c.moveTo(0,60);for(let x=0;x<=W;x+=10)c.lineTo(x,60+Math.sin(x*.03)*10+10);c.stroke();
+   for(let x=20;x<W;x+=50){const y=72+Math.sin(x*.03)*10,col=["#ef4444","#22c55e","#fde047","#60a5fa"][(x/50|0)%4];c.fillStyle=Math.sin(t*3+x)>-.3?col:"rgba(255,255,255,.12)";c.beginPath();c.arc(x,y,4,0,Math.PI*2);c.fill()}
+   const sx=((t*60)%(W+400))-200;c.save();c.translate(sx,150+Math.sin(t*1.5)*12);c.font="28px Arial";c.textAlign="center";c.textBaseline="middle";c.shadowBlur=14;c.shadowColor="#fde047";c.fillText("🦌🦌🛷🎅",0,0);c.restore()}},
+ {ev:"xmas",key:"bg",id:"xb_aurora",name:"오로라 설원",icon:"🌌",price:140,desc:"일렁이는 오로라와 별빛",top:"#020a1c",bot:"#06222a",star:"rgba(255,255,255,.4)",
+  scene(c,t){for(let i=0;i<4;i++){c.save();c.globalAlpha=.3;const ag=c.createLinearGradient(0,40,0,330);const col=["80,255,170","120,200,255","190,120,255","80,255,200"][i];ag.addColorStop(0,`rgba(${col},0)`);ag.addColorStop(.5,`rgba(${col},.95)`);ag.addColorStop(1,`rgba(${col},0)`);c.fillStyle=ag;c.beginPath();c.moveTo(0,100+i*28);for(let x=0;x<=W;x+=24)c.lineTo(x,100+i*28+Math.sin(x*.01+t*.5+i*1.7)*34+Math.sin(x*.03+t)*8);c.lineTo(W,340);c.lineTo(0,340);c.closePath();c.fill();c.restore()}
+   c.fillStyle="#fff";for(let i=0;i<70;i++){c.globalAlpha=.3+.7*Math.abs(Math.sin(t*1.4+i));c.fillRect(_rn(i)*W,_rn(i,2)*H*.6,1.6,1.6)}c.globalAlpha=1;
+   c.fillStyle="#dbe9f3";c.beginPath();c.moveTo(0,H-60);c.quadraticCurveTo(250,H-120,480,H-70);c.quadraticCurveTo(700,H-30,W,H-90);c.lineTo(W,H);c.lineTo(0,H);c.fill();
+   c.fillStyle="#0a3a2c";[[100,H-80,1],[790,H-85,1.1]].forEach(q=>{for(let i=0;i<3;i++){c.beginPath();c.moveTo(q[0],q[1]-54*q[2]-i*26*q[2]);c.lineTo(q[0]-24*q[2]-i*6,q[1]-i*26*q[2]);c.lineTo(q[0]+24*q[2]+i*6,q[1]-i*26*q[2]);c.closePath();c.fill()}})}},
+ {ev:"xmas",key:"bg",id:"xb_tree",name:"거대 트리",icon:"🎄",price:180,desc:"반짝이는 전구 트리와 선물 더미",top:"#0b1c33",bot:"#07101f",star:"rgba(255,255,255,.3)",
+  scene(c,t){_snowFall(c,t,70,8,2.2);
+   c.fillStyle="#0e5a2e";for(let i=0;i<5;i++){const w=150+i*58,y=H-110-(4-i)*86+30;c.beginPath();c.moveTo(450,y-92);c.lineTo(450-w/2,y);c.lineTo(450+w/2,y);c.closePath();c.fill()}
+   c.fillStyle="#5a3a1a";c.fillRect(430,H-120,40,60);
+   for(let i=0;i<34;i++){const lv=i%5,w=(150+lv*58)/2*(.2+.8*_rn(i,3)),y=H-110-(4-lv)*86+30-_rn(i,4)*80*.9,x=450+(_rn(i,5)*2-1)*w*.9,col=["#ef4444","#fde047","#60a5fa","#f472b6"][i%4],on=Math.sin(t*3+i*2)>-.25;c.fillStyle=on?col:"rgba(255,255,255,.12)";if(on){c.shadowBlur=12;c.shadowColor=col}c.beginPath();c.arc(x,y,5,0,Math.PI*2);c.fill();c.shadowBlur=0}
+   c.save();c.translate(450,H-460);c.shadowBlur=30;c.shadowColor="#fde047";c.fillStyle="#fde047";polyStar(c,5,22,9,-Math.PI/2+Math.sin(t)*.1);c.fill();c.restore();
+   [[360,H-62,50,"#ef4444"],[530,H-58,44,"#3b82f6"],[596,H-50,34,"#a855f7"],[300,H-48,32,"#22c55e"]].forEach(q=>{c.fillStyle=q[3];c.fillRect(q[0],q[1],q[2],q[2]*.85);c.fillStyle="#fde047";c.fillRect(q[0]+q[2]/2-3,q[1],6,q[2]*.85)});
+   c.fillStyle="#e8f1f8";c.fillRect(0,H-26,W,26)}},
+ {ev:"xmas",key:"trail",id:"xt_snow",name:"눈꽃 꼬리",icon:"❄️",price:40,desc:"하얀 눈송이",col:(i,t)=>`hsl(${200+Math.sin(t*2+i*.5)*10},80%,${85+Math.sin(i)*8}%)`},
+ {ev:"xmas",key:"trail",id:"xt_tree",name:"트리 꼬리",icon:"🎄",price:55,desc:"초록·빨강이 번갈아",col:(i,t)=>(i+((t*6)|0))%2?"#22c55e":"#ef4444"},
+ {ev:"xmas",key:"trail",id:"xt_star",name:"별빛 꼬리",icon:"⭐",price:70,desc:"반짝이는 금빛",col:(i,t)=>`hsl(${48+Math.sin(t*5+i)*8},100%,${58+Math.sin(t*9+i*1.3)*14}%)`},
+ {ev:"xmas",key:"pad",id:"xp_cane",name:"지팡이사탕 패들",icon:"🍬",price:70,desc:"빨강·하양 줄무늬",fill:()=>"#fff",glow:"#fca5a5",
+  deco(c,p){c.fillStyle="#dc2626";for(let x=p.x-p.h;x<p.x+p.w;x+=18){c.beginPath();c.moveTo(x,p.y+p.h);c.lineTo(x+p.h,p.y);c.lineTo(x+p.h+9,p.y);c.lineTo(x+9,p.y+p.h);c.closePath();c.fill()}}},
+ {ev:"xmas",key:"pad",id:"xp_gift",name:"선물 패들",icon:"🎁",price:85,desc:"리본이 묶인 선물 상자",fill:()=>"#dc2626",glow:"#fde047",
+  deco(c,p){c.fillStyle="#22c55e";c.fillRect(p.x+p.w/2-7,p.y,14,p.h);c.fillRect(p.x,p.y+p.h/2-2,p.w,4);c.fillStyle="#16a34a";c.beginPath();c.ellipse(p.x+p.w/2-8,p.y,8,4,-.4,0,Math.PI*2);c.ellipse(p.x+p.w/2+8,p.y,8,4,.4,0,Math.PI*2);c.fill()}},
+ {ev:"xmas",key:"pad",id:"xp_ice",name:"얼음 패들",icon:"🧊",price:95,desc:"반짝이는 얼음 결정",fill:t=>`hsl(${195+Math.sin(t*2)*10},85%,${72+Math.sin(t*5)*6}%)`,glow:"#e0f2fe",
+  deco(c,p,t){c.fillStyle="rgba(255,255,255,.7)";for(let i=0;i<5;i++){const x=p.x+((i*47+t*30)%p.w);c.fillRect(x,p.y+2,2,p.h-4)}}},
+ {ev:"xmas",key:"fx",id:"xf_snow",name:"눈꽃 파편",icon:"❄️",price:50,desc:"파편이 눈꽃색",pick:_pick(["#ffffff","#e0f2fe","#bae6fd","#dbeafe"])},
+ {ev:"xmas",key:"fx",id:"xf_xmas",name:"크리스마스 불꽃",icon:"🎆",price:65,desc:"빨강·초록·금색 불꽃",pick:_pick(["#ef4444","#22c55e","#fde047","#ffffff"])},
+ {ev:"xmas",key:"acc",id:"xa_santa",name:"산타 모자",icon:"🎅",price:90,desc:"구슬이 산타 모자를 씁니다",draw:"santa"},
+ {ev:"xmas",key:"acc",id:"xa_antler",name:"루돌프 뿔",icon:"🦌",price:100,desc:"머리 위에 갈색 뿔",draw:"antler"},
+ {ev:"xmas",key:"acc",id:"xa_crown",name:"눈송이 왕관",icon:"👸",price:120,desc:"회전하는 눈송이 왕관",draw:"flake"},
+ {ev:"xmas",key:"title",id:"xti_santa",name:"산타의 단짝",icon:"🎅",price:30,desc:"상단에 표시",text:"🎅 산타의 단짝"},
+ {ev:"xmas",key:"bg",id:"xb_palace",name:"얼음 궁전",icon:"🏰",price:160,desc:"반짝이는 얼음 성과 떨어지는 눈꽃",top:"#0a2342",bot:"#0c3b5c",star:"rgba(200,240,255,.4)",
+  scene(c,t){_snowFall(c,t,50,5,2.4);const sh=.6+.4*Math.sin(t*2);
+   c.fillStyle="rgba(186,230,253,.85)";c.fillRect(330,H-330,240,270);c.fillRect(280,H-250,70,190);c.fillRect(550,H-250,70,190);
+   [[330,H-330,240,90],[270,H-250,90,70],[540,H-250,90,70]].forEach(q=>{c.beginPath();c.moveTo(q[0],q[1]);c.lineTo(q[0]+q[2]/2,q[1]-q[3]);c.lineTo(q[0]+q[2],q[1]);c.closePath();c.fill()});
+   c.fillStyle=`rgba(255,255,255,${.5+.3*sh})`;[[420,H-300],[470,H-300],[290,H-220],[565,H-220]].forEach(q=>c.fillRect(q[0],q[1],14,34));
+   c.fillStyle="#7dd3fc";c.beginPath();c.moveTo(450,H-60);c.lineTo(425,H-130);c.arc(450,H-130,25,Math.PI,0);c.lineTo(475,H-60);c.fill();
+   c.save();c.shadowBlur=30;c.shadowColor="#e0f2fe";c.fillStyle="#fff";for(let i=0;i<8;i++){const a=t*.3+i*.8;c.fillRect(450+Math.cos(a)*300-1,260+Math.sin(a*1.3)*120-1,3,3)}c.restore();
+   c.fillStyle="#e8f1f8";c.fillRect(0,H-60,W,60)}},
+ {ev:"xmas",key:"bg",id:"xb_fire",name:"벽난로 거실",icon:"🧦",price:120,desc:"타오르는 벽난로와 양말, 가랜드",top:"#2a1308",bot:"#12080a",star:"rgba(255,200,120,.2)",
+  scene(c,t){c.fillStyle="#3b1d12";c.fillRect(0,H-90,W,90);
+   c.fillStyle="#5b2c1c";c.fillRect(300,H-300,300,240);c.fillStyle="#120805";c.fillRect(350,H-250,200,190);
+   for(let i=0;i<7;i++){const k=(t*1.8+i*.37)%1,x=390+i*20+Math.sin(t*5+i)*4;c.fillStyle=`hsla(${20+i*6},100%,${55+k*15}%,${.9-k*.5})`;c.beginPath();c.moveTo(x-12,H-62);c.quadraticCurveTo(x+Math.sin(t*9+i)*8,H-100-k*70-i%3*18,x,H-150-(i%3)*22);c.quadraticCurveTo(x+16,H-100,x+12,H-62);c.fill()}
+   c.fillStyle="#7a3b22";c.fillRect(280,H-310,340,20);
+   ["#dc2626","#16a34a","#dc2626","#16a34a"].forEach((col,i)=>{const x=330+i*75,sw=Math.sin(t*1.5+i)*2;c.fillStyle=col;c.fillRect(x+sw,H-290,26,30);c.fillRect(x+sw,H-265,38,14);c.fillStyle="#fff";c.fillRect(x+sw-2,H-294,30,7)});
+   c.strokeStyle="#15803d";c.lineWidth=5;c.beginPath();c.moveTo(0,40);for(let x=0;x<=W;x+=20)c.lineTo(x,40+Math.sin(x*.04)*14);c.stroke();
+   for(let x=20;x<W;x+=60){const y=40+Math.sin(x*.04)*14,col=["#ef4444","#fde047","#60a5fa"][(x/60|0)%3];c.fillStyle=Math.sin(t*3+x)>-.3?col:"rgba(255,255,255,.15)";c.beginPath();c.arc(x,y+6,5,0,Math.PI*2);c.fill()}
+   c.fillStyle="rgba(251,146,60,.07)";c.fillRect(0,0,W,H)}},
+ {ev:"xmas",key:"trail",id:"xt_aurora",name:"오로라 꼬리",icon:"🌌",price:80,desc:"초록에서 보라로 일렁임",col:(i,t)=>`hsl(${150+((Math.sin(t*2+i*.3)+1)*70)},85%,65%)`},
+ {ev:"xmas",key:"trail",id:"xt_cane",name:"지팡이사탕 꼬리",icon:"🍭",price:50,desc:"빨강·하양 줄무늬",col:(i)=>(i>>1)%2?"#ef4444":"#ffffff"},
+ {ev:"xmas",key:"pad",id:"xp_tree",name:"트리 패들",icon:"🎄",price:80,desc:"장식 구슬이 달린 초록 패들",fill:()=>"#15803d",glow:"#4ade80",
+  deco(c,p,t){["#ef4444","#fde047","#60a5fa","#f472b6"].forEach((col,i)=>{const x=p.x+p.w*(i+.5)/4;c.fillStyle=Math.sin(t*4+i*2)>-.3?col:"rgba(255,255,255,.2)";c.beginPath();c.arc(x,p.y+p.h/2,3.2,0,Math.PI*2);c.fill()})}},
+ {ev:"xmas",key:"fx",id:"xf_gold",name:"금빛 별 파편",icon:"🌟",price:55,desc:"파편이 금빛·은빛",pick:_pick(["#fde047","#fbbf24","#ffffff","#fef3c7"])},
+ {ev:"xmas",key:"acc",id:"xa_scarf",name:"빨간 목도리",icon:"🧣",price:80,desc:"구슬에 목도리를 둘러줍니다",draw:"scarf"},
+ {ev:"xmas",key:"acc",id:"xa_elf",name:"요정 모자",icon:"🧝",price:90,desc:"초록 요정 모자 + 금방울",draw:"elf"},
+ {ev:"xmas",key:"title",id:"xti_fairy",name:"크리스마스 요정",icon:"🧝",price:40,desc:"상단에 표시",text:"🧝 크리스마스 요정"},
+ {ev:"xmas",key:"title",id:"xti_king",name:"겨울왕",icon:"⛄",price:70,desc:"상단에 표시",text:"⛄ 겨울왕"}
+];
+const COS_ALL=COS.flatMap(c=>c.items.map(it=>({...it,key:c.key}))).concat(EV_COS);
+function drawAcc(c,x,y,r,ac,t){
+ const k=ac.draw;c.save();c.translate(x,y);
+ if(k==="witch"){c.fillStyle="#3b1d6e";c.beginPath();c.ellipse(0,-r*.8,r*1.5,r*.28,0,0,Math.PI*2);c.fill();
+  c.beginPath();c.moveTo(-r*.8,-r*.85);c.quadraticCurveTo(-r*.3,-r*1.9,r*.55,-r*2.55);c.quadraticCurveTo(r*.15,-r*1.8,r*.8,-r*.85);c.closePath();c.fill();
+  c.fillStyle="#fbbf24";c.fillRect(-r*.78,-r*1.05,r*1.56,r*.2)}
+ else if(k==="wings"){const fl=Math.sin(t*9)*.35;c.fillStyle="#1a0b2e";c.strokeStyle="#7c3aed";c.lineWidth=1;
+  [-1,1].forEach(sd=>{c.beginPath();c.moveTo(sd*r*.7,-r*.1);c.quadraticCurveTo(sd*r*1.6,-r*(1.3+fl),sd*r*2.5,-r*(.5+fl));c.quadraticCurveTo(sd*r*2.1,-r*.2,sd*r*2.0,r*.3);c.quadraticCurveTo(sd*r*1.6,0,sd*r*1.3,r*.3);c.quadraticCurveTo(sd*r*1.0,0,sd*r*.7,r*.25);c.closePath();c.fill();c.stroke()})}
+ else if(k==="santa"){c.fillStyle="#dc2626";c.beginPath();c.moveTo(-r*.95,-r*.55);c.quadraticCurveTo(-r*.6,-r*1.9,r*.55,-r*1.6);c.quadraticCurveTo(r*1.0,-r*1.4,r*1.0,-r*.9);c.lineTo(r*.95,-r*.55);c.closePath();c.fill();
+  c.fillStyle="#fff";c.beginPath();c.ellipse(0,-r*.62,r*1.05,r*.26,0,0,Math.PI*2);c.fill();c.beginPath();c.arc(r*.95,-r*.95+Math.sin(t*4)*1.5,r*.28,0,Math.PI*2);c.fill()}
+ else if(k==="antler"){c.strokeStyle="#6b4423";c.lineCap="round";c.lineWidth=2.6;[-1,1].forEach(sd=>{c.beginPath();c.moveTo(sd*r*.4,-r*.8);c.lineTo(sd*r*.75,-r*1.45);c.moveTo(sd*r*.6,-r*1.15);c.lineTo(sd*r*1.1,-r*1.2);c.moveTo(sd*r*.72,-r*1.38);c.lineTo(sd*r*.62,-r*1.8);c.stroke()})}
+ else if(k==="flake"){c.strokeStyle="#e0f2fe";c.lineWidth=1.4;c.shadowBlur=8;c.shadowColor="#7dd3fc";
+  for(let i=0;i<5;i++){const a=-Math.PI/2+(i-2)*.5,fx=Math.cos(a)*r*1.35,fy=Math.sin(a)*r*1.35-r*.15;c.save();c.translate(fx,fy);c.rotate(t*1.5+i);c.beginPath();for(let j=0;j<3;j++){const b=j*Math.PI/3;c.moveTo(Math.cos(b)*5,Math.sin(b)*5);c.lineTo(-Math.cos(b)*5,-Math.sin(b)*5)}c.stroke();c.restore()}}
+ else if(k==="scarf"){c.strokeStyle="#dc2626";c.lineWidth=r*.38;c.lineCap="round";c.beginPath();c.arc(0,r*.35,r*.82,.25,Math.PI-.25);c.stroke();c.strokeStyle="#fff";c.lineWidth=2;c.setLineDash([3,5]);c.beginPath();c.arc(0,r*.35,r*.82,.25,Math.PI-.25);c.stroke();c.setLineDash([]);
+  c.fillStyle="#dc2626";c.save();c.translate(r*.55,r*.8);c.rotate(Math.sin(t*5)*.15);c.fillRect(0,0,r*.38,r*.95);c.restore()}
+ else if(k==="elf"){c.fillStyle="#15803d";c.beginPath();c.moveTo(-r*.9,-r*.55);c.quadraticCurveTo(-r*.3,-r*1.5,r*1.3,-r*1.5+Math.sin(t*4)*2);c.quadraticCurveTo(r*.3,-r*1.2,r*.9,-r*.55);c.closePath();c.fill();c.fillStyle="#dc2626";c.fillRect(-r*.95,-r*.62,r*1.9,r*.2);c.fillStyle="#fde047";c.beginPath();c.arc(r*1.3,-r*1.5+Math.sin(t*4)*2,3,0,Math.PI*2);c.fill()}
+ else if(k==="shades"){c.fillStyle="#0f172a";c.fillRect(-r*.85,-r*.35,r*.75,r*.5);c.fillRect(r*.1,-r*.35,r*.75,r*.5);c.fillRect(-r*.15,-r*.3,r*.3,r*.08);c.fillStyle="rgba(255,255,255,.35)";c.fillRect(-r*.75,-r*.3,r*.2,r*.1);c.fillRect(r*.2,-r*.3,r*.2,r*.1)}
+ else if(k==="crown"){c.fillStyle="#facc15";c.strokeStyle="#a16207";c.lineWidth=1;c.beginPath();c.moveTo(-r*.8,-r*.65);c.lineTo(-r*.8,-r*1.4);c.lineTo(-r*.4,-r*1.0);c.lineTo(0,-r*1.6);c.lineTo(r*.4,-r*1.0);c.lineTo(r*.8,-r*1.4);c.lineTo(r*.8,-r*.65);c.closePath();c.fill();c.stroke();c.fillStyle="#ef4444";c.beginPath();c.arc(0,-r*.85,2.3,0,Math.PI*2);c.fill()}
+ c.restore();
+}
 const COS_FUN=[
  {id:"fountain",name:"코인 분수",icon:"⛲",price:1000,d:"코인을 던지고 소원을 빕니다. (아무 일도 일어나지 않음)"},
  {id:"gacha",name:"럭키 뽑기",icon:"🎰",price:3000,d:"안 가진 꾸미기 아이템이 무작위로 나옵니다. 꽝도 있어요!"},
@@ -1351,12 +1579,15 @@ function renderCos(){
   h+=`<div class="evCat"><h2>${c.cat}</h2><div class="evGrid"><button class="${!cos.eq[c.key]?"done":""}" onclick="cosEquip('${c.key}','')"><strong>⚪ 기본</strong><span class="ballDesc">${!cos.eq[c.key]?"착용 중":"기본으로 되돌리기"}</span></button>`;
   c.items.forEach(it=>{const own=cos.own[it.id],on=cos.eq[c.key]===it.id;
    h+=`<button class="${on?"done":(!own&&gold<it.price?"cant":"")}" onclick="cosBuy('${it.id}')"><strong>${it.icon} ${it.name}</strong><span class="ballDesc">${on?"착용 중":own?"보유 중 · 눌러서 착용":"미보유"}</span>${own?"":`<span class="evPrice">💰 ${fmtP(it.price)}</span>`}</button>`});
+  EV_COS.filter(it=>it.key===c.key&&cos.own[it.id]).forEach(it=>{const on=cos.eq[c.key]===it.id;
+   h+=`<button class="${on?"done":""}" onclick="cosEquip('${c.key}','${on?"":it.id}')"><strong>${it.icon} ${it.name}</strong><span class="ballDesc">${it.ev==="xmas"?"🎄":"🎃"} 사탕 이벤트 아이템 · ${on?"착용 중 (눌러서 해제)":"눌러서 착용"}</span></button>`});
   h+=`</div></div>`;
  });
  $("cosBody").innerHTML=h;
 }
 function cosBuy(id){
  const it=COS_ALL.find(x=>x.id===id);if(!it)return;
+ if(it.ev){toast("🍬 사탕 전용 아이템입니다 (이벤트 창에서 구매)");return}
  if(cos.own[id]){cosEquip(it.key,id);return}
  if(gold<it.price){toast("💰 골드가 부족합니다");return}
  gold-=it.price;cos.spent+=it.price;cos.own[id]=true;cos.eq[it.key]=id;
@@ -1369,7 +1600,7 @@ function cosFun(id){
  gold-=f.price;cos.spent+=f.price;
  if(id==="blackhole"){toast("🕳️ 블랙홀이 모든 것을 삼켰다… 당신은 전설이 되었다");cosRain()}
  else if(id==="fountain"){cos.fount++;toast("⛲ "+FOUNT_MSG[Math.floor(Math.random()*FOUNT_MSG.length)]);cosRain()}
- else{cos.pulls++;const pool=COS_ALL.filter(x=>!cos.own[x.id]&&x.price<1e9);
+ else{cos.pulls++;const pool=COS_ALL.filter(x=>!x.ev&&!cos.own[x.id]&&x.price<1e9);
   if(!pool.length||Math.random()<.25){toast("🎰 꽝! 다음 기회에… (환불 없음)")}
   else{const it=pool[Math.floor(Math.random()*pool.length)];cos.own[it.id]=true;toast(`🎰 당첨! ${it.icon} ${it.name} 획득 (보유 중 · 눌러서 착용)`);cosRain()}}
  beep(700,.15,"triangle");saveGame();updateUI();renderCos();
@@ -1746,6 +1977,13 @@ const P={
  Blizzard:lv=>({dmg:.2+lv*.015,every:Math.max(90,170-lv*4)}),
  Elemental:lv=>({r:90+lv*3,dmg:.4+lv*.03}),
  SkyPig:lv=>({dmg:1+lv*.08,r:100+lv*3,every:Math.max(70,130-lv*3)}),
+ Tempest:lv=>({n:3+Math.floor(lv/3),dmg:.7+lv*.05,spd:.15+lv*.01}),
+ Magma:lv=>({r:100+lv*4,dmg:.6+lv*.05,burn:1+lv*.1}),
+ Plague:lv=>({r:110+lv*4,dmg:.45+lv*.04,self:.6+lv*.05}),
+ Prism:lv=>({m:1.8+lv*.12,n:4+Math.floor(lv/3),dmg:.5+lv*.04}),
+ Eclipse:lv=>({r:130+lv*4,dmg:.35+lv*.03,p:Math.min(.7,.3+lv*.02),spd:.2}),
+ Nightmare:lv=>({m:1.8+lv*.15,r:105+lv*4,dmg:.5+lv*.04,crit:Math.min(.6,.25+lv*.02),candy:Math.min(.6,.2+lv*.02)}),
+ Noel:lv=>({n:2+Math.floor(lv/6),dmg:1+lv*.06,r:70+lv*2,gold:.15,snow:2+Math.floor(lv/5)}),
  Snowman:lv=>({n:2+Math.floor(lv/5),dmg:.8+lv*.05}),
  Santa:lv=>({n:1+Math.floor(lv/7),dmg:1.2+lv*.07,r:70+lv*2,gold:.15}),
  Golem:lv=>({m:.6+lv*.06,hp:2+Math.floor(lv/5)}),
@@ -1782,6 +2020,13 @@ function abilityText(n,lv){
   case "Pigeon":return `벽돌에 부딪힐 때마다 데미지 +${p.add} 누적 (이번 판 최대 +${p.cap}) · 새 판마다 초기화`;
   case "Rudolph":return `빨간 코 빛줄기: 가까운 벽돌 ${p.n}개를 꿰뚫음 (피해 ${pc(p.dmg)})`;
   case "Dream":return `2초마다 산타 썰매 출격! 지나가며 선물 ${p.n}개 투하 (폭발 반경 ${p.r} · 피해 ${pc(p.dmg)} · ${pc(p.gold)} 금빛 선물)`;
+  case "Tempest":return `충돌마다 번개가 가까운 벽돌 ${p.n}개에 연쇄 (피해 ${pc(p.dmg)}) + 가속`;
+  case "Magma":return `충돌마다 반경 ${p.r} 용암 폭발 (피해 ${pc(p.dmg)}) + 맞힌 벽돌 화상 ${pc(p.burn)}`;
+  case "Plague":return `맞힌 벽돌 주변 반경 ${p.r}에 역병 피해 ${pc(p.dmg)} + 맞힌 벽돌 추가 ${pc(p.self)}`;
+  case "Prism":return `맞힌 벽돌에 ${f1(p.m)}배 레이저 + 빛 조각 ${p.n}개 (피해 ${pc(p.dmg)})`;
+  case "Eclipse":return `충돌마다 반경 ${p.r} 그림자 피해 ${pc(p.dmg)} · ${pc(p.p)} 확률로 가속`;
+  case "Nightmare":return `호박 폭발 ${f1(p.m)}배 · 반경 ${p.r} · ${pc(p.crit)} 확률 치명타 · 이벤트 맵 사탕 ${pc(p.candy)}`;
+  case "Noel":return `충돌마다 눈덩이 ${p.snow}개 + 선물 ${p.n}개 투척 (선물 피해 ${pc(p.dmg)})`;
   case "Blizzard":return `${f1(p.every/60)}초마다 모든 벽돌에 눈보라 피해 ${pc(p.dmg)}`;
   case "Elemental":return `충돌마다 반경 ${p.r} 불꽃/냉기 폭발이 번갈아 터짐 (피해 ${pc(p.dmg)})`;
   case "SkyPig":return `${f1(p.every/60)}초마다 하늘에서 거대 발도장 (반경 ${p.r} · 피해 ${pc(p.dmg)})`;
@@ -1865,6 +2110,20 @@ function applyEffect(t,b,d,lv){
    ball.elT=(ball.elT||0)+1;const fire=ball.elT%2===1,cx=b.x+b.w/2,cy=b.y+b.h/2;
    alive().forEach(x=>{if(x!==b&&Math.hypot(x.x+x.w/2-cx,x.y+x.h/2-cy)<p.r){x.hp-=Math.max(1,d*p.dmg);x.flash=6}});
    burst(cx,cy,16,fire?"#fb923c":"#7dd3fc");burst(cx,cy,8,fire?"#fde047":"#e0f2fe");break;}
+  case "Tempest":nearest(b.x+b.w/2,b.y+b.h/2,p.n,b).forEach(x=>{x.hp-=Math.max(1,d*p.dmg);x.flash=6;burst(x.x+x.w/2,x.y+x.h/2,4,"#c4b5fd")});addSpeed(p.spd);burst(ball.x,ball.y,8,"#e9d5ff");break;
+  case "Magma":b.hp-=Math.max(1,d*p.burn);areaDamage(b,Math.max(1,d*p.dmg),p.r);burst(ball.x,ball.y,22,"#f97316");burst(ball.x,ball.y,8,"#fde047");shake=Math.max(shake,4);break;
+  case "Plague":b.hp-=d*p.self;areaDamage(b,Math.max(1,d*p.dmg),p.r);burst(ball.x,ball.y,16,"#a3e635");break;
+  case "Prism":b.hp-=d*(p.m-1);nearest(ball.x,ball.y,p.n,b).forEach(x=>{x.hp-=Math.max(1,d*p.dmg);x.flash=6;burst(x.x+x.w/2,x.y+x.h/2,3,["#f472b6","#22d3ee","#fde047"][Math.random()*3|0])});break;
+  case "Eclipse":areaDamage(b,Math.max(1,d*p.dmg),p.r);burst(ball.x,ball.y,14,"#312e81");if(Math.random()<p.p)addSpeed(p.spd);break;
+  case "Nightmare":
+   b.hp-=d*(p.m-1);if(Math.random()<p.crit){b.hp-=d*2;burst(ball.x,ball.y,10,"#c084fc")}
+   areaDamage(b,Math.max(1,d*p.dmg),p.r);burst(ball.x,ball.y,18,"#ff9a1f");addStamp("pumpkin",ball.x,ball.y,p.r,34,p.r);shake=Math.max(shake,3);
+   if(eventMode&&Math.random()<p.candy)addCandy(1,ball.x,ball.y-10);break;
+  case "Noel":{
+   const pool=alive().filter(x=>x!==b);
+   for(let i=0;i<p.snow&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];launch("snow",ball.x,ball.y,x,Math.max(1,d*p.dmg*.5),0,0)}
+   for(let i=0;i<p.n&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];launch("gift",ball.x,ball.y,x,Math.max(1,d*p.dmg),p.r,Math.random()<p.gold?1:0)}
+   break;}
   case "Dream":case "Blizzard":case "SkyPig":break;   // 주기 능력 (fusionTick)
   case "Snowman":{
    const pool=alive().filter(x=>x!==b);
@@ -1964,7 +2223,9 @@ function tierPassive(){
 
 /* ============ 파티클 ============ */
 function burst(x,y,n,c){
+ const fxc=cosGet("fx");
  for(let i=0;i<n;i++){
+  if(fxc)c=fxc.pick();
   const a=Math.random()*Math.PI*2,v=1+Math.random()*3.5;
   particles.push({x,y,dx:Math.cos(a)*v,dy:Math.sin(a)*v,life:28,c,s:2+Math.random()*2});
  }
@@ -2111,6 +2372,7 @@ function restartGame(startStage,force){
 /* ============ 구슬 외형 (레벨 단계별 진화) ============ */
 const TIER_NAMES=["기본","빛나는","궤도","각성","초월","전설"];
 const tierOf=lv=>lv<=0?0:lv<5?1:lv<10?2:lv<15?3:lv<20?4:5;
+let bodyMain=false;
 function drawBallVisual(c,x,y,r,name,lv,trail,tm,ch){
  const [c1,c2]=COLORS[name]||COLORS.Normal,tier=tierOf(lv),t=(tm===undefined?performance.now()/1000:tm);
  const legend=tier===5,rb=`hsl(${(t*120)%360},95%,65%)`,glow=legend?rb:c2;
@@ -2160,6 +2422,7 @@ function drawBallVisual(c,x,y,r,name,lv,trail,tm,ch){
  }
  // 본체 (구슬마다 다른 모양)
  drawBody(c,x,y,r,name,c1,legend?rb:c2,t,glow,lv);
+ if(bodyMain){const ac=cosGet("acc");if(ac)drawAcc(c,x,y,r*(1+tier*.04),ac,t)}
  // 전설: 왕관 표시
  if(legend){
   c.fillStyle="#ffd84d";c.beginPath();
@@ -2469,6 +2732,43 @@ case "Rudolph":{
   c.fillStyle="#f472b6";c.beginPath();c.ellipse(0,3,6,4.2,0,0,Math.PI*2);c.fill();c.fillStyle="#9d174d";c.beginPath();c.arc(-2,3,1,0,Math.PI*2);c.arc(2,3,1,0,Math.PI*2);c.fill();
   c.fillStyle="#1f2937";c.beginPath();c.arc(-4.5,-3,1.5,0,Math.PI*2);c.arc(4.5,-3,1.5,0,Math.PI*2);c.fill();
   break;}
+ case "Tempest":{
+  sph("#e9d5ff","#7c3aed");
+  c.strokeStyle="#fde047";c.lineWidth=2;c.shadowBlur=8;c.shadowColor="#fde047";c.beginPath();c.moveTo(2,-r*.8);c.lineTo(-3,-1);c.lineTo(2,1);c.lineTo(-2,r*.8);c.stroke();c.shadowBlur=0;
+  c.fillStyle="#ddd6fe";for(let i=0;i<3;i++){const a=t*4+i*2.1;c.beginPath();c.arc(Math.cos(a)*r*1.4,Math.sin(a)*r*1.4,2,0,Math.PI*2);c.fill()}
+  break;}
+ case "Magma":{
+  sph("#fdba74","#b91c1c");
+  c.fillStyle="#1c0a05";c.beginPath();c.moveTo(-r*.6,r*.5);c.lineTo(-r*.2,-r*.2);c.lineTo(r*.1,r*.3);c.lineTo(r*.5,-r*.4);c.lineTo(r*.6,r*.5);c.closePath();c.fill();
+  c.fillStyle=`rgba(253,224,71,${.6+.4*Math.sin(t*8)})`;c.beginPath();c.arc(-r*.1,r*.1,2.2,0,Math.PI*2);c.arc(r*.3,r*.2,1.8,0,Math.PI*2);c.fill();
+  for(let i=0;i<3;i++){const k=(t*1.6+i/3)%1;c.fillStyle=`rgba(251,146,60,${1-k})`;c.beginPath();c.arc(-r*.4+i*r*.4,-r*(.9+k*.9),2.2,0,Math.PI*2);c.fill()}
+  break;}
+ case "Plague":{
+  sph("#bef264","#4d7c0f");
+  c.fillStyle="#365314";[[-4,-3,2.6],[4,-1,2],[-1,4,2.2]].forEach(q=>{c.beginPath();c.arc(q[0],q[1],q[2],0,Math.PI*2);c.fill()});
+  c.strokeStyle="#a3e635";c.lineWidth=1.6;for(let i=0;i<8;i++){const a=i*Math.PI/4+t;c.beginPath();c.moveTo(Math.cos(a)*r,Math.sin(a)*r);c.lineTo(Math.cos(a)*(r+4),Math.sin(a)*(r+4));c.stroke()}
+  break;}
+ case "Prism":{
+  sph("#ffffff","#22d3ee");
+  c.beginPath();c.moveTo(0,-r*.8);c.lineTo(r*.8,r*.6);c.lineTo(-r*.8,r*.6);c.closePath();c.fillStyle="rgba(255,255,255,.55)";c.fill();c.strokeStyle="#0e7490";c.lineWidth=1.2;c.stroke();
+  ["#ef4444","#fde047","#22c55e","#3b82f6"].forEach((col,i)=>{c.strokeStyle=col;c.lineWidth=1.4;c.beginPath();c.moveTo(r*.3,0);c.lineTo(r*1.5,-r*.5+i*r*.35);c.stroke()});
+  break;}
+ case "Eclipse":{
+  sph("#fde68a","#f59e0b");
+  c.fillStyle="#0f0a2e";c.beginPath();c.arc(Math.sin(t*1.2)*r*.35+r*.15,0,r*.92,0,Math.PI*2);c.fill();
+  c.strokeStyle=`rgba(253,230,138,${.6+.3*Math.sin(t*5)})`;c.lineWidth=2;c.beginPath();c.arc(0,0,r+1.5,0,Math.PI*2);c.stroke();
+  break;}
+ case "Nightmare":{
+  c.fillStyle="#1a0b2e";[-1,1].forEach(sd=>{c.beginPath();c.moveTo(sd*r*.6,-r*.2);c.quadraticCurveTo(sd*r*1.7,-r*(1.1+Math.sin(t*10)*.3),sd*r*2.1,-r*.1);c.quadraticCurveTo(sd*r*1.5,r*.1,sd*r*.8,r*.3);c.closePath();c.fill()});
+  sph("#fdba74","#c2410c");
+  c.fillStyle="#2e1065";c.beginPath();c.moveTo(-6,-5);c.lineTo(-2,-5);c.lineTo(-4,-1);c.moveTo(2,-5);c.lineTo(6,-5);c.lineTo(4,-1);c.moveTo(-6,3);c.lineTo(-3,5);c.lineTo(0,3);c.lineTo(3,5);c.lineTo(6,3);c.lineTo(3,7);c.lineTo(-3,7);c.fill();
+  break;}
+ case "Noel":{
+  sph("#fecaca","#15803d");
+  c.fillStyle="#dc2626";c.beginPath();c.moveTo(-r*.8,-r*.5);c.quadraticCurveTo(0,-r*1.9,r*.8,-r*.5);c.closePath();c.fill();c.fillStyle="#fff";c.fillRect(-r*.9,-r*.55,r*1.8,3.4);c.beginPath();c.arc(r*.55,-r*1.2,2.8,0,Math.PI*2);c.fill();
+  c.fillStyle="#111";c.beginPath();c.arc(-3.5,1.5,1.2,0,Math.PI*2);c.arc(3.5,1.5,1.2,0,Math.PI*2);c.fill();c.fillStyle="#f97316";c.beginPath();c.moveTo(0,3);c.lineTo(5,4.4);c.lineTo(0,5.5);c.fill();
+  c.fillStyle="#fde047";for(let i=0;i<3;i++){const a=t*2+i*2.1;c.beginPath();c.arc(Math.cos(a)*r*1.5,Math.sin(a)*r*1.5,2,0,Math.PI*2);c.fill()}
+  break;}
  case "Snowman":{
   sph("#ffffff","#bfdbfe");
   c.fillStyle="#111";c.beginPath();c.arc(-4,-3,1.5,0,Math.PI*2);c.arc(4,-3,1.5,0,Math.PI*2);c.arc(-3.5,4,.9,0,Math.PI*2);c.arc(0,5,.9,0,Math.PI*2);c.arc(3.5,4,.9,0,Math.PI*2);c.fill();
@@ -2565,11 +2865,13 @@ function render(){
  ctx.setTransform(1,0,0,1,0,0);
  ctx.clearRect(0,0,W,H);
  if(shake>0){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake)}
- if(eventMode)(eventTheme==="xmas"?drawChristmasBg:drawHalloweenBg)();
+ const cb=cosGet("bg");
+ if(eventMode&&!(cb&&cb.scene))(eventTheme==="xmas"?drawChristmasBg:drawHalloweenBg)();
  else{
-  const cb=cosGet("bg"),g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,cb?cb.top:"#0b1230");g.addColorStop(1,cb?cb.bot:"#050713");
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,cb?cb.top:"#0b1230");g.addColorStop(1,cb?cb.bot:"#050713");
   ctx.fillStyle=g;ctx.fillRect(-10,-10,W+20,H+20);
   ctx.fillStyle=cb?cb.star:"rgba(255,255,255,.1)";stars.forEach(s=>ctx.fillRect(s.x,s.y,s.s,s.s));
+  if(cb&&cb.scene)cb.scene(ctx,performance.now()/1000);
  }
 
  // 벽돌
@@ -2600,6 +2902,7 @@ function render(){
  // 패들
  ctx.shadowBlur=18;
  const cp=cosGet("pad"),tt=performance.now()/1000;ctx.shadowColor=cp?cp.glow:"#1877ff";ctx.fillStyle=cp?cp.fill(tt):"#176cff";rr(bluePad.x,bluePad.y,bluePad.w,bluePad.h,7);ctx.fill();
+ if(cp&&cp.deco){ctx.save();ctx.shadowBlur=0;rr(bluePad.x,bluePad.y,bluePad.w,bluePad.h,7);ctx.clip();cp.deco(ctx,bluePad,tt);ctx.restore()}
  ctx.shadowBlur=0;
 
  drawStamps();drawProj();drawSleighs();
@@ -2610,7 +2913,7 @@ function render(){
  ctx.textAlign="start";ctx.globalAlpha=1;
 
  // 공 (구슬 레벨에 따라 외형이 진화)
- drawBallVisual(ctx,ball.x,ball.y,ball.r,currentBall,useLv(currentBall),ball.trail,orbitT,{a:ball.awk/6,l:ball.leg/10});
+ bodyMain=true;drawBallVisual(ctx,ball.x,ball.y,ball.r,currentBall,useLv(currentBall),ball.trail,orbitT,{a:ball.awk/6,l:ball.leg/10});bodyMain=false;
  if(ball.starBoost>0){ctx.strokeStyle="#ffd84d";ctx.lineWidth=2;ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r+4,0,Math.PI*2);ctx.stroke()}
 }
 
@@ -2626,7 +2929,7 @@ function step(){
  floaters.forEach(f=>{f.y-=.6;f.life--});floaters=floaters.filter(f=>f.life>0);
  stamps.forEach(s=>s.life--);stamps=stamps.filter(s=>s.life>0);
  projTick();
- if(gameStarted&&!gameOver)fusionTick();
+ if(gameStarted&&!gameOver){fusionTick()}
  particles=particles.filter(p=>p.life>0);
  bricks.forEach(b=>{if(b.flash>0)b.flash--;if(b.oc>0)b.oc--;if(b.hc>0)b.hc--});
  if(shake>0)shake=Math.max(0,shake-.5);
