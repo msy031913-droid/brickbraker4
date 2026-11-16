@@ -197,7 +197,6 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
   <p class="small">할로윈 맵을 <b>클리어할 때마다 🍬 사탕 10개!</b> 호박 벽돌(🎃)을 부수면 보너스 +1.<br>사탕으로 한정판 구슬 · 버프 · 물약 · 코인 · <b>꾸미기(배경/꼬리/패들/이펙트/장식/칭호)</b>를 구매할 수 있어요.<br>🎄 크리스마스 맵은 <b>크리스마스 창</b>에서 시작합니다.</p>
   <div id="evStatus"></div>
   <div><button class="evStart" onclick="startEventMap('halloween')">🎃 할로윈 맵 시작</button><button onclick="leaveEventMap()">🗺️ 일반 맵으로</button><button onclick="closeEvent()">닫기</button></div>
-  <div><button style="background:#be185d" onclick="document.getElementById('cos_halloween').scrollIntoView({behavior:'smooth'})">🎨 할로윈 꾸미기 상점 바로가기</button></div>
   <div id="evShop"></div>
  </div>
 </div>
@@ -225,7 +224,6 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
   <h1>🎄 크리스마스 이벤트</h1>
   <div id="xmStatus"></div>
   <div><button class="evStart" style="background:#15803d!important" onclick="startEventMap('xmas')">🎄 크리스마스 맵 시작</button><button onclick="leaveEventMap()">🗺️ 일반 맵으로</button></div>
-  <div><button style="background:#be185d" onclick="document.getElementById('cos_xmas').scrollIntoView({behavior:'smooth'})">🎨 크리스마스 꾸미기 상점 바로가기</button></div>
   <h2 style="margin:14px 0 4px">🎁 크리스마스 이벤트 상자</h2>
   <p id="xmasInfo"></p>
   <div>
@@ -871,32 +869,21 @@ function evCosHTML(theme){
   const list=EV_COS.filter(x=>x.ev===theme&&x.key===k);if(!list.length)return;
   h+=`<div class="evCat"><h2>${theme==="xmas"?"🎄":"🎃"} ${CANDY_CAT[k]}</h2><div class="evGrid">${list.map(it=>{
    const own=cos.own[it.id],on=cos.eq[k]===it.id;
-   return `<button class="${on?"eq":(!own&&candy<it.price?"cant":"")}" onclick="evCosAct('${it.id}')">${k==="title"?`<span style="display:block;font-size:17px;margin:6px 0">${it.text}</span>`:`<canvas class="cosThumb" width="150" height="${k==="bg"?108:64}" data-id="${it.id}"></canvas>`}<strong>${it.icon} ${it.name}</strong><span class="ballDesc">${it.desc||""}</span><span class="evPrice">${on?"✅ 착용 중 (눌러서 해제)":own?"보유 중 · 눌러서 착용":"🍬 "+it.price}</span></button>`}).join("")}</div></div>`;
+   return `<button class="${on?"eq":(!own&&candy<it.price?"cant":"")}" onclick="evCosAct('${it.id}')">${k==="bg"?`<canvas class="cosThumb" width="150" height="108" data-id="${it.id}"></canvas>`:""}<strong>${it.icon} ${it.name}</strong><span class="ballDesc">${it.desc||""}</span><span class="evPrice">${on?"✅ 착용 중 (눌러서 해제)":own?"보유 중 · 눌러서 착용":"🍬 "+it.price}</span></button>`}).join("")}</div></div>`;
  });
  return h;
 }
 function drawThumbs(root){
  root.querySelectorAll("canvas.cosThumb").forEach(cv=>{
-  const it=EV_COS.find(x=>x.id===cv.dataset.id);if(!it)return;
-  const c=cv.getContext("2d"),w=cv.width,h=cv.height,t=1.7;c.save();
-  try{
-   if(it.key==="bg"){c.scale(w/W,h/H);const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,it.top);g.addColorStop(1,it.bot);c.fillStyle=g;c.fillRect(0,0,W,H);it.scene(c,3.1)}
-   else{
-    const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,"#0b1230");g.addColorStop(1,"#050713");c.fillStyle=g;c.fillRect(0,0,w,h);
-    const ball=(x,y,r)=>{const gg=c.createRadialGradient(x-r*.3,y-r*.3,1,x,y,r);gg.addColorStop(0,"#fff");gg.addColorStop(1,"#9db4ff");c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fillStyle=gg;c.fill()};
-    if(it.key==="trail"){for(let i=0;i<22;i++){const k=i/22,x=14+k*105,y=40-Math.sin(k*5)*14;c.globalAlpha=.25+k*.6;c.fillStyle=it.col(i,t);c.beginPath();c.arc(x,y,2+k*7,0,Math.PI*2);c.fill()}c.globalAlpha=1;ball(122,40-Math.sin(5)*14,8)}
-    else if(it.key==="pad"){const p={x:20,y:26,w:110,h:14};c.shadowBlur=14;c.shadowColor=it.glow;c.fillStyle=it.fill(t);c.beginPath();c.roundRect(p.x,p.y,p.w,p.h,7);c.fill();c.shadowBlur=0;if(it.deco){c.save();c.beginPath();c.roundRect(p.x,p.y,p.w,p.h,7);c.clip();it.deco(c,p,t);c.restore()}ball(75,14,6)}
-    else if(it.key==="fx"){for(let i=0;i<26;i++){const a=i*2.4,d=6+(i%7)*5;c.fillStyle=it.pick();c.fillRect(75+Math.cos(a)*d*1.7,32+Math.sin(a)*d*.9,3,3)}}
-    else if(it.key==="acc"){ball(75,38,13);drawAcc(c,75,38,13,it,t)}
-   }
-  }catch(e){}
-  c.restore();
+  const it=EV_COS.find(x=>x.id===cv.dataset.id);if(!it||!it.scene)return;
+  const c=cv.getContext("2d");c.save();c.scale(cv.width/W,cv.height/H);
+  const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,it.top);g.addColorStop(1,it.bot);c.fillStyle=g;c.fillRect(0,0,W,H);
+  try{it.scene(c,3.1)}catch(e){}c.restore();
  });
 }
 function renderEventShop(el,theme){
  const balls=EVENT_SHOP[theme==="xmas"?1:0],common=EVENT_SHOP.slice(2);
- const sec=c=>`<div class="evCat"><h2>${c.cat}</h2><div class="evGrid">${c.items.map(evItemBtn).join("")}</div></div>`;
- el.innerHTML=`<div id="cos_${theme}" style="margin-top:8px;padding:6px;border:2px dashed ${theme==="xmas"?"#16a34a":"#ea580c"};border-radius:12px"><h1 style="font-size:20px">${theme==="xmas"?"🎄 크리스마스 꾸미기 상점":"🎃 할로윈 꾸미기 상점"} <span class="small">(🍬 사탕으로 구매)</span></h1><p class="small">맵을 클리어할 때마다 🍬 10개! 샀다면 눌러서 착용 · 한 번 더 누르면 해제</p>${evCosHTML(theme)}</div>`+sec(balls)+common.map(sec).join("");
+ el.innerHTML=[balls,...common].map(c=>`<div class="evCat"><h2>${c.cat}</h2><div class="evGrid">${c.items.map(evItemBtn).join("")}</div></div>`).join("")+evCosHTML(theme);
  drawThumbs(el);
 }
 function renderEvent(){
@@ -1517,31 +1504,6 @@ const EV_COS=[
  {ev:"xmas",key:"acc",id:"xa_antler",name:"루돌프 뿔",icon:"🦌",price:100,desc:"머리 위에 갈색 뿔",draw:"antler"},
  {ev:"xmas",key:"acc",id:"xa_crown",name:"눈송이 왕관",icon:"👸",price:120,desc:"회전하는 눈송이 왕관",draw:"flake"},
  {ev:"xmas",key:"title",id:"xti_santa",name:"산타의 단짝",icon:"🎅",price:30,desc:"상단에 표시",text:"🎅 산타의 단짝"},
- {ev:"xmas",key:"bg",id:"xb_palace",name:"얼음 궁전",icon:"🏰",price:160,desc:"반짝이는 얼음 성과 떨어지는 눈꽃",top:"#0a2342",bot:"#0c3b5c",star:"rgba(200,240,255,.4)",
-  scene(c,t){_snowFall(c,t,50,5,2.4);const sh=.6+.4*Math.sin(t*2);
-   c.fillStyle="rgba(186,230,253,.85)";c.fillRect(330,H-330,240,270);c.fillRect(280,H-250,70,190);c.fillRect(550,H-250,70,190);
-   [[330,H-330,240,90],[270,H-250,90,70],[540,H-250,90,70]].forEach(q=>{c.beginPath();c.moveTo(q[0],q[1]);c.lineTo(q[0]+q[2]/2,q[1]-q[3]);c.lineTo(q[0]+q[2],q[1]);c.closePath();c.fill()});
-   c.fillStyle=`rgba(255,255,255,${.5+.3*sh})`;[[420,H-300],[470,H-300],[290,H-220],[565,H-220]].forEach(q=>c.fillRect(q[0],q[1],14,34));
-   c.fillStyle="#7dd3fc";c.beginPath();c.moveTo(450,H-60);c.lineTo(425,H-130);c.arc(450,H-130,25,Math.PI,0);c.lineTo(475,H-60);c.fill();
-   c.save();c.shadowBlur=30;c.shadowColor="#e0f2fe";c.fillStyle="#fff";for(let i=0;i<8;i++){const a=t*.3+i*.8;c.fillRect(450+Math.cos(a)*300-1,260+Math.sin(a*1.3)*120-1,3,3)}c.restore();
-   c.fillStyle="#e8f1f8";c.fillRect(0,H-60,W,60)}},
- {ev:"xmas",key:"bg",id:"xb_fire",name:"벽난로 거실",icon:"🧦",price:120,desc:"타오르는 벽난로와 양말, 가랜드",top:"#2a1308",bot:"#12080a",star:"rgba(255,200,120,.2)",
-  scene(c,t){c.fillStyle="#3b1d12";c.fillRect(0,H-90,W,90);
-   c.fillStyle="#5b2c1c";c.fillRect(300,H-300,300,240);c.fillStyle="#120805";c.fillRect(350,H-250,200,190);
-   for(let i=0;i<7;i++){const k=(t*1.8+i*.37)%1,x=390+i*20+Math.sin(t*5+i)*4;c.fillStyle=`hsla(${20+i*6},100%,${55+k*15}%,${.9-k*.5})`;c.beginPath();c.moveTo(x-12,H-62);c.quadraticCurveTo(x+Math.sin(t*9+i)*8,H-100-k*70-i%3*18,x,H-150-(i%3)*22);c.quadraticCurveTo(x+16,H-100,x+12,H-62);c.fill()}
-   c.fillStyle="#7a3b22";c.fillRect(280,H-310,340,20);
-   ["#dc2626","#16a34a","#dc2626","#16a34a"].forEach((col,i)=>{const x=330+i*75,sw=Math.sin(t*1.5+i)*2;c.fillStyle=col;c.fillRect(x+sw,H-290,26,30);c.fillRect(x+sw,H-265,38,14);c.fillStyle="#fff";c.fillRect(x+sw-2,H-294,30,7)});
-   c.strokeStyle="#15803d";c.lineWidth=5;c.beginPath();c.moveTo(0,40);for(let x=0;x<=W;x+=20)c.lineTo(x,40+Math.sin(x*.04)*14);c.stroke();
-   for(let x=20;x<W;x+=60){const y=40+Math.sin(x*.04)*14,col=["#ef4444","#fde047","#60a5fa"][(x/60|0)%3];c.fillStyle=Math.sin(t*3+x)>-.3?col:"rgba(255,255,255,.15)";c.beginPath();c.arc(x,y+6,5,0,Math.PI*2);c.fill()}
-   c.fillStyle="rgba(251,146,60,.07)";c.fillRect(0,0,W,H)}},
- {ev:"xmas",key:"trail",id:"xt_aurora",name:"오로라 꼬리",icon:"🌌",price:80,desc:"초록에서 보라로 일렁임",col:(i,t)=>`hsl(${150+((Math.sin(t*2+i*.3)+1)*70)},85%,65%)`},
- {ev:"xmas",key:"trail",id:"xt_cane",name:"지팡이사탕 꼬리",icon:"🍭",price:50,desc:"빨강·하양 줄무늬",col:(i)=>(i>>1)%2?"#ef4444":"#ffffff"},
- {ev:"xmas",key:"pad",id:"xp_tree",name:"트리 패들",icon:"🎄",price:80,desc:"장식 구슬이 달린 초록 패들",fill:()=>"#15803d",glow:"#4ade80",
-  deco(c,p,t){["#ef4444","#fde047","#60a5fa","#f472b6"].forEach((col,i)=>{const x=p.x+p.w*(i+.5)/4;c.fillStyle=Math.sin(t*4+i*2)>-.3?col:"rgba(255,255,255,.2)";c.beginPath();c.arc(x,p.y+p.h/2,3.2,0,Math.PI*2);c.fill()})}},
- {ev:"xmas",key:"fx",id:"xf_gold",name:"금빛 별 파편",icon:"🌟",price:55,desc:"파편이 금빛·은빛",pick:_pick(["#fde047","#fbbf24","#ffffff","#fef3c7"])},
- {ev:"xmas",key:"acc",id:"xa_scarf",name:"빨간 목도리",icon:"🧣",price:80,desc:"구슬에 목도리를 둘러줍니다",draw:"scarf"},
- {ev:"xmas",key:"acc",id:"xa_elf",name:"요정 모자",icon:"🧝",price:90,desc:"초록 요정 모자 + 금방울",draw:"elf"},
- {ev:"xmas",key:"title",id:"xti_fairy",name:"크리스마스 요정",icon:"🧝",price:40,desc:"상단에 표시",text:"🧝 크리스마스 요정"},
  {ev:"xmas",key:"title",id:"xti_king",name:"겨울왕",icon:"⛄",price:70,desc:"상단에 표시",text:"⛄ 겨울왕"}
 ];
 const COS_ALL=COS.flatMap(c=>c.items.map(it=>({...it,key:c.key}))).concat(EV_COS);
@@ -1557,9 +1519,6 @@ function drawAcc(c,x,y,r,ac,t){
  else if(k==="antler"){c.strokeStyle="#6b4423";c.lineCap="round";c.lineWidth=2.6;[-1,1].forEach(sd=>{c.beginPath();c.moveTo(sd*r*.4,-r*.8);c.lineTo(sd*r*.75,-r*1.45);c.moveTo(sd*r*.6,-r*1.15);c.lineTo(sd*r*1.1,-r*1.2);c.moveTo(sd*r*.72,-r*1.38);c.lineTo(sd*r*.62,-r*1.8);c.stroke()})}
  else if(k==="flake"){c.strokeStyle="#e0f2fe";c.lineWidth=1.4;c.shadowBlur=8;c.shadowColor="#7dd3fc";
   for(let i=0;i<5;i++){const a=-Math.PI/2+(i-2)*.5,fx=Math.cos(a)*r*1.35,fy=Math.sin(a)*r*1.35-r*.15;c.save();c.translate(fx,fy);c.rotate(t*1.5+i);c.beginPath();for(let j=0;j<3;j++){const b=j*Math.PI/3;c.moveTo(Math.cos(b)*5,Math.sin(b)*5);c.lineTo(-Math.cos(b)*5,-Math.sin(b)*5)}c.stroke();c.restore()}}
- else if(k==="scarf"){c.strokeStyle="#dc2626";c.lineWidth=r*.38;c.lineCap="round";c.beginPath();c.arc(0,r*.35,r*.82,.25,Math.PI-.25);c.stroke();c.strokeStyle="#fff";c.lineWidth=2;c.setLineDash([3,5]);c.beginPath();c.arc(0,r*.35,r*.82,.25,Math.PI-.25);c.stroke();c.setLineDash([]);
-  c.fillStyle="#dc2626";c.save();c.translate(r*.55,r*.8);c.rotate(Math.sin(t*5)*.15);c.fillRect(0,0,r*.38,r*.95);c.restore()}
- else if(k==="elf"){c.fillStyle="#15803d";c.beginPath();c.moveTo(-r*.9,-r*.55);c.quadraticCurveTo(-r*.3,-r*1.5,r*1.3,-r*1.5+Math.sin(t*4)*2);c.quadraticCurveTo(r*.3,-r*1.2,r*.9,-r*.55);c.closePath();c.fill();c.fillStyle="#dc2626";c.fillRect(-r*.95,-r*.62,r*1.9,r*.2);c.fillStyle="#fde047";c.beginPath();c.arc(r*1.3,-r*1.5+Math.sin(t*4)*2,3,0,Math.PI*2);c.fill()}
  else if(k==="shades"){c.fillStyle="#0f172a";c.fillRect(-r*.85,-r*.35,r*.75,r*.5);c.fillRect(r*.1,-r*.35,r*.75,r*.5);c.fillRect(-r*.15,-r*.3,r*.3,r*.08);c.fillStyle="rgba(255,255,255,.35)";c.fillRect(-r*.75,-r*.3,r*.2,r*.1);c.fillRect(r*.2,-r*.3,r*.2,r*.1)}
  else if(k==="crown"){c.fillStyle="#facc15";c.strokeStyle="#a16207";c.lineWidth=1;c.beginPath();c.moveTo(-r*.8,-r*.65);c.lineTo(-r*.8,-r*1.4);c.lineTo(-r*.4,-r*1.0);c.lineTo(0,-r*1.6);c.lineTo(r*.4,-r*1.0);c.lineTo(r*.8,-r*1.4);c.lineTo(r*.8,-r*.65);c.closePath();c.fill();c.stroke();c.fillStyle="#ef4444";c.beginPath();c.arc(0,-r*.85,2.3,0,Math.PI*2);c.fill()}
  c.restore();
