@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Ultimate Brick Breaker v11.16-G</title>
+<title>Ultimate Brick Breaker v11.16-I</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -428,6 +428,8 @@ const ballTypes=[
 {name:"Plasma",icon:"🔮",price:150,desc:"현재 벽돌에 매우 강한 단일 피해"},
 {name:"Star",icon:"⭐",price:180,desc:"충전 후 다음 3번 충돌에 추가 피해"},
 {name:"Phoenix",icon:"🦅",price:0,limited:true,desc:"한정판 · 강한 화상 + 확률로 불꽃 폭발"},
+{name:"Platinum",icon:"🥈",price:350,desc:"백금 광택 · 맞힌 벽돌에 정밀 추가 피해 + 근처 벽돌 관통"},
+{name:"StarPlatinum",icon:"🌟",price:0,limited:true,desc:"🧪 비밀 조합 한정 · 오라오라! 연타 러시 + 8번째 충돌마다 시간 정지 난타"},
 {name:"Galaxy",icon:"🌌",price:0,limited:true,desc:"한정판 · 가까운 벽돌 여러 개에 별빛 연쇄"},
 {name:"Pumpkin",icon:"🎃",price:0,limited:true,event:true,desc:"이벤트 한정 · 호박 불꽃 폭발 + 이벤트 맵에서 사탕 획득 확률"},
 {name:"Bat",icon:"🦇",price:0,limited:true,event:true,desc:"이벤트 한정 · 치명타 + 박쥐처럼 빨라지는 가속"},
@@ -458,7 +460,7 @@ const ballTypes=[
 {name:"Hydra",icon:"🐍",price:0,limited:true,desc:"히드라(4세계) 보스 구슬 · 머리 셋이 동시에 물어뜯음"},
 {name:"Boss",icon:"👹",price:0,limited:true,desc:"악마왕(1세계) 보스 구슬 · 보스에게 3배 피해"}
 ];
-const COLORS={Gatling:["#e5e7eb","#4b5563"],Tempest:["#e9d5ff","#7c3aed"],Magma:["#fdba74","#b91c1c"],Plague:["#bef264","#4d7c0f"],Prism:["#ffffff","#22d3ee"],Eclipse:["#fde68a","#1e1b4b"],Nightmare:["#fdba74","#581c87"],Noel:["#fecaca","#15803d"],Rudolph:["#d6a36a","#7c4a1d"],Dream:["#fde68a","#dc2626"],Blizzard:["#e0f2fe","#38bdf8"],Elemental:["#fb923c","#38bdf8"],SkyPig:["#fbcfe8","#ec4899"],Snowman:["#ffffff","#93c5fd"],Santa:["#fecaca","#b91c1c"],Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
+const COLORS={Platinum:["#f8fafc","#94a3b8"],StarPlatinum:["#c4b5fd","#4c1d95"],Gatling:["#e5e7eb","#4b5563"],Tempest:["#e9d5ff","#7c3aed"],Magma:["#fdba74","#b91c1c"],Plague:["#bef264","#4d7c0f"],Prism:["#ffffff","#22d3ee"],Eclipse:["#fde68a","#1e1b4b"],Nightmare:["#fdba74","#581c87"],Noel:["#fecaca","#15803d"],Rudolph:["#d6a36a","#7c4a1d"],Dream:["#fde68a","#dc2626"],Blizzard:["#e0f2fe","#38bdf8"],Elemental:["#fb923c","#38bdf8"],SkyPig:["#fbcfe8","#ec4899"],Snowman:["#ffffff","#93c5fd"],Santa:["#fecaca","#b91c1c"],Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
 
 const bluePad={x:365,y:485,w:170,h:15};
 const ball={x:450,y:463,r:12,dx:4,dy:-4,trail:[],starBoost:0,awk:0,leg:0};
@@ -1391,7 +1393,8 @@ const FUSIONS=[
  {a:"Crystal",b:"Laser",r:"Prism",base:2600},
  {a:"Gravity",b:"Shadow",r:"Eclipse",base:2300},
  {a:"Pumpkin",b:"Bat",r:"Nightmare",base:2800},
- {a:"Santa",b:"Snowman",r:"Noel",base:3200}];
+ {a:"Santa",b:"Snowman",r:"Noel",base:3200},
+ {a:"Star",b:"Platinum",r:"StarPlatinum",base:4500,hidden:true}];   // hidden: 공식 조합법 목록에는 안 보이는 비밀 조합 (조합대에서만)
 const isLimitedBall=n=>!!(ballTypes.find(t=>t.name===n)||{}).limited;
 function fuseCost(f){const la=ballLv[f.a]||0,lb=ballLv[f.b]||0;return {base:f.base,lv:200*(la+lb),lim:1500*((isLimitedBall(f.a)?1:0)+(isLimitedBall(f.b)?1:0)),get total(){return this.base+this.lv+this.lim}}}
 function openFuse(){if(mpBlock())return;renderFuse();$("fuseMenu").classList.add("open")}
@@ -1447,6 +1450,7 @@ function renderFuse(){
  craftSel=craftSel.filter(n=>owned[n]);renderCraft();
  let h=`<p>💰 보유 <b>${Math.floor(gold)}</b> G</p>`;
  FUSIONS.forEach((f,i)=>{
+  if(f.hidden)return;
   const c=fuseCost(f),ha=!!owned[f.a],hb=!!owned[f.b],hr=!!owned[f.r],ok=ha&&hb&&!hr&&gold>=c.total;
   const rt=ballTypes.find(t=>t.name===f.r),mi=n=>`${ballIcon(n)} ${n}${owned[n]?" Lv."+(ballLv[n]||0)+" ✅":" ❌"}`;
   h+=`<div class="evCat" style="border:1px solid #6b21a8;border-radius:10px;padding:8px;margin:8px 0">
@@ -2084,6 +2088,8 @@ const P={
  Shadow:lv=>({p:Math.min(.9,.45+lv*.03),spd:.15+lv*.02}),
  Crystal:lv=>({n:3+Math.floor(lv/2),dmg:.5+lv*.04}),
  Plasma:lv=>({m:3+lv*.3}),
+ Platinum:lv=>({m:.8+lv*.06,n:2+Math.floor(lv/6),dmg:.5+lv*.04}),
+ StarPlatinum:lv=>({n:5+Math.floor(lv/2),dmg:.35+lv*.03,every:8,tdmg:.6+lv*.04}),
  Star:lv=>({n:3+Math.floor(lv/3),m:1+lv*.1}),
  Phoenix:lv=>({burn:1+lv*.1,p:Math.min(.8,.3+lv*.02),r:110+lv*5,dmg:.8+lv*.04}),
  Galaxy:lv=>({n:3+Math.floor(lv/2),dmg:.6+lv*.05,self:.5+lv*.05}),
@@ -2165,6 +2171,8 @@ function abilityText(n,lv){
   case "Boss":return `추가 피해 ${pc(p.m)} · 보스 벽돌에는 ${f1(p.boss)}배 피해`;
   case "Ghost":return `무작위 벽돌 ${p.n}개에 유령 피해 ${pc(p.dmg)}`;
   case "Galaxy":return `별빛 ${p.n}개 · 별빛 피해 ${pc(p.dmg)} · 추가 피해 ${pc(p.self)}`;
+  case "Platinum":return `맞힌 벽돌 추가 피해 ${pc(p.m)} + 근처 벽돌 ${p.n}개 관통 피해 ${pc(p.dmg)}`;
+  case "StarPlatinum":return `충돌마다 연타 러시 ${p.n}회 (회당 ${pc(p.dmg)}) · ${p.every}번째 충돌마다 시간 정지 난타(모든 벽돌에 ${pc(p.tdmg)}×3)`;
   case "Star":return `충전 후 ${p.n}회 추가 피해 ×${f1(p.m)}`;
  }
  return "";
@@ -2276,6 +2284,17 @@ function applyEffect(t,b,d,lv){
    for(let i=0;i<p.n&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];x.hp-=Math.max(1,d*p.dmg);x.flash=6;burst(x.x+x.w/2,x.y+x.h/2,5,"#e0e7ff")}
    break;}
   case "Galaxy":b.hp-=d*p.self;nearest(ball.x,ball.y,p.n,b).forEach(x=>{x.hp-=Math.max(1,d*p.dmg);x.flash=6;burst(x.x+x.w/2,x.y+x.h/2,3,"#a5b4fc")});break;
+  case "Platinum":b.hp-=Math.max(1,d*p.m);nearest(b.x+b.w/2,b.y+b.h/2,p.n,b).forEach(x=>{x.hp-=Math.max(1,d*p.dmg);x.flash=5;burst(x.x+x.w/2,x.y+x.h/2,3,"#e2e8f0")});burst(ball.x,ball.y,6,"#f1f5f9");break;
+  case "StarPlatinum":{
+   ball.sph=(ball.sph||0)+1;
+   const pool=[b,...nearest(b.x+b.w/2,b.y+b.h/2,4,b)];
+   for(let i=0;i<p.n;i++){const x=pool[i%pool.length];x.hp-=Math.max(.6,d*p.dmg);x.flash=4;burst(x.x+x.w/2,x.y+x.h/2,2,i%2?"#c4b5fd":"#fde047")}
+   floatText(b.x+b.w/2,b.y-4,"오라오라오라!","#c4b5fd");shake=Math.max(shake,3);beep(240+Math.random()*60,.05,"square",.04);
+   if(ball.sph>=p.every){ball.sph=0;
+    for(let k=0;k<3;k++)alive().forEach(x=>{x.hp-=Math.max(.6,d*p.tdmg);x.flash=8});
+    for(let i=0;i<30;i++)burst(Math.random()*W,60+Math.random()*320,1,i%2?"#c4b5fd":"#fde047");
+    floatText(W/2,200,"⏱️ 시간 정지!","#fde047");shake=Math.max(shake,8);beep(120,.4,"sawtooth",.06)}
+   break;}
   case "Star":if(!boostedThisHit&&ball.starBoost<=0)ball.starBoost=p.n;break;
  }
 }
@@ -2493,7 +2512,7 @@ function restartGame(startStage,force){
  ball.x=bluePad.x+bluePad.w/2;ball.y=bluePad.y-ball.r-1;
  {const sp=Math.min(MAX_SPEED,Math.sqrt(32)+.45*(stage-1))*(runBuff.slow?.8:1),fx=(2.5+rnd()*1.5)/Math.sqrt(32);   // 건너뛴 스테이지만큼 공 속도도 반영
   ball.dx=(rnd()<.5?-1:1)*sp*fx;ball.dy=-Math.sqrt(sp*sp-ball.dx*ball.dx)}
- ball.trail=[];ball.starBoost=0;ball.awk=0;ball.leg=0;ball.pigHits=0;ball.pgcd=0;ball.pgn=0;gatReset();ball.drT=0;ball.blT=0;ball.spT=0;ball.elT=0;stamps=[];orbitT=0;particles=[];
+ ball.trail=[];ball.starBoost=0;ball.awk=0;ball.leg=0;ball.pigHits=0;ball.pgcd=0;ball.pgn=0;ball.sph=0;gatReset();ball.drT=0;ball.blT=0;ball.spT=0;ball.elT=0;stamps=[];orbitT=0;particles=[];
  createBricks();updateUI();countdown();
 }
 
@@ -2883,6 +2902,19 @@ case "Rudolph":{
   c.restore();
   c.fillStyle="#111";c.beginPath();c.arc(-3.5,1,1.3,0,Math.PI*2);c.arc(3.5,1,1.3,0,Math.PI*2);c.fill();c.fillStyle="#ef4444";c.fillRect(-4,5,8,1.6);
   break;}
+ case "Platinum":{
+  const g=c.createRadialGradient(-r*.35,-r*.4,1,0,0,r);g.addColorStop(0,"#ffffff");g.addColorStop(.45,"#e2e8f0");g.addColorStop(1,"#64748b");
+  c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.fillStyle=g;sh();c.fill();nsh();
+  c.strokeStyle="rgba(255,255,255,.85)";c.lineWidth=1.4;c.beginPath();c.arc(0,0,r*.62,Math.PI*1.05,Math.PI*1.75);c.stroke();
+  c.fillStyle="rgba(255,255,255,.9)";const sx=((t*40)%(r*3))-r*1.5;c.save();c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.clip();c.translate(sx,0);c.rotate(.5);c.fillRect(-2,-r*2,4,r*4);c.restore();
+  break;}
+ case "StarPlatinum":{
+  const g=c.createRadialGradient(-r*.3,-r*.3,1,0,0,r);g.addColorStop(0,"#ede9fe");g.addColorStop(.5,"#a78bfa");g.addColorStop(1,"#2e1065");
+  c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.fillStyle=g;sh();c.fill();nsh();
+  c.save();c.rotate(t*.8);c.fillStyle="#fde047";c.shadowBlur=10;c.shadowColor="#fde047";polyStar(c,5,r*.8,r*.34,-Math.PI/2);c.fill();c.restore();
+  c.strokeStyle=`rgba(237,233,254,${.5+.4*Math.sin(t*14)})`;c.lineWidth=1.6;
+  for(let i=0;i<10;i++){const a=i*Math.PI/5+t*6,r0=r*1.15,r1=r*(1.5+.3*Math.sin(t*20+i*2));c.beginPath();c.moveTo(Math.cos(a)*r0,Math.sin(a)*r0);c.lineTo(Math.cos(a)*r1,Math.sin(a)*r1);c.stroke()}
+  break;}
  case "Tempest":{
   sph("#e9d5ff","#7c3aed");
   c.strokeStyle="#fde047";c.lineWidth=2;c.shadowBlur=8;c.shadowColor="#fde047";c.beginPath();c.moveTo(2,-r*.8);c.lineTo(-3,-1);c.lineTo(2,1);c.lineTo(-2,r*.8);c.stroke();c.shadowBlur=0;
@@ -3131,6 +3163,6 @@ restartGame();
 booting=false;
 animationId=requestAnimationFrame(loop);
 </script>
-<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.16-G · 기관총 구슬 · 조합대 · 합성 11종 · 사탕 꾸미기</div>
+<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.16-I · 스타 플래티나(비밀 조합) · 기관총 · 조합대</div>
 </body>
 </html>
