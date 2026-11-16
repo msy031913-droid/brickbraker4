@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Ultimate Brick Breaker</title>
+<title>Ultimate Brick Breaker v11.16-G</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -215,6 +215,8 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
  <div class="panel" style="max-height:90vh;overflow:auto;border-color:#a855f7">
   <h1>🧪 구슬 합성</h1>
   <p class="small">재료 구슬 2개를 <b>소모</b>해서 특별한 구슬을 만듭니다. 결과 구슬의 레벨은 재료 레벨의 평균이고,<br>가격은 <b>재료의 레벨 합 · 한정판 여부</b>에 따라 달라집니다.</p>
+  <div id="craftBox"></div>
+  <h2 style="margin:12px 0 4px">📖 공식 조합법</h2>
   <div id="fuseBody"></div>
   <button onclick="closeFuse()">닫기</button>
  </div>
@@ -383,6 +385,19 @@ let stage=1,gold=0,damage=1,bricksBroken=0,clearRewarded=false;
 let highScore=1,speedTimer=0,shake=0,soundOn=true;
 let keys={};
 let owned={Normal:true},currentBall="Normal",ballLv={},redeemed=[];
+const HYB={};                                   // 🧬 조합대로 만든 구슬: 이름 -> {parts:[...]}
+let dmgShare=1;                                 // 조합 구슬의 능력별 위력 비율 (틱 효과용)
+const hybShare=n=>n===2?.7:.55;                 // 재료 2개: 70% · 3개: 55%
+function regHyb(parts){
+ parts=[...parts].sort();const name=parts.join("+");
+ if(HYB[name])return name;
+ HYB[name]={parts};
+ const ic=n=>(ballTypes.find(t=>t.name===n)||{}).icon||"🔮";
+ ballTypes.push({name,icon:parts.map(ic).join(""),price:0,limited:true,hyb:true,desc:"🧬 조합대 구슬 · "+parts.join(" + ")});
+ const ca=(COLORS[parts[0]]||COLORS.Normal),cb=(COLORS[parts[parts.length-1]]||COLORS.Normal);
+ COLORS[name]=[ca[0],cb[1]];
+ return name;
+}
 // 🎃 할로윈 이벤트 상태
 let candy=0,buffs={atk:0,wide:0,slow:0,gold2:0},potions={revive:0,blast:0},eventBest=1,evBought={};
 const worldLen=()=>world===2?5:10;   // 2세계는 스테이지가 5개
@@ -428,6 +443,7 @@ const ballTypes=[
 {name:"Blizzard",icon:"🌨️",price:0,limited:true,desc:"🧪 합성 한정(눈사람+얼음) · 주기적으로 모든 벽돌에 눈보라"},
 {name:"Elemental",icon:"☯️",price:0,limited:true,desc:"🧪 합성 한정(불+얼음) · 충돌마다 불꽃/냉기 폭발이 번갈아 터짐"},
 {name:"SkyPig",icon:"🐖",price:0,limited:true,desc:"🧪 합성 한정(돼지+비둘기) · 하늘에서 거대 발도장이 주기적으로 쾅!"},
+{name:"Gatling",icon:"🔫",price:0,limited:true,desc:"데미지 3 고정 · 초고속 기관총 연사 (코드 MACHINEGUN)"},
 {name:"Tempest",icon:"🌩️",price:0,limited:true,desc:"🧪 합성 한정(전기+바람) · 충돌마다 번개가 여러 벽돌에 연쇄 + 가속"},
 {name:"Magma",icon:"🌋",price:0,limited:true,desc:"🧪 합성 한정(폭탄+불) · 충돌마다 용암 폭발 + 직접 맞힌 벽돌 화상"},
 {name:"Plague",icon:"🦠",price:0,limited:true,desc:"🧪 합성 한정(독+유령) · 맞힌 벽돌 주변으로 역병이 번져 모두 중독"},
@@ -442,7 +458,7 @@ const ballTypes=[
 {name:"Hydra",icon:"🐍",price:0,limited:true,desc:"히드라(4세계) 보스 구슬 · 머리 셋이 동시에 물어뜯음"},
 {name:"Boss",icon:"👹",price:0,limited:true,desc:"악마왕(1세계) 보스 구슬 · 보스에게 3배 피해"}
 ];
-const COLORS={Tempest:["#e9d5ff","#7c3aed"],Magma:["#fdba74","#b91c1c"],Plague:["#bef264","#4d7c0f"],Prism:["#ffffff","#22d3ee"],Eclipse:["#fde68a","#1e1b4b"],Nightmare:["#fdba74","#581c87"],Noel:["#fecaca","#15803d"],Rudolph:["#d6a36a","#7c4a1d"],Dream:["#fde68a","#dc2626"],Blizzard:["#e0f2fe","#38bdf8"],Elemental:["#fb923c","#38bdf8"],SkyPig:["#fbcfe8","#ec4899"],Snowman:["#ffffff","#93c5fd"],Santa:["#fecaca","#b91c1c"],Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
+const COLORS={Gatling:["#e5e7eb","#4b5563"],Tempest:["#e9d5ff","#7c3aed"],Magma:["#fdba74","#b91c1c"],Plague:["#bef264","#4d7c0f"],Prism:["#ffffff","#22d3ee"],Eclipse:["#fde68a","#1e1b4b"],Nightmare:["#fdba74","#581c87"],Noel:["#fecaca","#15803d"],Rudolph:["#d6a36a","#7c4a1d"],Dream:["#fde68a","#dc2626"],Blizzard:["#e0f2fe","#38bdf8"],Elemental:["#fb923c","#38bdf8"],SkyPig:["#fbcfe8","#ec4899"],Snowman:["#ffffff","#93c5fd"],Santa:["#fecaca","#b91c1c"],Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
 
 const bluePad={x:365,y:485,w:170,h:15};
 const ball={x:450,y:463,r:12,dx:4,dy:-4,trail:[],starBoost:0,awk:0,leg:0};
@@ -479,7 +495,7 @@ function toggleSound(){soundOn=!soundOn;updateUI();saveGame()}
 /* ============ 저장 / 불러오기 ============ */
 function saveGame(showMessage=false){
  if(mp.active)return;   // 대결 중에는 임시 능력치가 저장되지 않도록 막음
- const data={ballUse,dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
+ const data={hyb:Object.values(HYB).map(h=>h.parts),ballUse,dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
  try{
   localStorage.setItem("ultimateBrickBreakerSave",JSON.stringify(data));
   localStorage.setItem("brickBreakerHighScore",String(highScore));
@@ -513,7 +529,7 @@ function loadGame(){
   if(d.potions&&typeof d.potions==="object")for(const k in potions)if(Number.isFinite(d.potions[k]))potions[k]=Math.max(0,Math.floor(d.potions[k]));
   if(Number.isFinite(d.eventBest))eventBest=Math.max(1,Math.floor(d.eventBest));
   if(d.evBought&&typeof d.evBought==="object")evBought={...d.evBought};
-  delete owned.Gatling;delete ballLv.Gatling;
+  if(Array.isArray(d.hyb))d.hyb.forEach(pt=>{if(Array.isArray(pt)&&pt.length>=2&&pt.length<=3&&pt.every(n=>ballTypes.some(t=>t.name===n&&!t.hyb)))regHyb(pt)});
   if(typeof d.currentBall==="string"&&owned[d.currentBall]&&ballTypes.some(t=>t.name===d.currentBall))currentBall=d.currentBall;
  }catch(e){console.warn("저장 데이터를 불러오지 못했습니다.",e)}
 }
@@ -593,6 +609,7 @@ const CODES={
  "PEACE":{gold:700,msg:"평화의 선물"},
  "TRICKORTREAT":{candy:100,msg:"트릭 오어 트릿! 사탕 100개"},
  "CANDYRAIN":{candy:500,msg:"사탕 비 🍬 500개"},
+ "MACHINEGUN":{ball:"Gatling",msg:"한정판 기관총 구슬 🔫 (데미지 3 고정)"},
  "EVERYTHING":{all:true,msg:"모든 코드 보상 통합 패키지"},
  "MEGAPACK":{gold:3000,ball:["Phoenix","Galaxy"],lv:{Phoenix:5,Galaxy:5},dmg:3,msg:"메가 패키지 (한정판 2종 + Lv.5)"}
 };
@@ -840,7 +857,7 @@ const EVENT_SHOP=[
   {id:"perm_dmg",icon:"🗡️",name:"기본 데미지 +1 (영구)",desc:"최대 5회 구매 가능",price:100,max:5,perm:"dmg"}]}
 ];
 const maxStart=()=>eventMode?eventBest:highScore;
-const effDamage=()=>(damage+(runBuff.atk?3:0))*dmgMul();
+const effDamage=()=>currentBall==="Gatling"?3:(damage+(runBuff.atk?3:0))*dmgMul()*dmgShare;   // 🔫 Gatling: 데미지 3 고정
 function addCandy(n,x,y){
  candy+=n;runCandy+=n;
  if(x!==undefined)floatText(x,y,"+"+n+" 🍬","#fbbf24");
@@ -1139,8 +1156,66 @@ function drawBossCore(b,th){
 
 /* ============ 🧪 주기 능력 (합성 구슬) ============ */
 let sleighs=[];
+/* ============ 🔫 기관총 구슬 v3 (처음부터 재제작) ============ */
+const gat={ang:-Math.PI/2,spin:0,acc:0,n:0,slugs:[],shells:[],recoil:0,flash:0};
+const gatRate=lv=>40+lv*2;                         // 초당 발사 수 (Lv.1≈42 → Lv.20=80)
+function gatReset(){gat.spin=0;gat.acc=0;gat.slugs.length=0;gat.shells.length=0;gat.recoil=0;gat.flash=0}
+function gatTick(){
+ if(currentBall!=="Gatling"){if(gat.slugs.length||gat.shells.length)gatReset();return}
+ const lv=useLv("Gatling"),tg=nearest(ball.x,ball.y,1)[0];
+ // 조준: 가장 가까운 벽돌 쪽으로 포신이 부드럽게 회전
+ if(tg){
+  const want=Math.atan2(tg.y+tg.h/2-ball.y,tg.x+tg.w/2-ball.x);
+  let d=want-gat.ang;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;
+  gat.ang+=d*.35;
+  gat.spin+=(1-gat.spin)*.07;                      // 스핀업 (약 0.5초에 최고속)
+ }else gat.spin*=.92;
+ gat.recoil*=.7;gat.flash=Math.max(0,gat.flash-1);
+ // 연사
+ if(tg&&gat.spin>.3){
+  gat.acc+=gatRate(lv)*gat.spin/60;
+  while(gat.acc>=1){
+   gat.acc-=1;gat.n++;
+   const a=gat.ang+(Math.random()-.5)*.05,mx=ball.x+Math.cos(a)*(ball.r+13),my=ball.y+Math.sin(a)*(ball.r+13);
+   gat.slugs.push({x:mx,y:my,dx:Math.cos(a)*16,dy:Math.sin(a)*16,life:70});
+   gat.recoil=3;gat.flash=2;
+   if(gat.n%2===0)gat.shells.push({x:ball.x,y:ball.y,dx:-Math.sin(a)*(2+Math.random()*2)+(Math.random()-.5),dy:Math.cos(a)*(2+Math.random()*2)-2.5,rot:Math.random()*6,life:34});
+   if(gat.n%4===0)beep(150+Math.random()*80,.03,"square",.02);
+  }
+ }else gat.acc=Math.min(gat.acc,.99);
+ // 총알 이동·충돌 (4칸씩 쪼개서 벽돌 통과 방지)
+ let hit=false;
+ for(let i=gat.slugs.length-1;i>=0;i--){
+  const q=gat.slugs[i];let dead=false;
+  for(let k=0;k<4&&!dead;k++){
+   q.x+=q.dx/4;q.y+=q.dy/4;
+   for(const b of bricks){
+    if(b.hp>0&&q.x>=b.x&&q.x<=b.x+b.w&&q.y>=b.y&&q.y<=b.y+b.h){
+     b.hp-=3;b.flash=3;hit=true;dead=true;                       // 💥 데미지 3 고정
+     for(let j=0;j<3;j++)particles.push({x:q.x,y:q.y,dx:(Math.random()-.5)*5-q.dx*.1,dy:(Math.random()-.5)*5-q.dy*.1,life:14,c:j?"#fde047":"#fff",s:2});
+     break;
+    }
+   }
+  }
+  if(--q.life<=0||q.x<-30||q.x>W+30||q.y<-30||q.y>H+30)dead=true;
+  if(dead)gat.slugs.splice(i,1);
+ }
+ for(let i=gat.shells.length-1;i>=0;i--){const q=gat.shells[i];q.x+=q.dx;q.y+=q.dy;q.dy+=.28;q.rot+=.4;if(--q.life<=0)gat.shells.splice(i,1)}
+ if(hit){reap();if(bricks.length&&bricks.every(b=>b.hp<=0))clearStage()}
+}
+function drawGatFx(){
+ if(currentBall!=="Gatling")return;
+ const c=ctx;c.save();c.lineCap="round";
+ gat.shells.forEach(q=>{c.save();c.translate(q.x,q.y);c.rotate(q.rot);c.globalAlpha=Math.min(1,q.life/14);c.fillStyle="#d4a017";c.fillRect(-2.5,-1,5,2);c.restore()});
+ c.globalAlpha=1;
+ gat.slugs.forEach(q=>{
+  c.strokeStyle="rgba(251,146,60,.45)";c.lineWidth=5;c.beginPath();c.moveTo(q.x-q.dx*2.2,q.y-q.dy*2.2);c.lineTo(q.x,q.y);c.stroke();
+  c.strokeStyle="#fffbe0";c.lineWidth=2.4;c.shadowBlur=10;c.shadowColor="#fbbf24";c.beginPath();c.moveTo(q.x-q.dx*1.1,q.y-q.dy*1.1);c.lineTo(q.x,q.y);c.stroke();c.shadowBlur=0});
+ c.restore();
+}
 function fusionTick(){
- const n=currentBall,lv=useLv(n);
+ const _hy=HYB[currentBall],_names=_hy?_hy.parts:[currentBall];
+ for(const n of _names){const lv=useLv(_hy?currentBall:n);dmgShare=_hy?hybShare(_names.length):1;
  if(n==="Dream"){
   const p=P.Dream(lv);ball.drT=(ball.drT||0)+1;
   if(ball.drT>=120){ball.drT=0;const dir=Math.random()<.5?1:-1;sleighs.push({x:dir>0?-160:W+160,y:38+Math.random()*16,dir,left:p.n,gap:Math.max(4,Math.floor(80/p.n)),cd:6,p});beep(520,.25,"triangle",.05)}
@@ -1156,6 +1231,7 @@ function fusionTick(){
    alive().forEach(x=>{if(Math.hypot(x.x+x.w/2-cx,x.y+x.h/2-cy)<p.r){x.hp-=Math.max(1,d*p.dmg);x.flash=8}});
    addStamp("paw",cx,cy,p.r*1.1,40,p.r);shake=Math.max(shake,7);beep(90,.3,"square",.06);floatText(cx,cy-20,"🐖 쾅!","#ffd1e8")}}
  }
+ dmgShare=1;}
  for(let i=sleighs.length-1;i>=0;i--){
   const q=sleighs[i];q.x+=q.dir*12;
   if(q.left>0&&--q.cd<=0&&q.x>40&&q.x<W-40){
@@ -1227,7 +1303,7 @@ const BOSS_PATTERN_TXT={aim:"불덩이를 구슬에게 발사",slow:"맞으면 �
 let shots=[],ballHp=5,ballInv=0;
 const inBossRoom=()=>bricks.some(b=>b.room&&b.hp>0);
 const isBossRoomStage=()=>!mp.active&&!eventMode&&!secretMode&&stage===worldLen();
-const ballMaxHp=()=>5+(currentBall==="Golem"?P.Golem(useLv("Golem")).hp:0);
+const ballMaxHp=()=>5+((currentBall==="Golem"||(HYB[currentBall]&&HYB[currentBall].parts.includes("Golem")))?P.Golem(useLv(currentBall)).hp*(HYB[currentBall]?hybShare(HYB[currentBall].parts.length):1):0);
 function hurtBall(n){
  if(ballInv>0)return;
  ballHp-=n;ballInv=70;shake=Math.max(shake,7);burst(ball.x,ball.y,14,"#ff5a5a");beep(140,.25,"sawtooth",.06);
@@ -1320,7 +1396,55 @@ const isLimitedBall=n=>!!(ballTypes.find(t=>t.name===n)||{}).limited;
 function fuseCost(f){const la=ballLv[f.a]||0,lb=ballLv[f.b]||0;return {base:f.base,lv:200*(la+lb),lim:1500*((isLimitedBall(f.a)?1:0)+(isLimitedBall(f.b)?1:0)),get total(){return this.base+this.lv+this.lim}}}
 function openFuse(){if(mpBlock())return;renderFuse();$("fuseMenu").classList.add("open")}
 function closeFuse(){$("fuseMenu").classList.remove("open");updateUI()}
+let craftSel=[];
+const craftPool=()=>ballTypes.filter(t=>owned[t.name]&&t.name!=="Normal"&&t.name!=="Rainbow"&&t.name!=="Gatling"&&!t.hyb).map(t=>t.name);
+function craftInfo(){
+ const sel=craftSel.filter(n=>owned[n]),k=sel.length;
+ const sorted=[...sel].sort(),name=sorted.join("+");
+ const off=k===2?FUSIONS.findIndex(f=>(f.a===sel[0]&&f.b===sel[1])||(f.a===sel[1]&&f.b===sel[0])):-1;
+ const lvSum=sel.reduce((a,n)=>a+(ballLv[n]||0),0),lim=sel.filter(isLimitedBall).length;
+ const lv=k?Math.floor(lvSum/k):0;
+ let total,resName,resIcon,desc,block="";
+ if(off>=0){const f=FUSIONS[off];total=fuseCost(f).total;resName=f.r;const rt=ballTypes.find(t=>t.name===f.r);resIcon=rt.icon;desc="📖 공식 조합! "+rt.desc;if(owned[f.r])block="이미 보유 중인 구슬입니다"}
+ else{total=(k===3?4000:1500)+200*lvSum+1500*lim;resName=name;resIcon=sorted.map(ballIcon).join("");
+  desc=k>=2?`🧬 새로운 조합 구슬 · 각 재료 능력이 ${Math.round(hybShare(k)*100)}% 위력으로 모두 발동`:"";
+  if(HYB[name]&&owned[name])block="이미 보유 중인 조합입니다"}
+ if(k<2)block="재료를 2개 이상 올려 주세요";
+ else if(!block&&gold<total)block="골드가 부족합니다";
+ return {sel,k,off,lv,total,resName,resIcon,desc,block,name};
+}
+function craftAdd(n){const i=craftSel.indexOf(n);if(i>=0)craftSel.splice(i,1);else if(craftSel.length<3)craftSel.push(n);else{toast("조합대는 최대 3칸입니다");return}beep(600,.05,"triangle");renderFuse()}
+function craftSlot(i){craftSel.splice(i,1);renderFuse()}
+function craftClear(){craftSel=[];renderFuse()}
+function craftDo(){
+ const c=craftInfo();if(c.block)return;
+ if(c.off>=0){craftSel=[];fuse(c.off);return}
+ if(!confirm(`${c.sel.join(" + ")} 구슬이 사라지고 「${c.resName}」 구슬이 만들어집니다. 조합할까요? (${c.total}G)`))return;
+ gold-=c.total;
+ c.sel.forEach(n=>{delete owned[n];delete ballLv[n];delete ballUse[n]});
+ const name=regHyb(c.sel);owned[name]=true;ballLv[name]=c.lv;currentBall=name;craftSel=[];
+ beep(990,.4,"triangle",.07);cosRain();
+ toast(`🧬 조합 성공!\n${ballIcon(name)} ${name} 구슬 Lv.${c.lv} 탄생!`);
+ saveGame();refreshMenus();renderFuse();
+}
+function renderCraft(){
+ const c=craftInfo(),pool=craftPool();
+ let h=`<div style="border:2px solid #a855f7;border-radius:12px;padding:10px;margin:8px 0;background:rgba(88,28,135,.25)"><h2 style="margin:0 0 4px">🛠️ 조합대 (직접 합성)</h2>
+ <p class="small" style="margin:0 0 8px">보유한 구슬 <b>2~3개</b>를 조합대에 올리면 능력이 합쳐진 새 구슬이 됩니다. 재료는 사라지고, 공식 조합법과 같으면 공식 결과 구슬이 나와요.<br>💰 보유 <b>${Math.floor(gold)}</b> G</p><div style="display:flex;gap:8px;justify-content:center;margin:8px 0">`;
+ for(let i=0;i<3;i++){const n=craftSel[i];
+  h+=n?`<button style="min-width:92px;min-height:70px;border:2px solid #c084fc;background:#3b0764" onclick="craftSlot(${i})"><div style="font-size:26px">${ballIcon(n)}</div><div class="small">${n}<br>Lv.${ballLv[n]||0}</div><div class="small">(눌러서 빼기)</div></button>`
+   :`<button style="min-width:92px;min-height:70px;border:2px dashed #7c3aed;background:rgba(0,0,0,.25)" onclick="void 0"><div style="font-size:22px;opacity:.5">${i===2?"➕":"⬜"}</div><div class="small">${i===2?"3번째(선택)":"빈 칸"}</div></button>`;
+  if(i<2)h+=`<div style="align-self:center;font-size:22px">＋</div>`}
+ h+=`</div>`;
+ if(c.k>=2)h+=`<div style="text-align:center;margin:6px 0">⬇️<br><b style="font-size:20px;color:#e9d5ff">${c.resIcon} ${c.resName}</b> <span class="small">Lv.${c.off>=0?Math.floor(c.sel.reduce((a,n)=>a+(ballLv[n]||0),0)/2):c.lv}</span><br><span class="small">${c.desc}</span><br>`+(c.sel.length?`<span class="small">${c.sel.map(n=>"["+n+"] "+abilityText(n,c.lv)).join("<br>")}</span><br>`:"")+`가격 <b>${c.total}G</b></div>`;
+ h+=`<div style="text-align:center"><button ${c.block?"disabled":""} onclick="craftDo()" style="font-size:16px;padding:10px 20px">${c.block?"🔒 "+c.block:"🧪 조합하기 ("+c.total+"G)"}</button> <button onclick="craftClear()">🗑️ 비우기</button></div>
+ <h3 style="margin:12px 0 4px">내 구슬 (눌러서 올리기)</h3><div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">`;
+ h+=pool.length?pool.map(n=>{const on=craftSel.includes(n);return `<button style="min-width:84px;${on?"border-color:#fde047;box-shadow:0 0 10px #fde04799":""}" onclick="craftAdd('${n}')">${ballIcon(n)} ${n}<br><span class="small">Lv.${ballLv[n]||0}${on?" ✅":""}</span></button>`}).join(""):`<span class="small">조합할 수 있는 구슬이 없습니다. (일반 구슬 제외, 2개 이상 필요)</span>`;
+ h+=`</div></div>`;
+ $("craftBox").innerHTML=h;
+}
 function renderFuse(){
+ craftSel=craftSel.filter(n=>owned[n]);renderCraft();
  let h=`<p>💰 보유 <b>${Math.floor(gold)}</b> G</p>`;
  FUSIONS.forEach((f,i)=>{
   const c=fuseCost(f),ha=!!owned[f.a],hb=!!owned[f.b],hr=!!owned[f.r],ok=ha&&hb&&!hr&&gold>=c.total;
@@ -1659,7 +1783,7 @@ function dev2Map(){if(!devOk())return;secretDoor=null;secretShop=null;secretMode
 function dev2Gold(n){n=Math.floor(n);if(!(n>0))return;gold+=n;saveGame();updateUI();dev2Info();beep(880,.1,"triangle")}
 
 /* ============ 🛒 비밀 상점 / 🚪 비밀 맵의 문 ============ */
-const MYSTERY_POOL=["Phoenix","Galaxy","Pumpkin","Bat","Ghost","Pig","Pigeon"],MYSTERY_PRICE=600,KEY_PRICE=800;
+const MYSTERY_POOL=["Phoenix","Galaxy","Pumpkin","Bat","Ghost","Pig","Pigeon","Gatling"],MYSTERY_PRICE=600,KEY_PRICE=800;
 const hitObj=o=>ball.x+ball.r>o.x&&ball.x-ball.r<o.x+o.w&&ball.y+ball.r>o.y&&ball.y-ball.r<o.y+o.h;
 function specialsTick(){
  if(secretShop){if(secretShop.cd>0)secretShop.cd--;else if(hitObj(secretShop)){openShop()}}
@@ -1747,7 +1871,7 @@ function updateUI(){
  $("topDev2").style.display=dev2Unlocked&&!mp.active?"":"none";
  $("topDev").style.display=devUnlocked&&!mp.active?"":"none";
  $("highScoreText").textContent=(cosGet("title")?cosGet("title").text+" · ":"")+(world>1?"🌍 세계 "+world+(world===2?" (5스테이지) · ":" · "):"")+(secretKeys>0?"🗝️×"+secretKeys+" · ":"")+"최고기록: STAGE "+highScore;
- $("damageText").textContent="⚔️ DAMAGE: "+damage+(rebirth?" (×"+f2(dmgMul())+")":"");
+ $("damageText").textContent=currentBall==="Gatling"?"⚔️ DAMAGE: 3 (🔫 고정)":"⚔️ DAMAGE: "+damage+(rebirth?" (×"+f2(dmgMul())+")":"");
  $("topRebirth").textContent="♻️ 환생"+(rebirth?" "+rebirth:"");
  $("damageValue").textContent=damage;
  $("upgradeCostValue").textContent=getUpgradeCost()+" GOLD";
@@ -1857,7 +1981,7 @@ function togglePause(){
 
 /* ============ 벽돌 ============ */
 function createBricks(){
- bricks=[];secretShop=null;secretDoor=null;proj=[];sleighs=[];
+ bricks=[];secretShop=null;secretDoor=null;proj=[];sleighs=[];gatReset();
  if(secretMode){   // 🗝️ 비밀 맵: 금 벽돌 보물방
   const hp=6+stage*3;
   for(let r=0;r<5;r++)for(let c=0;c<9;c++){
@@ -1977,6 +2101,7 @@ const P={
  Blizzard:lv=>({dmg:.2+lv*.015,every:Math.max(90,170-lv*4)}),
  Elemental:lv=>({r:90+lv*3,dmg:.4+lv*.03}),
  SkyPig:lv=>({dmg:1+lv*.08,r:100+lv*3,every:Math.max(70,130-lv*3)}),
+ Gatling:lv=>({rate:40+lv*2,dmg:3}),   // 초당 발사 수 (Lv.20 = 80발/초)
  Tempest:lv=>({n:3+Math.floor(lv/3),dmg:.7+lv*.05,spd:.15+lv*.01}),
  Magma:lv=>({r:100+lv*4,dmg:.6+lv*.05,burn:1+lv*.1}),
  Plague:lv=>({r:110+lv*4,dmg:.45+lv*.04,self:.6+lv*.05}),
@@ -1993,6 +2118,7 @@ const P={
 };
 const f1=n=>String(Math.round(n*10)/10),f2=n=>String(Math.round(n*100)/100),pc=n=>Math.round(n*100)+"%";
 function abilityText(n,lv){
+ if(HYB[n]){const h=HYB[n];return `🧬 각 능력 위력 ${Math.round(hybShare(h.parts.length)*100)}% · `+h.parts.map(q=>`[${q}] ${abilityText(q,lv)}`).join(" / ")}
  const p=P[n](lv);
  switch(n){
   case "Normal":return `치명타 확률 ${pc(p.crit)} (피해 ×2)`;
@@ -2020,6 +2146,7 @@ function abilityText(n,lv){
   case "Pigeon":return `벽돌에 부딪힐 때마다 데미지 +${p.add} 누적 (이번 판 최대 +${p.cap}) · 새 판마다 초기화`;
   case "Rudolph":return `빨간 코 빛줄기: 가까운 벽돌 ${p.n}개를 꿰뚫음 (피해 ${pc(p.dmg)})`;
   case "Dream":return `2초마다 산타 썰매 출격! 지나가며 선물 ${p.n}개 투하 (폭발 반경 ${p.r} · 피해 ${pc(p.dmg)} · ${pc(p.gold)} 금빛 선물)`;
+  case "Gatling":return `모든 피해가 ${p.dmg}으로 고정 · 초당 ${p.rate}발 기관총 연사 · 가까운 벽돌을 자동 조준 · 예광탄이 날아가 맞힌 벽돌에 3씩 · 발사할수록 총열이 빨리 돈다`;
   case "Tempest":return `충돌마다 번개가 가까운 벽돌 ${p.n}개에 연쇄 (피해 ${pc(p.dmg)}) + 가속`;
   case "Magma":return `충돌마다 반경 ${p.r} 용암 폭발 (피해 ${pc(p.dmg)}) + 맞힌 벽돌 화상 ${pc(p.burn)}`;
   case "Plague":return `맞힌 벽돌 주변 반경 ${p.r}에 역병 피해 ${pc(p.dmg)} + 맞힌 벽돌 추가 ${pc(p.self)}`;
@@ -2044,6 +2171,7 @@ function abilityText(n,lv){
 }
 let boostedThisHit=false;
 function applyEffect(t,b,d,lv){
+ if(HYB[t]){const h=HYB[t],sh=hybShare(h.parts.length);h.parts.forEach(q=>applyEffect(q,b,d*sh,lv));return}
  const p=P[t](lv);
  switch(t){
   case "Fire":b.hp-=Math.max(1,d*p.burn);break;
@@ -2124,7 +2252,7 @@ function applyEffect(t,b,d,lv){
    for(let i=0;i<p.snow&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];launch("snow",ball.x,ball.y,x,Math.max(1,d*p.dmg*.5),0,0)}
    for(let i=0;i<p.n&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];launch("gift",ball.x,ball.y,x,Math.max(1,d*p.dmg),p.r,Math.random()<p.gold?1:0)}
    break;}
-  case "Dream":case "Blizzard":case "SkyPig":break;   // 주기 능력 (fusionTick)
+  case "Dream":case "Blizzard":case "SkyPig":case "Gatling":break;   // 주기 능력 (fusionTick)
   case "Snowman":{
    const pool=alive().filter(x=>x!==b);
    for(let i=0;i<p.n&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];launch("snow",ball.x,ball.y,x,Math.max(1,d*p.dmg),0,0)}
@@ -2365,7 +2493,7 @@ function restartGame(startStage,force){
  ball.x=bluePad.x+bluePad.w/2;ball.y=bluePad.y-ball.r-1;
  {const sp=Math.min(MAX_SPEED,Math.sqrt(32)+.45*(stage-1))*(runBuff.slow?.8:1),fx=(2.5+rnd()*1.5)/Math.sqrt(32);   // 건너뛴 스테이지만큼 공 속도도 반영
   ball.dx=(rnd()<.5?-1:1)*sp*fx;ball.dy=-Math.sqrt(sp*sp-ball.dx*ball.dx)}
- ball.trail=[];ball.starBoost=0;ball.awk=0;ball.leg=0;ball.pigHits=0;ball.pgcd=0;ball.pgn=0;ball.drT=0;ball.blT=0;ball.spT=0;ball.elT=0;stamps=[];orbitT=0;particles=[];
+ ball.trail=[];ball.starBoost=0;ball.awk=0;ball.leg=0;ball.pigHits=0;ball.pgcd=0;ball.pgn=0;gatReset();ball.drT=0;ball.blT=0;ball.spT=0;ball.elT=0;stamps=[];orbitT=0;particles=[];
  createBricks();updateUI();countdown();
 }
 
@@ -2421,7 +2549,7 @@ function drawBallVisual(c,x,y,r,name,lv,trail,tm,ch){
   if(tier>=5&&ch.l>0){c.beginPath();c.strokeStyle="#fff";c.lineWidth=2;c.arc(x,y,r+23,-Math.PI/2,-Math.PI/2+Math.PI*2*ch.l);c.stroke()}
  }
  // 본체 (구슬마다 다른 모양)
- drawBody(c,x,y,r,name,c1,legend?rb:c2,t,glow,lv);
+ drawBodyAny(c,x,y,r,name,c1,legend?rb:c2,t,glow,lv);
  if(bodyMain){const ac=cosGet("acc");if(ac)drawAcc(c,x,y,r*(1+tier*.04),ac,t)}
  // 전설: 왕관 표시
  if(legend){
@@ -2543,6 +2671,15 @@ function evoFront(c,n,tr,r,t,c2){
  }
 }
 
+function drawBodyAny(c,x,y,r,name,c1,c2,t,glow,lv){
+ const h=HYB[name];if(!h)return drawBody(c,x,y,r,name,c1,c2,t,glow,lv);
+ const n=h.parts.length,seg=Math.PI*2/n;
+ h.parts.forEach((pn,i)=>{const a0=-Math.PI/2+i*seg;c.save();c.beginPath();c.moveTo(x,y);c.arc(x,y,r*5,a0,a0+seg);c.closePath();c.clip();
+  const pc2=COLORS[pn]||COLORS.Normal;drawBody(c,x,y,r,pn,pc2[0],pc2[1],t,pc2[1],lv);c.restore()});
+ c.save();c.strokeStyle="rgba(255,255,255,.85)";c.lineWidth=1.6;c.beginPath();
+ for(let i=0;i<n;i++){const a=-Math.PI/2+i*seg;c.moveTo(x,y);c.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r)}c.stroke();
+ c.fillStyle="#fff";c.beginPath();c.arc(x,y,2,0,Math.PI*2);c.fill();c.restore();
+}
 function drawBody(c,x,y,r,name,c1,c2,t,glow,lv){
  c.save();c.translate(x,y);
  const tr=tierOf(lv);c.scale(1+tr*.04,1+tr*.04);   // 레벨이 오를수록 구슬이 살짝 커짐
@@ -2732,6 +2869,20 @@ case "Rudolph":{
   c.fillStyle="#f472b6";c.beginPath();c.ellipse(0,3,6,4.2,0,0,Math.PI*2);c.fill();c.fillStyle="#9d174d";c.beginPath();c.arc(-2,3,1,0,Math.PI*2);c.arc(2,3,1,0,Math.PI*2);c.fill();
   c.fillStyle="#1f2937";c.beginPath();c.arc(-4.5,-3,1.5,0,Math.PI*2);c.arc(4.5,-3,1.5,0,Math.PI*2);c.fill();
   break;}
+ case "Gatling":{
+  const main=bodyMain,ang=main?gat.ang:-Math.PI/2,sp=main?gat.spin:.4,rec=main?gat.recoil:0;
+  sph("#e5e7eb","#4b5563");
+  c.save();c.rotate(ang+Math.PI/2);c.translate(0,rec);
+  c.fillStyle="#374151";c.fillRect(-r*.75,-r*.55,r*1.5,5);                       // 총열 받침
+  const roll=(main?gat.n*.9:0)+t*sp*18;
+  for(let i=0;i<4;i++){const a=roll+i*Math.PI/2,bx=Math.cos(a)*r*.5,sh2=.55+.45*Math.sin(a);   // 회전하는 4연 총열
+   c.fillStyle=`rgb(${Math.floor(110+90*sh2)},${Math.floor(115+90*sh2)},${Math.floor(125+90*sh2)})`;
+   c.fillRect(bx-1.7,-r*1.5,3.4,r*1.0);c.fillStyle="#111827";c.fillRect(bx-1.1,-r*1.5,2.2,2)}
+  c.strokeStyle="#6b7280";c.lineWidth=1.5;c.strokeRect(-r*.7,-r*1.5,r*1.4,2);       // 총구 링
+  if(main&&gat.flash>0){c.fillStyle="#fde047";c.shadowBlur=14;c.shadowColor="#f59e0b";c.save();c.translate(0,-r*1.75);polyStar(c,7,9,3.5,Math.random()*6);c.fill();c.restore();c.fillStyle="#fff";c.beginPath();c.arc(0,-r*1.6,3,0,Math.PI*2);c.fill();c.shadowBlur=0}
+  c.restore();
+  c.fillStyle="#111";c.beginPath();c.arc(-3.5,1,1.3,0,Math.PI*2);c.arc(3.5,1,1.3,0,Math.PI*2);c.fill();c.fillStyle="#ef4444";c.fillRect(-4,5,8,1.6);
+  break;}
  case "Tempest":{
   sph("#e9d5ff","#7c3aed");
   c.strokeStyle="#fde047";c.lineWidth=2;c.shadowBlur=8;c.shadowColor="#fde047";c.beginPath();c.moveTo(2,-r*.8);c.lineTo(-3,-1);c.lineTo(2,1);c.lineTo(-2,r*.8);c.stroke();c.shadowBlur=0;
@@ -2905,7 +3056,7 @@ function render(){
  if(cp&&cp.deco){ctx.save();ctx.shadowBlur=0;rr(bluePad.x,bluePad.y,bluePad.w,bluePad.h,7);ctx.clip();cp.deco(ctx,bluePad,tt);ctx.restore()}
  ctx.shadowBlur=0;
 
- drawStamps();drawProj();drawSleighs();
+ drawStamps();drawProj();drawGatFx();drawSleighs();
  // 파티클
  particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/28);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,p.s,p.s)});
  ctx.globalAlpha=1;
@@ -2929,7 +3080,7 @@ function step(){
  floaters.forEach(f=>{f.y-=.6;f.life--});floaters=floaters.filter(f=>f.life>0);
  stamps.forEach(s=>s.life--);stamps=stamps.filter(s=>s.life>0);
  projTick();
- if(gameStarted&&!gameOver){fusionTick()}
+ if(gameStarted&&!gameOver){fusionTick();gatTick()}
  particles=particles.filter(p=>p.life>0);
  bricks.forEach(b=>{if(b.flash>0)b.flash--;if(b.oc>0)b.oc--;if(b.hc>0)b.hc--});
  if(shake>0)shake=Math.max(0,shake-.5);
@@ -2980,5 +3131,6 @@ restartGame();
 booting=false;
 animationId=requestAnimationFrame(loop);
 </script>
+<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.16-G · 기관총 구슬 · 조합대 · 합성 11종 · 사탕 꾸미기</div>
 </body>
 </html>
