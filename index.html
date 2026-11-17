@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Ultimate Brick Breaker v11.16-I</title>
+<title>Ultimate Brick Breaker v11.17-J</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -612,7 +612,9 @@ const CODES={
  "TRICKORTREAT":{candy:100,msg:"트릭 오어 트릿! 사탕 100개"},
  "CANDYRAIN":{candy:500,msg:"사탕 비 🍬 500개"},
  "MACHINEGUN":{ball:"Gatling",msg:"한정판 기관총 구슬 🔫 (데미지 3 고정)"},
- "EVERYTHING":{all:true,msg:"모든 코드 보상 통합 패키지"},
+ "EVERYTHING":{prank:true,msg:"힝 속았지"},
+ "REALEVERYTHING":{all:true,msg:"모든 코드 보상 통합 패키지"},
+ "SURPRISE":{gold:5000,candy:300,msg:"깜짝 선물! 골드 5000 + 사탕 300"},
  "MEGAPACK":{gold:3000,ball:["Phoenix","Galaxy"],lv:{Phoenix:5,Galaxy:5},dmg:3,msg:"메가 패키지 (한정판 2종 + Lv.5)"}
 };
 // 구슬 하나를 Lv.20으로 지급하는 코드: MAX + 구슬 이름 (예: MAXFIRE, MAXPIG)
@@ -628,10 +630,11 @@ function redeemCode(){
  if(raw==="DEVPANEL"){devUnlocked=true;saveGame();updateUI();msg.style.color="#86efac";msg.textContent="🛠️ 개발자 패널 활성화! 상단 🛠️ 버튼을 확인하세요";beep(660,.2,"triangle");return}
  let c=CODES[raw];
  if(!c)return fail("❌ 존재하지 않는 코드입니다.");
+ if(c.prank){msg.style.color="#fde047";msg.innerHTML="😝 <b>힝 속았지~!</b><br><span style=\"font-size:13px;color:#cbd5e1\">아무것도 받지 못했어요. 진짜 코드는 따로 있답니다 🤫</span>";beep(520,.1,"square",.05);setTimeout(()=>beep(390,.15,"square",.05),110);setTimeout(()=>beep(260,.25,"square",.05),240);return}
  // 모든 코드는 여러 번 입력할 수 있습니다
  if(c.all){
   // 모든 코드의 보상 + 모든 구슬(Lv.20) + 개발자 패널. 여러 번 입력 가능 (사용 처리되지 않음)
-  const m={gold:0,dmg:0,candy:0,ball:[],lv:{},buff:{},potion:{},noComp:true,dev:true,msg:c.msg},keys=Object.keys(CODES).filter(k=>k!==raw);
+  const m={gold:0,dmg:0,candy:0,ball:[],lv:{},buff:{},potion:{},noComp:true,dev:true,msg:c.msg},keys=Object.keys(CODES).filter(k=>k!==raw&&!CODES[k].all&&!CODES[k].prank);
   keys.forEach(k=>{
    const r=CODES[k];m.gold+=r.gold||0;m.dmg+=r.dmg||0;m.candy+=r.candy||0;
    if(r.buff)for(const q in r.buff)m.buff[q]=(m.buff[q]||0)+r.buff[q];
@@ -3163,6 +3166,6 @@ restartGame();
 booting=false;
 animationId=requestAnimationFrame(loop);
 </script>
-<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.16-I · 스타 플래티나(비밀 조합) · 기관총 · 조합대</div>
+<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.17-J · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대</div>
 </body>
 </html>
