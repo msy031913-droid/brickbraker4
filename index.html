@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Ultimate Brick Breaker v11.18-A</title>
+<title>Ultimate Brick Breaker v11.18-B</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -449,6 +449,7 @@ const rebirthReq=()=>rebirth<REBIRTH_REQ.length?REBIRTH_REQ[rebirth]:REBIRTH_REQ
 let dev2Unlocked=false,devUnlocked=false,secretKeys=0,secretMode=false,secretShop=null,secretDoor=null,shopStock=null;
 let descendT=0,world=1,portalState=0,portalT=0,portalPos={x:450,y:100};
 let eventTheme="halloween";const evIcon=()=>eventTheme==="xmas"?"🎄":"🎃";
+let reviveOn=true,infGold=false;                  // 💖 부활 포션 ON/OFF · 💰 무한 골드
 let hardMode=false,hardBest=1;                       // 💀 하드 모드
 let tb={g2:0,d2:0};                                  // ⏱️ 시간제 버프 (만료 시각 ms): 골드 2배 / 데미지 2배
 let mine={pick:0,digs:0,cells:[],ms:{},day:"",prog:{},claimed:{}};   // ⛏️ 채굴 이벤트
@@ -515,7 +516,6 @@ let bricks=[],particles=[];
 const bonus=n=>0;   // 구슬 강화는 능력만 강화합니다. 기본 데미지는 "일반 강화"로만 오릅니다.
 let ballUse={};   // 구슬별 "사용 레벨" (보유 레벨보다 낮게 설정 가능)
 const useLv=n=>ballLv[n]||0;   // 레벨 다운그레이드(사용 레벨) 기능은 제거됨
-let orbitOn=true;                // 🪐 공전 구슬 ON/OFF
 const ballUpCost=n=>35+(ballLv[n]||0)*10;
 const getUpgradeCost=()=>20+(damage-1)*5;
 const isPaused=()=>!!document.querySelector(".overlay.open");
@@ -543,7 +543,7 @@ function toggleSound(){soundOn=!soundOn;updateUI();saveGame()}
 /* ============ 저장 / 불러오기 ============ */
 function saveGame(showMessage=false){
  if(mp.active)return;   // 대결 중에는 임시 능력치가 저장되지 않도록 막음
- const data={mine,tb,hardBest,hyb:Object.values(HYB).map(h=>h.parts),orbitOn,dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
+ const data={mine,tb,hardBest,hyb:Object.values(HYB).map(h=>h.parts),reviveOn,infGold,dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
  try{
   localStorage.setItem("ultimateBrickBreakerSave",JSON.stringify(data));
   localStorage.setItem("brickBreakerHighScore",String(highScore));
@@ -569,7 +569,7 @@ function loadGame(){
   if(Number.isFinite(d.highScore))highScore=Math.max(highScore,d.highScore);
   if(d.owned&&typeof d.owned==="object")owned={Normal:true,...d.owned};
   if(d.ballLv&&typeof d.ballLv==="object")ballLv={...ballLv,...d.ballLv};
-  orbitOn=d.orbitOn!==false;
+  reviveOn=d.reviveOn!==false;infGold=!!d.infGold;
   if(typeof d.soundOn==="boolean")soundOn=d.soundOn;
   if(Array.isArray(d.redeemed))redeemed=d.redeemed.filter(x=>typeof x==="string");
   if(Number.isFinite(d.candy))candy=Math.max(0,Math.floor(d.candy));
@@ -660,6 +660,7 @@ const CODES={
  "PEACE":{gold:700,msg:"평화의 선물"},
  "TRICKORTREAT":{candy:100,msg:"트릭 오어 트릿! 사탕 100개"},
  "CANDYRAIN":{candy:500,msg:"사탕 비 🍬 500개"},
+ "ULTIMATE":{maxpack:true,msg:"💎 궁극 패키지"},
  "MINER":{pick:50,msg:"곡괭이 50개 ⛏️ (채굴 이벤트에서 사용)"},
  "PICKAXE":{ball:"Pickaxe",msg:"한정판 곡괭이 구슬 ⛏️"},
  "MACHINEGUN":{ball:"Gatling",msg:"한정판 기관총 구슬 🔫 (데미지 3 고정)"},
@@ -682,6 +683,20 @@ function redeemCode(){
  let c=CODES[raw];
  if(!c)return fail("❌ 존재하지 않는 코드입니다.");
  if(c.prank){msg.style.color="#fde047";msg.innerHTML="😝 <b>힝 속았지~!</b><br><span style=\"font-size:13px;color:#cbd5e1\">아무것도 받지 못했어요. 진짜 코드는 따로 있답니다 🤫</span>";beep(520,.1,"square",.05);setTimeout(()=>beep(390,.15,"square",.05),110);setTimeout(()=>beep(260,.25,"square",.05),240);return}
+ if(c.maxpack){
+  if(mpBlock())return fail("대결 중에는 사용할 수 없습니다.");
+  candy+=1400000;
+  COS_ALL.forEach(it=>{cos.own[it.id]=true});
+  infGold=true;gold=Math.max(gold,1e15);
+  ballTypes.forEach(t=>{owned[t.name]=true;ballLv[t.name]=MAX_BALL_LV});
+  rebirth=Math.max(rebirth,10);damage=Math.max(damage,6001);
+  potions.blast+=500;potions.revive+=300;
+  world=31;highScore=Math.max(highScore,56);
+  saveGame();refreshMenus();beep(880,.2,"triangle");burst(ball.x,ball.y,40,"#ffd84d");
+  msg.style.color="#86efac";msg.innerHTML="✅ 💎 궁극 패키지!<br><b>🍬 사탕 +1,400,000 · 🎨 모든 꾸미기 · 💰 골드 무한 · 🔮 모든 구슬 Lv.20 · 🔁 환생 10 · ⚔️ 강화 6000강 · 🌍 세계 31 / STAGE 56 · 💥 폭발 +500 · 💖 부활 +300</b>";
+  $("codeInput").value="";
+  setTimeout(()=>{closeCode&&closeCode();restartGame(56,true)},900);return;
+ }
  // 모든 코드는 여러 번 입력할 수 있습니다
  if(c.all){
   // 모든 코드의 보상 + 모든 구슬(Lv.20) + 개발자 패널. 여러 번 입력 가능 (사용 처리되지 않음)
@@ -1154,7 +1169,7 @@ function eventBuy(id){
 }
 /* 물약 */
 function tryRevive(){
- if(mp.active||potions.revive<=0)return false;
+ if(mp.active||!reviveOn||potions.revive<=0)return false;
  potions.revive--;
  ball.x=bluePad.x+bluePad.w/2;ball.y=bluePad.y-ball.r-2;
  const sp=Math.max(MIN_SPEED+1,Math.hypot(ball.dx,ball.dy)),dx=sp*.5*(Math.random()<.5?-1:1);
@@ -2077,8 +2092,9 @@ function updateUI(){
  {const bi=Object.keys(runBuff).filter(k=>runBuff[k]).map(k=>BUFF_ICON[k]).join(" "),bt=$("buffText");bt.style.display=bi?"":"none";bt.textContent="버프 "+bi}
  {const rt=$("ruleText"),rb=ruleBadges();rt.style.display=rb?"":"none";rt.textContent="난이도 "+rb;rt.title="🛡️강철 💚재생 ↔️이동 ⬇️하강 📏좁은 패들 👹보스"}
  {const pb=$("potionBar");
-  if(!mp.active&&(potions.revive>0||potions.blast>0)){pb.style.display="flex";pb.innerHTML=`<span>💖 부활 ×${potions.revive} (자동)</span><button onclick="useBlast()">💥 폭발 ×${potions.blast} [Q]</button>`}
+  if(!mp.active&&(potions.revive>0||potions.blast>0)){pb.style.display="flex";pb.innerHTML=`<button onclick="toggleRevive()" style="background:${reviveOn?"#16a34a":"#6b7280"}">💖 부활 ×${potions.revive} (자동 ${reviveOn?"ON":"OFF"})</button><button onclick="useBlast()">💥 폭발 ×${potions.blast} [Q]</button>`}
   else pb.style.display="none"}
+ if(infGold&&!mp.active&&gold<1e15)gold=1e15;
  $("goldText").textContent="GOLD: "+Math.floor(gold);
  $("topDev2").style.display=dev2Unlocked&&!mp.active?"":"none";
  $("topDev").style.display=devUnlocked&&!mp.active?"":"none";
@@ -2125,12 +2141,11 @@ function renderBallUpgrade(){
    +`현재 능력: <b>${abilityText(n,lv)}</b><br>`
    +`<div class="tierList">${[1,2,3,4,5].map(i=>{const on=tn>=i;return `<div class="${on?"on":"off"}">${on?"✅":"🔒"} <b>${TIER_ABIL[i].icon} ${TIER_NAMES[i]} · ${TIER_ABIL[i].n}</b> <span class="small">(Lv.${TIER_LV[i]}~)</span><br><span class="small">${TIER_ABIL[i].txt(Math.max(lv,TIER_LV[i]))}</span></div>`}).join("")}</div>`
    +(maxed?`<b>✨ 최대 레벨</b>`:`다음 Lv.${lv+1}: <b>${abilityText(n,lv+1)}</b> `)
-   +`<div style="margin:8px 0;padding:6px;border:1px dashed #64748b;border-radius:8px">🪐 <b>공전 구슬</b>: <button class="lvCtl" onclick="toggleOrbit()" style="min-width:64px;background:${orbitOn?"#16a34a":"#6b7280"}">${orbitOn?"ON":"OFF"}</button><br><span class="small">${tn>=2?"켜면 구슬 주위를 도는 공전 구슬이 보이고 벽돌에 피해를 줍니다. 끄면 보이지도, 피해를 주지도 않습니다.":`공전 구슬은 Lv.${TIER_LV[2]} 이상(2단계)부터 생깁니다.`}</span></div>`
    +`<br><button class="upBtn" ${(gold<c||maxed)?"disabled":""}>${maxed?"MAX":"⚒️ 강화하기 ("+c+"G)"}</button>`;
   el.querySelector("button.upBtn").onclick=upgradeBall;
  });
 }
-function toggleOrbit(){orbitOn=!orbitOn;saveGame();refreshMenus();toast(orbitOn?"🪐 공전 구슬 ON":"🪐 공전 구슬 OFF")}
+function toggleRevive(){reviveOn=!reviveOn;saveGame();updateUI();toast(reviveOn?"💖 부활 포션 자동 사용 ON":"💖 부활 포션 자동 사용 OFF")}
 function refreshMenus(){
  buildShop();renderInventory("inventory");renderInventory("inventoryStandalone");renderBallUpgrade();updateUI();
 }
@@ -2561,7 +2576,7 @@ function tierOnHit(b,d,lv){
 function tierPassive(){
  const lv=useLv(currentBall),tier=tierOf(lv);if(tier<2)return;
  const d=effDamage(),c2=(COLORS[currentBall]||COLORS.Normal)[1],n=ORB[tier];
- for(let i=0;i<(orbitOn?n:0);i++){
+ for(let i=0;i<n;i++){
   const [ox,oy]=orbiterPos(tier,i,n,orbitT);
   for(const b of bricks){
    if(b.hp<=0||b.oc>0||!circleRect(ox,oy,5,b))continue;
@@ -2769,7 +2784,7 @@ function drawBallVisual(c,x,y,r,name,lv,trail,tm,ch){
  }
  c.setLineDash([]);c.globalAlpha=1;
  // 공전 구슬 (2단계 이상)
- const orb=(bodyMain&&!orbitOn)?0:[0,0,2,3,4,6][tier];
+ const orb=[0,0,2,3,4,6][tier];
  for(let i=0;i<orb;i++){
   const ang=t*(2+tier*.4)+i*Math.PI*2/orb,or=r+8+tier*1.5;
   c.beginPath();c.arc(x+Math.cos(ang)*or,y+Math.sin(ang)*or,2+tier*.35,0,Math.PI*2);
@@ -3391,6 +3406,6 @@ restartGame();
 booting=false;
 animationId=requestAnimationFrame(loop);
 </script>
-<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.18-A · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대</div>
+<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.18-B · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대</div>
 </body>
 </html>
