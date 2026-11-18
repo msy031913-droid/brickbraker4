@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Ultimate Brick Breaker v11.18-C</title>
+<title>Ultimate Brick Breaker v11.18-D</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -320,6 +320,16 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
    <input id="dev2GoldIn" type="number" min="0" placeholder="직접 입력" style="width:110px">
    <button onclick="dev2Gold(+$('dev2GoldIn').value||0)">추가</button>
   </div>
+  <h2>⚔️ 데미지 조절</h2>
+  <div>
+   <button onclick="dev2Dmg(-100)">−100</button><button onclick="dev2Dmg(-10)">−10</button><button onclick="dev2Dmg(-1)">−1</button>
+   <button onclick="dev2Dmg(1)">+1</button><button onclick="dev2Dmg(10)">+10</button><button onclick="dev2Dmg(100)">+100</button><button onclick="dev2Dmg(1000)">+1000</button>
+  </div>
+  <div>
+   <input id="dev2DmgIn" type="number" min="1" placeholder="데미지 직접 입력" style="width:130px">
+   <button onclick="dev2DmgSet(+$('dev2DmgIn').value)">설정</button>
+   <button onclick="dev2DmgSet(1)">초기화(1)</button>
+  </div>
   <button onclick="closeDev2()">닫기</button>
  </div>
 </div>
@@ -491,6 +501,7 @@ const ballTypes=[
 {name:"Blizzard",icon:"🌨️",price:0,limited:true,desc:"🧪 합성 한정(눈사람+얼음) · 주기적으로 모든 벽돌에 눈보라"},
 {name:"Elemental",icon:"☯️",price:0,limited:true,desc:"🧪 합성 한정(불+얼음) · 충돌마다 불꽃/냉기 폭발이 번갈아 터짐"},
 {name:"SkyPig",icon:"🐖",price:0,limited:true,desc:"🧪 합성 한정(돼지+비둘기) · 하늘에서 거대 발도장이 주기적으로 쾅!"},
+{name:"Gyro",icon:"🌀",price:150,desc:"체력이 내 데미지보다 높은 벽돌에 달라붙어 회전하며 부술 때까지 공격 · 약한 귀소본능 · 부순 뒤엔 랜덤 방향으로 튕김"},
 {name:"Pickaxe",icon:"⛏️",price:0,limited:true,desc:"충돌마다 5% 확률로 1~1,000,000 골드 · 7번 타격마다 벽돌을 찾아 부수는 곡괭이 소환 (채굴 100회 보상)"},
 {name:"Gatling",icon:"🔫",price:0,limited:true,desc:"레벨이 오를수록 총알 증가 · 총알 1발 = 벽돌 최대 체력의 0.1%~3% · 집중/분사 사격 모드 (코드 MACHINEGUN)"},
 {name:"Tempest",icon:"🌩️",price:0,limited:true,desc:"🧪 합성 한정(전기+바람) · 충돌마다 번개가 여러 벽돌에 연쇄 + 가속"},
@@ -507,7 +518,7 @@ const ballTypes=[
 {name:"Hydra",icon:"🐍",price:0,limited:true,desc:"히드라(4세계) 보스 구슬 · 머리 셋이 동시에 물어뜯음"},
 {name:"Boss",icon:"👹",price:0,limited:true,desc:"악마왕(1세계) 보스 구슬 · 보스에게 3배 피해"}
 ];
-const COLORS={Pickaxe:["#d6d3d1","#78716c"],Platinum:["#f8fafc","#94a3b8"],StarPlatinum:["#c4b5fd","#4c1d95"],Gatling:["#e5e7eb","#4b5563"],Tempest:["#e9d5ff","#7c3aed"],Magma:["#fdba74","#b91c1c"],Plague:["#bef264","#4d7c0f"],Prism:["#ffffff","#22d3ee"],Eclipse:["#fde68a","#1e1b4b"],Nightmare:["#fdba74","#581c87"],Noel:["#fecaca","#15803d"],Rudolph:["#d6a36a","#7c4a1d"],Dream:["#fde68a","#dc2626"],Blizzard:["#e0f2fe","#38bdf8"],Elemental:["#fb923c","#38bdf8"],SkyPig:["#fbcfe8","#ec4899"],Snowman:["#ffffff","#93c5fd"],Santa:["#fecaca","#b91c1c"],Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
+const COLORS={Gyro:["#99f6e4","#0f766e"],Pickaxe:["#d6d3d1","#78716c"],Platinum:["#f8fafc","#94a3b8"],StarPlatinum:["#c4b5fd","#4c1d95"],Gatling:["#e5e7eb","#4b5563"],Tempest:["#e9d5ff","#7c3aed"],Magma:["#fdba74","#b91c1c"],Plague:["#bef264","#4d7c0f"],Prism:["#ffffff","#22d3ee"],Eclipse:["#fde68a","#1e1b4b"],Nightmare:["#fdba74","#581c87"],Noel:["#fecaca","#15803d"],Rudolph:["#d6a36a","#7c4a1d"],Dream:["#fde68a","#dc2626"],Blizzard:["#e0f2fe","#38bdf8"],Elemental:["#fb923c","#38bdf8"],SkyPig:["#fbcfe8","#ec4899"],Snowman:["#ffffff","#93c5fd"],Santa:["#fecaca","#b91c1c"],Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
 
 const bluePad={x:365,y:485,w:170,h:15};
 const ball={x:450,y:463,r:12,dx:4,dy:-4,trail:[],starBoost:0,awk:0,leg:0};
@@ -2008,7 +2019,9 @@ function devGold(n){n=Math.min(10000,Math.floor(n));if(!(n>0))return;   // 1회 
  gold+=n;saveGame();updateUI();devInfo();beep(880,.1,"triangle")}
 
 /* ============ 🛠️ 개발자 패널 2 (코드 DEVPANEL2 · 제한 없는 원본 기능) ============ */
-function dev2Info(){$("dev2Info").innerHTML=`💰 ${Math.floor(gold)}G · 🗝️ ${secretKeys}개 · 세계 ${world} · STAGE ${stage}`}
+function dev2Dmg(n){dev2DmgSet(damage+n)}
+function dev2DmgSet(v){if(!Number.isFinite(v))return;damage=Math.max(1,Math.floor(v));saveGame();updateUI();dev2Info();beep(880,.1,"triangle")}
+function dev2Info(){$("dev2Info").innerHTML=`⚔️ 기본 데미지 ${damage} · 💰 ${Math.floor(gold)}G · 🗝️ ${secretKeys}개 · 세계 ${world} · STAGE ${stage}`}
 function openDev2(){if(mpBlock())return;dev2Info();$("dev2Menu").classList.add("open")}
 function closeDev2(){$("dev2Menu").classList.remove("open");updateUI()}
 function dev2Shop(key){if(!devOk())return;shopStock={ball:true,key};secretShop={x:ball.x>450?200:640,y:380,w:56,h:46,cd:0};closeDev2();toast("🛒 비밀 상점 소환!")}
@@ -2221,7 +2234,7 @@ function togglePause(){
 
 /* ============ 벽돌 ============ */
 function createBricks(){
- bricks=[];secretShop=null;secretDoor=null;proj=[];sleighs=[];picks=[];gatReset();
+ bricks=[];secretShop=null;secretDoor=null;proj=[];sleighs=[];picks=[];ball.sp=null;gatReset();
  if(secretMode){   // 🗝️ 비밀 맵: 금 벽돌 보물방
   const hp=6+stage*3;
   for(let r=0;r<5;r++)for(let c=0;c<9;c++){
@@ -2343,6 +2356,7 @@ const P={
  Blizzard:lv=>({dmg:.2+lv*.015,every:Math.max(90,170-lv*4)}),
  Elemental:lv=>({r:90+lv*3,dmg:.4+lv*.03}),
  SkyPig:lv=>({dmg:1+lv*.08,r:100+lv*3,every:Math.max(70,130-lv*3)}),
+ Gyro:lv=>({mul:.5+lv*.04,every:Math.max(6,12-Math.floor(lv/4)),home:.012+lv*.0006}),
  Pickaxe:lv=>({chance:.05,every:7,max:3+Math.floor(lv/4),dmg:.8+lv*.06,life:480+lv*20}),
  Gatling:lv=>({rate:gatRate(lv),pct:gatPct(lv)}),   // 초당 발사 수 (Lv.20 = 80발/초)
  Tempest:lv=>({n:3+Math.floor(lv/3),dmg:.7+lv*.05,spd:.15+lv*.01}),
@@ -2389,6 +2403,7 @@ function abilityText(n,lv){
   case "Pigeon":return `벽돌에 부딪힐 때마다 데미지 +${p.add} 누적 (이번 판 최대 +${p.cap}) · 새 판마다 초기화`;
   case "Rudolph":return `빨간 코 빛줄기: 가까운 벽돌 ${p.n}개를 꿰뚫음 (피해 ${pc(p.dmg)})`;
   case "Dream":return `2초마다 산타 썰매 출격! 지나가며 선물 ${p.n}개 투하 (폭발 반경 ${p.r} · 피해 ${pc(p.dmg)} · ${pc(p.gold)} 금빛 선물)`;
+  case "Gyro":return `체력이 내 데미지보다 높은 벽돌에 달라붙어 회전하며 ${p.every}틱마다 피해 ${pc(p.mul)} · 약한 귀소본능 · 부순 뒤 랜덤 방향으로 튕겨 나감`;
   case "Pickaxe":return `충돌마다 ${pc(p.chance)} 확률로 골드 1~1,000,000 랜덤 지급 · ${p.every}번 타격마다 곡괭이 소환 (최대 ${p.max}개, 피해 ${pc(p.dmg)}, ${Math.round(p.life/60)}초 동안 벽돌 탐색)`;
   case "Gatling":return `초당 ${p.rate}발 연사 · 총알 1발 = 벽돌 최대 체력의 ${Math.round(p.pct*1000)/10}% (최소 1) · 🎯집중사격(한 벽돌 고정) / 💦분사사격(넓게 퍼짐 · 발사 ×1.3)`;
   case "Tempest":return `충돌마다 번개가 가까운 벽돌 ${p.n}개에 연쇄 (피해 ${pc(p.dmg)}) + 가속`;
@@ -2498,6 +2513,7 @@ function applyEffect(t,b,d,lv){
    for(let i=0;i<p.snow&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];launch("snow",ball.x,ball.y,x,Math.max(1,d*p.dmg*.5),0,0)}
    for(let i=0;i<p.n&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];launch("gift",ball.x,ball.y,x,Math.max(1,d*p.dmg),p.r,Math.random()<p.gold?1:0)}
    break;}
+  case "Gyro":break;   // 부착 회전은 hitBrick/stickTick 에서 처리
   case "Pickaxe":{
    if(!mp.active&&Math.random()<p.chance){const g=1+Math.floor(Math.random()*1000000);gold+=g;floatText(b.x+b.w/2,b.y,"⛏️ +"+g+"G","#fde047");burst(b.x+b.w/2,b.y+b.h/2,10,"#fde047");updateUI()}
    ball.pkh=(ball.pkh||0)+1;if(ball.pkh%p.every===0)spawnPick(p);
@@ -2540,9 +2556,44 @@ function applyEffect(t,b,d,lv){
   case "Star":if(!boostedThisHit&&ball.starBoost<=0)ball.starBoost=p.n;break;
  }
 }
+/* ===== 🌀 회전구슬 ===== */
+function gyroAttach(b){
+ const cx=b.x+b.w/2,cy=b.y+b.h/2;
+ ball.sp={b,ang:Math.atan2(ball.y-cy,ball.x-cx),spd:Math.max(MIN_SPEED+1,Math.hypot(ball.dx,ball.dy)),t:0};
+ ball.dx=0;ball.dy=0;floatText(cx,b.y-4,"🌀 부착!","#99f6e4");beep(520,.08,"triangle");
+}
+function gyroHome(){   // 약한 귀소본능: 가까운 벽돌 쪽으로 살짝 방향을 튼다
+ const tg=nearest(ball.x,ball.y,1)[0];if(!tg)return;
+ const sp=Math.hypot(ball.dx,ball.dy);if(sp<.1)return;
+ const want=Math.atan2(tg.y+tg.h/2-ball.y,tg.x+tg.w/2-ball.x),cur=Math.atan2(ball.dy,ball.dx);
+ let d=want-cur;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;
+ const k=Math.max(-1,Math.min(1,d))*P.Gyro(useLv("Gyro")).home,a=cur+k;
+ ball.dx=Math.cos(a)*sp;ball.dy=Math.sin(a)*sp;
+}
+function stickTick(){
+ const q=ball.sp,b=q.b;
+ if(!b||b.hp<=0||!bricks.includes(b)){   // 벽돌이 사라짐 → 랜덤 방향으로 발사
+  ball.sp=null;
+  let a=Math.random()*Math.PI*2;
+  if(Math.abs(Math.sin(a))<.3)a+=Math.sign(Math.sin(a)||1)*.6;   // 거의 수평이면 보정
+  ball.dx=Math.cos(a)*q.spd;ball.dy=Math.sin(a)*q.spd;
+  burst(ball.x,ball.y,14,"#5eead4");beep(700,.1,"triangle");
+  if(bricks.length&&bricks.every(x=>x.hp<=0))clearStage();
+  return;
+ }
+ const lv=useLv("Gyro"),pp=P.Gyro(lv),cx=b.x+b.w/2,cy=b.y+b.h/2;
+ q.ang+=.24;q.t++;
+ const rx=b.w/2+ball.r+3,ry=b.h/2+ball.r+3;
+ ball.x=cx+Math.cos(q.ang)*rx;ball.y=cy+Math.sin(q.ang)*ry;
+ if(q.t%pp.every===0){
+  b.hp-=Math.max(1,effDamage()*pp.mul);b.flash=5;burst(ball.x,ball.y,4,"#5eead4");beep(400+Math.random()*100,.03,"triangle",.02);
+  reap();
+ }
+ ball.trail.push({x:ball.x,y:ball.y});if(ball.trail.length>12)ball.trail.shift();
+}
 function hitBrick(b){
  const t=currentBall,lv=useLv(t),d=effDamage();   // 기본 피해는 일반 강화로만 증가
- let dealt=d,crit=false;
+ let dealt=d,crit=false;const hpBefore=b.hp;
  if(t==="Normal"){const c=P.Normal(lv);if(Math.random()<c.crit){dealt=d*c.mul;crit=true}}
  b.hp-=dealt;b.flash=6;
  boostedThisHit=false;
@@ -2552,6 +2603,7 @@ function hitBrick(b){
   applyEffect(pool[Math.floor(Math.random()*pool.length)],b,d,lv);
  }else applyEffect(t,b,d,lv);
  tierOnHit(b,d,lv);
+ if(t==="Gyro"&&!ball.sp&&hpBefore>d&&b.hp>0&&!mp.active)gyroAttach(b);
  reap();
  burst(ball.x,ball.y,crit?16:8,crit?"#ffd84d":COLORS[t][1]);
  beep(crit?700:300+Math.random()*120,.05);
@@ -2645,6 +2697,8 @@ function moveBall(){
  }
  speedTimer++;
  if(speedTimer>=600){addSpeed(.12);speedTimer=0}
+ if(ball.sp){stickTick();return}
+ if(currentBall==="Gyro")gyroHome();
 
  const n=Math.max(1,Math.ceil(Math.hypot(ball.dx,ball.dy)/4)); // 빠른 공이 벽돌을 뚫지 않도록 분할 이동
  for(let i=0;i<n&&!gameOver;i++){
@@ -2765,7 +2819,7 @@ function restartGame(startStage,force){
  applyModeRules();
  {const sp=Math.min(MAX_SPEED,Math.sqrt(32)+(hardMode?1.8+.7*(stage-1):.45*(stage-1)))*(runBuff.slow?.8:1),fx=(2.5+rnd()*1.5)/Math.sqrt(32);   // 건너뛴 스테이지만큼 공 속도도 반영
   ball.dx=(rnd()<.5?-1:1)*sp*fx;ball.dy=-Math.sqrt(sp*sp-ball.dx*ball.dx)}
- ball.trail=[];ball.starBoost=0;ball.awk=0;ball.leg=0;ball.pigHits=0;ball.pgcd=0;ball.pgn=0;ball.sph=0;ball.pkh=0;picks=[];gatReset();ball.drT=0;ball.blT=0;ball.spT=0;ball.elT=0;stamps=[];orbitT=0;particles=[];
+ ball.trail=[];ball.starBoost=0;ball.awk=0;ball.leg=0;ball.pigHits=0;ball.pgcd=0;ball.pgn=0;ball.sph=0;ball.pkh=0;ball.sp=null;picks=[];gatReset();ball.drT=0;ball.blT=0;ball.spT=0;ball.elT=0;stamps=[];orbitT=0;particles=[];
  createBricks();updateUI();countdown();
 }
 
@@ -3141,6 +3195,12 @@ case "Rudolph":{
   c.fillStyle="#f472b6";c.beginPath();c.ellipse(0,3,6,4.2,0,0,Math.PI*2);c.fill();c.fillStyle="#9d174d";c.beginPath();c.arc(-2,3,1,0,Math.PI*2);c.arc(2,3,1,0,Math.PI*2);c.fill();
   c.fillStyle="#1f2937";c.beginPath();c.arc(-4.5,-3,1.5,0,Math.PI*2);c.arc(4.5,-3,1.5,0,Math.PI*2);c.fill();
   break;}
+ case "Gyro":{
+  sph("#99f6e4","#0f766e");
+  c.save();c.rotate(t*5);c.strokeStyle="#ecfeff";c.lineWidth=2;c.lineCap="round";
+  for(let i=0;i<3;i++){c.rotate(Math.PI*2/3);c.beginPath();c.arc(r*.3,0,r*.55,-1.2,1.6);c.stroke()}
+  c.restore();
+  break;}
  case "Pickaxe":{
   sph("#d6d3d1","#78716c");
   c.save();c.rotate(-.7+Math.sin(t*3)*.15);
@@ -3423,6 +3483,6 @@ restartGame();
 booting=false;
 animationId=requestAnimationFrame(loop);
 </script>
-<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.18-C · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대</div>
+<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.18-D · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대</div>
 </body>
 </html>
