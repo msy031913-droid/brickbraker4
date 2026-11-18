@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Ultimate Brick Breaker v11.18-B</title>
+<title>Ultimate Brick Breaker v11.18-C</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -231,6 +231,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
  </div>
 </div>
 <div id="tbTag"></div>
+<button id="gatBtn" onclick="setGatMode(gatMode==='focus'?'spray':'focus')" style="display:none;position:fixed;right:10px;bottom:34px;z-index:4;margin:0"></button>
 <div id="eventMenu" class="overlay">
  <div class="panel" style="max-height:90vh;overflow:auto;border-color:#ea580c">
   <h1>🎃 할로윈 이벤트</h1>
@@ -491,7 +492,7 @@ const ballTypes=[
 {name:"Elemental",icon:"☯️",price:0,limited:true,desc:"🧪 합성 한정(불+얼음) · 충돌마다 불꽃/냉기 폭발이 번갈아 터짐"},
 {name:"SkyPig",icon:"🐖",price:0,limited:true,desc:"🧪 합성 한정(돼지+비둘기) · 하늘에서 거대 발도장이 주기적으로 쾅!"},
 {name:"Pickaxe",icon:"⛏️",price:0,limited:true,desc:"충돌마다 5% 확률로 1~1,000,000 골드 · 7번 타격마다 벽돌을 찾아 부수는 곡괭이 소환 (채굴 100회 보상)"},
-{name:"Gatling",icon:"🔫",price:0,limited:true,desc:"데미지 3 고정 · 초고속 기관총 연사 (코드 MACHINEGUN)"},
+{name:"Gatling",icon:"🔫",price:0,limited:true,desc:"레벨이 오를수록 총알 증가 · 총알 1발 = 벽돌 최대 체력의 0.1%~3% · 집중/분사 사격 모드 (코드 MACHINEGUN)"},
 {name:"Tempest",icon:"🌩️",price:0,limited:true,desc:"🧪 합성 한정(전기+바람) · 충돌마다 번개가 여러 벽돌에 연쇄 + 가속"},
 {name:"Magma",icon:"🌋",price:0,limited:true,desc:"🧪 합성 한정(폭탄+불) · 충돌마다 용암 폭발 + 직접 맞힌 벽돌 화상"},
 {name:"Plague",icon:"🦠",price:0,limited:true,desc:"🧪 합성 한정(독+유령) · 맞힌 벽돌 주변으로 역병이 번져 모두 중독"},
@@ -515,7 +516,8 @@ let bricks=[],particles=[];
 /* ============ 유틸 ============ */
 const bonus=n=>0;   // 구슬 강화는 능력만 강화합니다. 기본 데미지는 "일반 강화"로만 오릅니다.
 let ballUse={};   // 구슬별 "사용 레벨" (보유 레벨보다 낮게 설정 가능)
-const useLv=n=>ballLv[n]||0;   // 레벨 다운그레이드(사용 레벨) 기능은 제거됨
+let gatMode="focus";   // 🔫 기관총 사격 모드: focus(집중) / spray(분사)
+const useLv=n=>{const l=ballLv[n]||0,u=ballUse[n];return u===undefined?l:Math.min(l,u)};
 const ballUpCost=n=>35+(ballLv[n]||0)*10;
 const getUpgradeCost=()=>20+(damage-1)*5;
 const isPaused=()=>!!document.querySelector(".overlay.open");
@@ -543,7 +545,7 @@ function toggleSound(){soundOn=!soundOn;updateUI();saveGame()}
 /* ============ 저장 / 불러오기 ============ */
 function saveGame(showMessage=false){
  if(mp.active)return;   // 대결 중에는 임시 능력치가 저장되지 않도록 막음
- const data={mine,tb,hardBest,hyb:Object.values(HYB).map(h=>h.parts),reviveOn,infGold,dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
+ const data={mine,tb,hardBest,hyb:Object.values(HYB).map(h=>h.parts),ballUse,gatMode,reviveOn,infGold,dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
  try{
   localStorage.setItem("ultimateBrickBreakerSave",JSON.stringify(data));
   localStorage.setItem("brickBreakerHighScore",String(highScore));
@@ -569,7 +571,8 @@ function loadGame(){
   if(Number.isFinite(d.highScore))highScore=Math.max(highScore,d.highScore);
   if(d.owned&&typeof d.owned==="object")owned={Normal:true,...d.owned};
   if(d.ballLv&&typeof d.ballLv==="object")ballLv={...ballLv,...d.ballLv};
-  reviveOn=d.reviveOn!==false;infGold=!!d.infGold;
+  reviveOn=d.reviveOn!==false;infGold=!!d.infGold;gatMode=d.gatMode==="spray"?"spray":"focus";
+  if(d.ballUse&&typeof d.ballUse==="object")ballUse={...d.ballUse};
   if(typeof d.soundOn==="boolean")soundOn=d.soundOn;
   if(Array.isArray(d.redeemed))redeemed=d.redeemed.filter(x=>typeof x==="string");
   if(Number.isFinite(d.candy))candy=Math.max(0,Math.floor(d.candy));
@@ -663,7 +666,7 @@ const CODES={
  "ULTIMATE":{maxpack:true,msg:"💎 궁극 패키지"},
  "MINER":{pick:50,msg:"곡괭이 50개 ⛏️ (채굴 이벤트에서 사용)"},
  "PICKAXE":{ball:"Pickaxe",msg:"한정판 곡괭이 구슬 ⛏️"},
- "MACHINEGUN":{ball:"Gatling",msg:"한정판 기관총 구슬 🔫 (데미지 3 고정)"},
+ "MACHINEGUN":{ball:"Gatling",msg:"한정판 기관총 구슬 🔫 (레벨별 총알 증가 · 집중/분사 사격)"},
  "EVERYTHING":{prank:true,msg:"힝 속았지"},
  "REALEVERYTHING":{all:true,msg:"모든 코드 보상 통합 패키지"},
  "SURPRISE":{gold:5000,candy:300,msg:"깜짝 선물! 골드 5000 + 사탕 300"},
@@ -1382,11 +1385,16 @@ function drawBossCore(b,th){
 let sleighs=[];
 /* ============ 🔫 기관총 구슬 v3 (처음부터 재제작) ============ */
 const gat={ang:-Math.PI/2,spin:0,acc:0,n:0,slugs:[],shells:[],recoil:0,flash:0};
-const gatRate=lv=>40+lv*2;                         // 초당 발사 수 (Lv.1≈42 → Lv.20=80)
-function gatReset(){gat.spin=0;gat.acc=0;gat.slugs.length=0;gat.shells.length=0;gat.recoil=0;gat.flash=0}
+const GAT_PTS=[[0,5],[1,6],[5,14],[10,28],[15,45],[20,70]];
+const gatRate=lv=>{lv=Math.max(0,Math.min(20,lv));for(let i=1;i<GAT_PTS.length;i++){const a=GAT_PTS[i-1],b=GAT_PTS[i];if(lv<=b[0])return Math.round(a[1]+(b[1]-a[1])*(lv-a[0])/(b[0]-a[0]))}return 70};
+const gatPct=lv=>lv>=20?.03:lv>=15?.01:lv>=10?.005:.001;     // 총알 1발 = 벽돌 최대 체력의 %
+const gatDmg=(b,lv)=>Math.max(1,(b.maxHp||b.cap||100)*gatPct(lv));                         // 초당 발사 수 (Lv.1≈42 → Lv.20=80)
+function gatReset(){gat.lock=null;gat.spin=0;gat.acc=0;gat.slugs.length=0;gat.shells.length=0;gat.recoil=0;gat.flash=0}
 function gatTick(){
  if(currentBall!=="Gatling"){if(gat.slugs.length||gat.shells.length)gatReset();return}
- const lv=useLv("Gatling"),tg=nearest(ball.x,ball.y,1)[0];
+ const lv=useLv("Gatling");
+ let tg=nearest(ball.x,ball.y,1)[0];
+ if(gatMode==="focus"){if(!(gat.lock&&gat.lock.hp>0&&bricks.includes(gat.lock)))gat.lock=tg;tg=gat.lock||tg}else gat.lock=null;
  // 조준: 가장 가까운 벽돌 쪽으로 포신이 부드럽게 회전
  if(tg){
   const want=Math.atan2(tg.y+tg.h/2-ball.y,tg.x+tg.w/2-ball.x);
@@ -1397,11 +1405,11 @@ function gatTick(){
  gat.recoil*=.7;gat.flash=Math.max(0,gat.flash-1);
  // 연사
  if(tg&&gat.spin>.3){
-  gat.acc+=gatRate(lv)*gat.spin/60;
+  gat.acc+=gatRate(lv)*(gatMode==="spray"?1.3:1)*gat.spin/60;
   while(gat.acc>=1){
    gat.acc-=1;gat.n++;
-   const a=gat.ang+(Math.random()-.5)*.05,mx=ball.x+Math.cos(a)*(ball.r+13),my=ball.y+Math.sin(a)*(ball.r+13);
-   gat.slugs.push({x:mx,y:my,dx:Math.cos(a)*16,dy:Math.sin(a)*16,life:70});
+   const a=gat.ang+(Math.random()-.5)*(gatMode==="spray"?.9:.04),mx=ball.x+Math.cos(a)*(ball.r+13),my=ball.y+Math.sin(a)*(ball.r+13);
+   gat.slugs.push({x:mx,y:my,dx:Math.cos(a)*16,dy:Math.sin(a)*16,life:70,lv});
    gat.recoil=3;gat.flash=2;
    if(gat.n%2===0)gat.shells.push({x:ball.x,y:ball.y,dx:-Math.sin(a)*(2+Math.random()*2)+(Math.random()-.5),dy:Math.cos(a)*(2+Math.random()*2)-2.5,rot:Math.random()*6,life:34});
    if(gat.n%4===0)beep(150+Math.random()*80,.03,"square",.02);
@@ -1415,7 +1423,7 @@ function gatTick(){
    q.x+=q.dx/4;q.y+=q.dy/4;
    for(const b of bricks){
     if(b.hp>0&&q.x>=b.x&&q.x<=b.x+b.w&&q.y>=b.y&&q.y<=b.y+b.h){
-     b.hp-=3;b.flash=3;hit=true;dead=true;                       // 💥 데미지 3 고정
+     b.hp-=gatDmg(b,q.lv);b.flash=3;hit=true;dead=true;      // 💥 벽돌 최대 체력의 %
      for(let j=0;j<3;j++)particles.push({x:q.x,y:q.y,dx:(Math.random()-.5)*5-q.dx*.1,dy:(Math.random()-.5)*5-q.dy*.1,life:14,c:j?"#fde047":"#fff",s:2});
      break;
     }
@@ -2095,11 +2103,12 @@ function updateUI(){
   if(!mp.active&&(potions.revive>0||potions.blast>0)){pb.style.display="flex";pb.innerHTML=`<button onclick="toggleRevive()" style="background:${reviveOn?"#16a34a":"#6b7280"}">💖 부활 ×${potions.revive} (자동 ${reviveOn?"ON":"OFF"})</button><button onclick="useBlast()">💥 폭발 ×${potions.blast} [Q]</button>`}
   else pb.style.display="none"}
  if(infGold&&!mp.active&&gold<1e15)gold=1e15;
+ {const gb=$("gatBtn");if(gb){gb.style.display=currentBall==="Gatling"&&!mp.active?"":"none";gb.textContent=gatMode==="focus"?"🎯 집중사격 (눌러서 분사로)":"💦 분사사격 (눌러서 집중으로)"}}
  $("goldText").textContent="GOLD: "+Math.floor(gold);
  $("topDev2").style.display=dev2Unlocked&&!mp.active?"":"none";
  $("topDev").style.display=devUnlocked&&!mp.active?"":"none";
  $("highScoreText").textContent=(cosGet("title")?cosGet("title").text+" · ":"")+(world>1?"🌍 세계 "+world+(world===2?" (5스테이지) · ":" · "):"")+(secretKeys>0?"🗝️×"+secretKeys+" · ":"")+"최고기록: STAGE "+highScore;
- $("damageText").textContent=currentBall==="Gatling"?"⚔️ DAMAGE: 3 (🔫 고정)":hardMode?"⚔️ DAMAGE: 50 (💀 고정"+(rebirth?" ×"+Math.round(dmgMul()*10)/10:"")+")":"⚔️ DAMAGE: "+damage+(rebirth?" (×"+f2(dmgMul())+")":"");
+ $("damageText").textContent=currentBall==="Gatling"?"⚔️ DAMAGE: 총알당 최대체력의 "+Math.round(gatPct(useLv("Gatling"))*1000)/10+"% ("+(gatMode==="focus"?"🎯집중":"💦분사")+")":hardMode?"⚔️ DAMAGE: 50 (💀 고정"+(rebirth?" ×"+Math.round(dmgMul()*10)/10:"")+")":"⚔️ DAMAGE: "+damage+(rebirth?" (×"+f2(dmgMul())+")":"");
  $("topRebirth").textContent="♻️ 환생"+(rebirth?" "+rebirth:"");
  $("damageValue").textContent=damage;
  $("upgradeCostValue").textContent=getUpgradeCost()+" GOLD";
@@ -2141,10 +2150,18 @@ function renderBallUpgrade(){
    +`현재 능력: <b>${abilityText(n,lv)}</b><br>`
    +`<div class="tierList">${[1,2,3,4,5].map(i=>{const on=tn>=i;return `<div class="${on?"on":"off"}">${on?"✅":"🔒"} <b>${TIER_ABIL[i].icon} ${TIER_NAMES[i]} · ${TIER_ABIL[i].n}</b> <span class="small">(Lv.${TIER_LV[i]}~)</span><br><span class="small">${TIER_ABIL[i].txt(Math.max(lv,TIER_LV[i]))}</span></div>`}).join("")}</div>`
    +(maxed?`<b>✨ 최대 레벨</b>`:`다음 Lv.${lv+1}: <b>${abilityText(n,lv+1)}</b> `)
+   +`<div style="margin:8px 0;padding:6px;border:1px dashed #64748b;border-radius:8px">🎚️ <b>사용 레벨</b>: <button class="lvCtl" onclick="setUseLv('${n}',${useLv(n)-1})" ${useLv(n)<=0?"disabled":""}>−</button> <b style="font-size:18px">Lv.${useLv(n)}</b> <button class="lvCtl" onclick="setUseLv('${n}',${useLv(n)+1})" ${useLv(n)>=lv?"disabled":""}>＋</button> <button class="lvCtl" onclick="setUseLv('${n}',0)">Lv.0</button> <button class="lvCtl" onclick="setUseLv('${n}',${lv})">MAX</button><br><span class="small">보유 Lv.${lv} · 실제 전투에는 사용 레벨의 능력·외형이 적용됩니다${useLv(n)<lv?" (⚠️ 낮춰서 사용 중)":""}</span></div>`
+   +(n==="Gatling"?`<div style="margin:8px 0;padding:6px;border:1px dashed #64748b;border-radius:8px">🔫 <b>사격 모드</b>: <button class="lvCtl" onclick="setGatMode('focus')" style="background:${gatMode==="focus"?"#16a34a":"#6b7280"}">🎯 집중사격</button> <button class="lvCtl" onclick="setGatMode('spray')" style="background:${gatMode==="spray"?"#16a34a":"#6b7280"}">💦 분사사격</button></div>`:"")
    +`<br><button class="upBtn" ${(gold<c||maxed)?"disabled":""}>${maxed?"MAX":"⚒️ 강화하기 ("+c+"G)"}</button>`;
   el.querySelector("button.upBtn").onclick=upgradeBall;
  });
 }
+function setUseLv(n,v){
+ const max=ballLv[n]||0;v=Math.max(0,Math.min(max,Math.floor(v)));
+ if(v>=max)delete ballUse[n];else ballUse[n]=v;
+ saveGame();refreshMenus();
+}
+function setGatMode(m){gatMode=m==="spray"?"spray":"focus";saveGame();refreshMenus();toast(gatMode==="focus"?"🎯 집중사격 모드":"💦 분사사격 모드")}
 function toggleRevive(){reviveOn=!reviveOn;saveGame();updateUI();toast(reviveOn?"💖 부활 포션 자동 사용 ON":"💖 부활 포션 자동 사용 OFF")}
 function refreshMenus(){
  buildShop();renderInventory("inventory");renderInventory("inventoryStandalone");renderBallUpgrade();updateUI();
@@ -2327,7 +2344,7 @@ const P={
  Elemental:lv=>({r:90+lv*3,dmg:.4+lv*.03}),
  SkyPig:lv=>({dmg:1+lv*.08,r:100+lv*3,every:Math.max(70,130-lv*3)}),
  Pickaxe:lv=>({chance:.05,every:7,max:3+Math.floor(lv/4),dmg:.8+lv*.06,life:480+lv*20}),
- Gatling:lv=>({rate:40+lv*2,dmg:3}),   // 초당 발사 수 (Lv.20 = 80발/초)
+ Gatling:lv=>({rate:gatRate(lv),pct:gatPct(lv)}),   // 초당 발사 수 (Lv.20 = 80발/초)
  Tempest:lv=>({n:3+Math.floor(lv/3),dmg:.7+lv*.05,spd:.15+lv*.01}),
  Magma:lv=>({r:100+lv*4,dmg:.6+lv*.05,burn:1+lv*.1}),
  Plague:lv=>({r:110+lv*4,dmg:.45+lv*.04,self:.6+lv*.05}),
@@ -2373,7 +2390,7 @@ function abilityText(n,lv){
   case "Rudolph":return `빨간 코 빛줄기: 가까운 벽돌 ${p.n}개를 꿰뚫음 (피해 ${pc(p.dmg)})`;
   case "Dream":return `2초마다 산타 썰매 출격! 지나가며 선물 ${p.n}개 투하 (폭발 반경 ${p.r} · 피해 ${pc(p.dmg)} · ${pc(p.gold)} 금빛 선물)`;
   case "Pickaxe":return `충돌마다 ${pc(p.chance)} 확률로 골드 1~1,000,000 랜덤 지급 · ${p.every}번 타격마다 곡괭이 소환 (최대 ${p.max}개, 피해 ${pc(p.dmg)}, ${Math.round(p.life/60)}초 동안 벽돌 탐색)`;
-  case "Gatling":return `모든 피해가 ${p.dmg}으로 고정 · 초당 ${p.rate}발 기관총 연사 · 가까운 벽돌을 자동 조준 · 예광탄이 날아가 맞힌 벽돌에 3씩 · 발사할수록 총열이 빨리 돈다`;
+  case "Gatling":return `초당 ${p.rate}발 연사 · 총알 1발 = 벽돌 최대 체력의 ${Math.round(p.pct*1000)/10}% (최소 1) · 🎯집중사격(한 벽돌 고정) / 💦분사사격(넓게 퍼짐 · 발사 ×1.3)`;
   case "Tempest":return `충돌마다 번개가 가까운 벽돌 ${p.n}개에 연쇄 (피해 ${pc(p.dmg)}) + 가속`;
   case "Magma":return `충돌마다 반경 ${p.r} 용암 폭발 (피해 ${pc(p.dmg)}) + 맞힌 벽돌 화상 ${pc(p.burn)}`;
   case "Plague":return `맞힌 벽돌 주변 반경 ${p.r}에 역병 피해 ${pc(p.dmg)} + 맞힌 벽돌 추가 ${pc(p.self)}`;
@@ -3406,6 +3423,6 @@ restartGame();
 booting=false;
 animationId=requestAnimationFrame(loop);
 </script>
-<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.18-B · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대</div>
+<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.18-C · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대</div>
 </body>
 </html>
