@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Ultimate Brick Breaker v11.18-E</title>
+<title>Ultimate Brick Breaker v11.20-A</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -120,6 +120,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
  <button id="topFuse" onclick="openFuse()" style="background:#7e22ce">🧪 합성</button>
  <button id="topHard" class="hardBtn" onclick="openHard()">💀 하드모드</button>
  <button id="topMine" onclick="openMine()" style="background:#78350f">⛏️ 채굴</button>
+ <button id="topStock" onclick="openStock()" style="background:#b91c1c">📈 주식</button>
  <button id="topXmas" onclick="openXmas()" style="background:#15803d">🎄 크리스마스</button>
  <button id="topCos" onclick="openCos()" style="background:#be185d">✨ 꾸미기</button>
  <button id="topRebirth" onclick="openRebirth()" style="background:#0f766e">♻️ 환생</button>
@@ -232,6 +233,26 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 </div>
 <div id="tbTag"></div>
 <button id="gatBtn" onclick="setGatMode(gatMode==='focus'?'spray':'focus')" style="display:none;position:fixed;right:10px;bottom:34px;z-index:4;margin:0"></button>
+<div id="stockMenu" class="overlay">
+ <div class="panel" style="max-width:760px;max-height:94vh;overflow:auto;border-color:#dc2626">
+  <h1>📈 주식 시장</h1>
+  <div id="stkSummary" style="font-weight:bold;margin-bottom:4px"></div>
+  <div class="mRow" style="display:block"><div class="small">🎁 목표: 주식 이익 <b>10,000,000원</b> 달성 시 📈 <b>주식구슬</b> 지급 <span id="stkGoalTxt"></span></div><div class="bar"><i id="stkGoalBar" style="width:0%"></i></div></div>
+  <div class="small" style="margin:4px 0">거래 화폐는 보유 <b>골드(원)</b>입니다. 가격은 1.5초마다 변동합니다. (상승 🔴 / 하락 🔵)</div>
+  <div style="margin:6px 0">수량 <input id="stkQty" type="number" min="1" value="1" style="width:100px">
+   <button onclick="stkSetQty(1)">1</button><button onclick="stkSetQty(10)">10</button><button onclick="stkSetQty(100)">100</button><button onclick="stkSetQty(1000)">1,000</button>
+   <button onclick="stkSetQty(100000)">100,000</button></div>
+  <div style="margin:4px 0">
+   <button onclick="stkBatch('buy')" style="background:#dc2626">✅ 선택 종목 일괄 매수</button>
+   <button onclick="stkBatch('sell')" style="background:#2563eb">✅ 선택 종목 일괄 매도</button>
+   <button onclick="stkBatch('sellAll')" style="background:#1e40af">선택 종목 전량 매도</button>
+   <button onclick="stkSelAll(true)">전체 선택</button><button onclick="stkSelAll(false)">선택 해제</button>
+  </div>
+  <div id="stkRows"></div>
+  <div id="stkLast" class="small" style="min-height:18px"></div>
+  <div><button onclick="closeStock()">닫기</button></div>
+ </div>
+</div>
 <div id="eventMenu" class="overlay">
  <div class="panel" style="max-height:90vh;overflow:auto;border-color:#ea580c">
   <h1>🎃 할로윈 이벤트</h1>
@@ -304,6 +325,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 <div id="dev2Menu" class="overlay">
  <div class="panel">
   <h1>🛠️ 개발자 패널 2</h1>
+  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.20-A · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
   <p id="dev2Info" class="small"></p>
   <h2>🛒 비밀 상점 / 🚪 비밀 맵</h2>
   <div>
@@ -337,6 +359,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 <div id="devMenu" class="overlay">
  <div class="panel">
   <h1>🛠️ 개발자 패널</h1>
+  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.20-A · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
   <p id="devInfo" class="small"></p>
   <h2>💰 골드 (1회 최대 10,000)</h2>
   <div>
@@ -461,6 +484,8 @@ let dev2Unlocked=false,devUnlocked=false,secretKeys=0,secretMode=false,secretSho
 let descendT=0,world=1,portalState=0,portalT=0,portalPos={x:450,y:100};
 let eventTheme="halloween";const evIcon=()=>eventTheme==="xmas"?"🎄":"🎃";
 let reviveOn=true,infGold=false;                  // 💖 부활 포션 ON/OFF · 💰 무한 골드
+let stk={p:{},h:{},hold:{},real:0,got:false,t:0};   // 📈 주식 (p 현재가, h 가격기록, hold {q,c}, real 실현손익)
+let sb={p:1000,h:[],last:1000};                       // 📈 주식구슬 주가 (데미지 배율 = p/1000)
 let hardMode=false,hardBest=1;                       // 💀 하드 모드
 let tb={g2:0,d2:0};                                  // ⏱️ 시간제 버프 (만료 시각 ms): 골드 2배 / 데미지 2배
 let mine={pick:0,digs:0,cells:[],ms:{},day:"",prog:{},claimed:{}};   // ⛏️ 채굴 이벤트
@@ -501,6 +526,7 @@ const ballTypes=[
 {name:"Blizzard",icon:"🌨️",price:0,limited:true,desc:"🧪 합성 한정(눈사람+얼음) · 주기적으로 모든 벽돌에 눈보라"},
 {name:"Elemental",icon:"☯️",price:0,limited:true,desc:"🧪 합성 한정(불+얼음) · 충돌마다 불꽃/냉기 폭발이 번갈아 터짐"},
 {name:"SkyPig",icon:"🐖",price:0,limited:true,desc:"🧪 합성 한정(돼지+비둘기) · 하늘에서 거대 발도장이 주기적으로 쾅!"},
+{name:"StockBall",icon:"📈",price:0,limited:true,desc:"데미지가 주가처럼 실시간으로 오르내림 (인벤토리에서도 변동) · 주식으로 10,000,000원 이익 시 지급"},
 {name:"Gyro",icon:"🌀",price:150,desc:"체력이 내 데미지보다 높은 벽돌에 달라붙어 회전하며 부술 때까지 공격 · 약한 귀소본능 · 부순 뒤엔 랜덤 방향으로 튕김"},
 {name:"Pickaxe",icon:"⛏️",price:0,limited:true,desc:"충돌마다 5% 확률로 1~1,000,000 골드 · 7번 타격마다 벽돌을 찾아 부수는 곡괭이 소환 (채굴 100회 보상)"},
 {name:"Gatling",icon:"🔫",price:0,limited:true,desc:"레벨이 오를수록 총알 증가 · 총알 1발 = 벽돌 최대 체력의 0.1%~3% · 집중/분사 사격 모드 (코드 MACHINEGUN)"},
@@ -518,7 +544,7 @@ const ballTypes=[
 {name:"Hydra",icon:"🐍",price:0,limited:true,desc:"히드라(4세계) 보스 구슬 · 머리 셋이 동시에 물어뜯음"},
 {name:"Boss",icon:"👹",price:0,limited:true,desc:"악마왕(1세계) 보스 구슬 · 보스에게 3배 피해"}
 ];
-const COLORS={Gyro:["#99f6e4","#0f766e"],Pickaxe:["#d6d3d1","#78716c"],Platinum:["#f8fafc","#94a3b8"],StarPlatinum:["#c4b5fd","#4c1d95"],Gatling:["#e5e7eb","#4b5563"],Tempest:["#e9d5ff","#7c3aed"],Magma:["#fdba74","#b91c1c"],Plague:["#bef264","#4d7c0f"],Prism:["#ffffff","#22d3ee"],Eclipse:["#fde68a","#1e1b4b"],Nightmare:["#fdba74","#581c87"],Noel:["#fecaca","#15803d"],Rudolph:["#d6a36a","#7c4a1d"],Dream:["#fde68a","#dc2626"],Blizzard:["#e0f2fe","#38bdf8"],Elemental:["#fb923c","#38bdf8"],SkyPig:["#fbcfe8","#ec4899"],Snowman:["#ffffff","#93c5fd"],Santa:["#fecaca","#b91c1c"],Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
+const COLORS={StockBall:["#86efac","#b91c1c"],Gyro:["#99f6e4","#0f766e"],Pickaxe:["#d6d3d1","#78716c"],Platinum:["#f8fafc","#94a3b8"],StarPlatinum:["#c4b5fd","#4c1d95"],Gatling:["#e5e7eb","#4b5563"],Tempest:["#e9d5ff","#7c3aed"],Magma:["#fdba74","#b91c1c"],Plague:["#bef264","#4d7c0f"],Prism:["#ffffff","#22d3ee"],Eclipse:["#fde68a","#1e1b4b"],Nightmare:["#fdba74","#581c87"],Noel:["#fecaca","#15803d"],Rudolph:["#d6a36a","#7c4a1d"],Dream:["#fde68a","#dc2626"],Blizzard:["#e0f2fe","#38bdf8"],Elemental:["#fb923c","#38bdf8"],SkyPig:["#fbcfe8","#ec4899"],Snowman:["#ffffff","#93c5fd"],Santa:["#fecaca","#b91c1c"],Golem:["#e2e8f0","#64748b"],Lich:["#f5f3ff","#6d28d9"],Hydra:["#bef264","#15803d"],Dragon:["#bbf7d0","#16a34a"],Angel:["#fff","#fde68a"],Void:["#a78bfa","#0b0618"],Sun:["#fff7c2","#f59e0b"],Pigeon:["#f1f5f9","#64748b"],Boss:["#fca5a5","#7f1d1d"],Normal:["#fff","#9a42ff"],Fire:["#fff36b","#ff3b19"],Ice:["#fff","#35dfff"],Electric:["#fff","#3d6bff"],Poison:["#d8ff70","#25a33b"],Bomb:["#ffb347","#3b3b3b"],Laser:["#fff","#ff3cff"],Wind:["#fff","#55d6c2"],Gravity:["#fff","#6a5acd"],Rainbow:["#fff","#ff5bdb"],Meteor:["#fff","#ff6b21"],Shadow:["#fff","#556"],Crystal:["#fff","#65e6ff"],Plasma:["#fff","#9d4dff"],Star:["#fff","#ffd84d"],Phoenix:["#fff0a0","#ff5a1f"],Galaxy:["#e9d5ff","#4f46e5"],Pumpkin:["#ffd27a","#ff7a00"],Bat:["#c4b5fd","#6d28d9"],Ghost:["#ffffff","#a5b4fc"],Pig:["#ffd1dc","#ff6fae"]};
 
 const bluePad={x:365,y:485,w:170,h:15};
 const ball={x:450,y:463,r:12,dx:4,dy:-4,trail:[],starBoost:0,awk:0,leg:0};
@@ -557,7 +583,7 @@ function toggleSound(){soundOn=!soundOn;updateUI();saveGame()}
 /* ============ 저장 / 불러오기 ============ */
 function saveGame(showMessage=false){
  if(mp.active)return;   // 대결 중에는 임시 능력치가 저장되지 않도록 막음
- const data={mine,tb,hardBest,hyb:Object.values(HYB).map(h=>h.parts),ballUse,orbitOn,gatMode,reviveOn,infGold,dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
+ const data={stk,sb,mine,tb,hardBest,hyb:Object.values(HYB).map(h=>h.parts),ballUse,orbitOn,gatMode,reviveOn,infGold,dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
  try{
   localStorage.setItem("ultimateBrickBreakerSave",JSON.stringify(data));
   localStorage.setItem("brickBreakerHighScore",String(highScore));
@@ -584,6 +610,9 @@ function loadGame(){
   if(d.owned&&typeof d.owned==="object")owned={Normal:true,...d.owned};
   if(d.ballLv&&typeof d.ballLv==="object")ballLv={...ballLv,...d.ballLv};
   reviveOn=d.reviveOn!==false;infGold=!!d.infGold;gatMode=d.gatMode==="spray"?"spray":"focus";orbitOn=d.orbitOn!==false;
+  if(d.stk&&typeof d.stk==="object")stk={p:d.stk.p||{},h:d.stk.h||{},hold:d.stk.hold||{},real:+d.stk.real||0,got:!!d.stk.got,t:+d.stk.t||0};
+  if(d.sb&&typeof d.sb==="object")sb={p:Math.max(150,Math.min(5000,+d.sb.p||1000)),h:Array.isArray(d.sb.h)?d.sb.h.slice(-90):[],last:+d.sb.last||1000};
+  stkInit();stkCatchUp();
   if(d.ballUse&&typeof d.ballUse==="object")ballUse={...d.ballUse};
   if(typeof d.soundOn==="boolean")soundOn=d.soundOn;
   if(Array.isArray(d.redeemed))redeemed=d.redeemed.filter(x=>typeof x==="string");
@@ -676,6 +705,7 @@ const CODES={
  "TRICKORTREAT":{candy:100,msg:"트릭 오어 트릿! 사탕 100개"},
  "CANDYRAIN":{candy:500,msg:"사탕 비 🍬 500개"},
  "ULTIMATE":{maxpack:true,msg:"💎 궁극 패키지"},
+ "STOCKBALL":{ball:"StockBall",msg:"한정판 주식구슬 📈"},
  "MINER":{pick:50,msg:"곡괭이 50개 ⛏️ (채굴 이벤트에서 사용)"},
  "PICKAXE":{ball:"Pickaxe",msg:"한정판 곡괭이 구슬 ⛏️"},
  "MACHINEGUN":{ball:"Gatling",msg:"한정판 기관총 구슬 🔫 (레벨별 총알 증가 · 집중/분사 사격)"},
@@ -899,6 +929,142 @@ function drawPicks(){
  });
 }
 
+/* ============ 📈 주식 시장 ============ */
+const STOCKS=[
+ {id:"amd",n:"애미디아",icon:"🟩",p0:180000,vol:.012,mk:.8},
+ {id:"skl",n:"SK로우닉스",icon:"🟥",p0:210000,vol:.011,mk:.8},
+ {id:"shib",n:"시바코인",icon:"🐕",p0:38,vol:.035,mk:.4},
+ {id:"btk",n:"비턱코인",icon:"🪙",p0:1250000,vol:.02,mk:.5},
+ {id:"sam",n:"샘숭 가락시",icon:"📱",p0:78000,vol:.008,mk:1},
+ {id:"nsd",n:"눈스닥",icon:"🏦",p0:15800,vol:.006,mk:1.2},
+ {id:"ksp",n:"퀴스피",icon:"🗼",p0:2650,vol:.005,mk:1.2}
+];
+const STK_GOAL=10000000,STK_MS=1500;
+const gauss=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+function stkInit(){
+ if(!stk.p)stk.p={};if(!stk.h)stk.h={};if(!stk.hold)stk.hold={};
+ STOCKS.forEach(x=>{
+  if(!(stk.p[x.id]>0))stk.p[x.id]=x.p0;
+  if(!Array.isArray(stk.h[x.id])||!stk.h[x.id].length)stk.h[x.id]=[stk.p[x.id]];
+  if(stk.hold[x.id]&&!(stk.hold[x.id].q>0))delete stk.hold[x.id];
+ });
+ if(!(sb.h&&sb.h.length))sb.h=[sb.p];
+}
+let stkMkt=0;
+function stkStep(record){
+ stkMkt=stkMkt*.9+gauss()*.004;                    // 시장 전체 분위기 (공통 요인)
+ STOCKS.forEach(x=>{
+  let p=stk.p[x.id];
+  let r=x.vol*gauss()+x.mk*stkMkt-Math.log(p/x.p0)*.004;   // 변동 + 시장 + 평균 회귀
+  if(Math.random()<.012)r+=(Math.random()<.5?-1:1)*(.04+Math.random()*.08);   // 급등락 이벤트
+  p=p*Math.exp(r);p=Math.max(x.p0*.1,Math.min(x.p0*10,p));
+  p=p>=1000?Math.round(p):Math.round(p*100)/100;
+  stk.p[x.id]=p;
+  if(record){const h=stk.h[x.id];h.push(p);if(h.length>90)h.shift()}
+ });
+ // 주식구슬 주가
+ sb.last=sb.p;
+ let r=.07*gauss()-Math.log(sb.p/1000)*.03;if(Math.random()<.05)r+=(Math.random()<.5?-1:1)*(.15+Math.random()*.25);
+ sb.p=Math.max(150,Math.min(5000,Math.round(sb.p*Math.exp(r))));
+ if(record){sb.h.push(sb.p);if(sb.h.length>90)sb.h.shift()}
+}
+function stkCatchUp(){   // 접속하지 않은 동안의 변동 (최대 40분어치)
+ if(stk.t>0){const n=Math.min(1600,Math.floor((Date.now()-stk.t)/STK_MS));for(let i=0;i<n;i++)stkStep(i%8===0)}
+ stk.t=Date.now();
+}
+const sbMul=()=>sb.p/1000;
+const sbText=()=>{const up=sb.p>=sb.last,pc2=sb.last?((sb.p/sb.last-1)*100):0;return `<span style="color:${up?"#f87171":"#60a5fa"}">📈 ×${sbMul().toFixed(2)} ${up?"▲":"▼"}${Math.abs(pc2).toFixed(1)}%</span>`};
+const fmtW=n=>Math.round(n).toLocaleString("ko-KR");
+const fmtPrice=n=>n>=1000?fmtW(n):n.toFixed(2);
+function stkTotals(){
+ let ev=0,unreal=0;
+ STOCKS.forEach(x=>{const h=stk.hold[x.id];if(h){ev+=h.q*stk.p[x.id];unreal+=h.q*(stk.p[x.id]-h.c)}});
+ return{ev,unreal,gain:stk.real+unreal};
+}
+function stkCheck(){
+ if(stk.got)return;
+ if(stkTotals().gain>=STK_GOAL){
+  stk.got=true;owned.StockBall=true;
+  toast("🎉 주식으로 10,000,000원 이익 달성!\n📈 주식구슬을 획득했습니다!");beep(988,.3,"triangle");
+  refreshMenus();saveGame();
+ }
+}
+function stkTick(){
+ stkStep(true);stk.t=Date.now();stkCheck();
+ document.querySelectorAll(".sbLive").forEach(e=>e.innerHTML=sbText());
+ if(currentBall==="StockBall")updateUI();
+ if($("stockMenu").classList.contains("open"))stkRefresh();
+}
+setInterval(stkTick,STK_MS);
+function openStock(){
+ if(mpBlock())return;
+ stkBuild();stkRefresh();$("stockMenu").classList.add("open");
+}
+function closeStock(){$("stockMenu").classList.remove("open");saveGame();updateUI()}
+let stkBuilt=false;
+function stkBuild(){
+ if(stkBuilt)return;stkBuilt=true;
+ $("stkRows").innerHTML=STOCKS.map(x=>`<div class="mRow" style="gap:6px;flex-wrap:wrap">
+  <input type="checkbox" id="stkSel_${x.id}" style="width:20px;height:20px">
+  <div style="min-width:112px"><b>${x.icon} ${x.n}</b><div id="stkHold_${x.id}" class="small"></div></div>
+  <div style="min-width:104px;text-align:right"><b id="stkPx_${x.id}" style="font-size:16px"></b><div id="stkCh_${x.id}" class="small"></div></div>
+  <canvas id="stkCv_${x.id}" width="130" height="38" style="background:rgba(0,0,0,.25);border-radius:6px"></canvas>
+  <div><button onclick="stkTrade('${x.id}','buy')" style="margin:1px;background:#dc2626">매수</button><button onclick="stkTrade('${x.id}','sell')" style="margin:1px;background:#2563eb">매도</button><br>
+  <button onclick="stkTrade('${x.id}','buyMax')" style="margin:1px;font-size:11px">최대 매수</button><button onclick="stkTrade('${x.id}','sellAll')" style="margin:1px;font-size:11px">전량 매도</button></div>
+ </div>`).join("");
+}
+function stkRefresh(){
+ const t=stkTotals();
+ $("stkSummary").innerHTML=`💰 보유 현금 <b>${fmtW(gold)}</b>원 · 📊 평가금액 <b>${fmtW(t.ev)}</b>원 · 손익 <b style="color:${t.gain>=0?"#f87171":"#60a5fa"}">${t.gain>=0?"+":""}${fmtW(t.gain)}</b>원 (실현 ${fmtW(stk.real)})`;
+ const g=Math.max(0,Math.min(1,t.gain/STK_GOAL));
+ $("stkGoalBar").style.width=(stk.got?100:g*100)+"%";
+ $("stkGoalTxt").textContent=stk.got?"✅ 달성! 주식구슬 지급 완료":`(${fmtW(Math.max(0,t.gain))} / ${fmtW(STK_GOAL)})`;
+ STOCKS.forEach(x=>{
+  const p=stk.p[x.id],h=stk.h[x.id],prev=h.length>1?h[h.length-2]:p,up=p>=prev,col=up?"#f87171":"#60a5fa",pc2=prev?(p/prev-1)*100:0,hold=stk.hold[x.id];
+  $("stkPx_"+x.id).textContent=fmtPrice(p)+"원";$("stkPx_"+x.id).style.color=col;
+  $("stkCh_"+x.id).innerHTML=`<span style="color:${col}">${up?"▲":"▼"} ${Math.abs(pc2).toFixed(2)}%</span>`;
+  $("stkHold_"+x.id).innerHTML=hold?`보유 ${fmtW(hold.q)}주 · 평단 ${fmtPrice(hold.c)}<br><span style="color:${p>=hold.c?"#f87171":"#60a5fa"}">${p>=hold.c?"+":""}${fmtW((p-hold.c)*hold.q)}원 (${((p/hold.c-1)*100).toFixed(1)}%)</span>`:"보유 없음";
+  const cv=$("stkCv_"+x.id),c=cv.getContext("2d"),w=cv.width,hh=cv.height;c.clearRect(0,0,w,hh);
+  const mn=Math.min(...h),mx=Math.max(...h),rg=(mx-mn)||1;
+  c.strokeStyle=h[h.length-1]>=h[0]?"#f87171":"#60a5fa";c.lineWidth=1.8;c.beginPath();
+  h.forEach((v,i)=>{const X=h.length>1?i/(h.length-1)*(w-4)+2:w/2,Y=hh-4-(v-mn)/rg*(hh-8);i?c.lineTo(X,Y):c.moveTo(X,Y)});c.stroke();
+ });
+}
+const stkQtyVal=()=>Math.max(1,Math.floor(+$("stkQty").value||1));
+function stkSetQty(n){$("stkQty").value=n}
+function stkSelAll(v){STOCKS.forEach(x=>{$("stkSel_"+x.id).checked=v})}
+function stkDo(id,mode,q){   // 반환: 메시지 (실패 시 null)
+ const x=STOCKS.find(y=>y.id===id),p=stk.p[id],h=stk.hold[id];
+ if(mode==="buy"||mode==="buyMax"){
+  if(mode==="buyMax")q=Math.floor(gold/p);
+  q=Math.floor(q);if(!(q>=1))return null;
+  const cost=Math.round(p*q);if(gold<cost)return null;
+  gold-=cost;
+  if(h){h.c=(h.c*h.q+p*q)/(h.q+q);h.q+=q}else stk.hold[id]={q,c:p};
+  return `${x.icon}${x.n} ${fmtW(q)}주 매수 (-${fmtW(cost)})`;
+ }
+ if(!h)return null;
+ if(mode==="sellAll")q=h.q;
+ q=Math.min(Math.floor(q),h.q);if(!(q>=1))return null;
+ const rev=Math.round(p*q);gold+=rev;stk.real+=(p-h.c)*q;h.q-=q;if(h.q<=0)delete stk.hold[id];
+ return `${x.icon}${x.n} ${fmtW(q)}주 매도 (+${fmtW(rev)})`;
+}
+function stkAfter(msgs,failed){
+ $("stkLast").innerHTML=msgs.length?msgs.join("<br>")+(failed?`<br><span style="color:#fca5a5">${failed}건 실패 (현금/보유 수량 부족)</span>`:""):`<span style="color:#fca5a5">거래할 수 없습니다 (현금 또는 보유 수량 부족)</span>`;
+ if(msgs.length){beep(msgs[0].includes("매수")?600:900,.1,"triangle")}else beep(180,.12,"sawtooth");
+ stkCheck();saveGame();updateUI();stkRefresh();
+}
+function stkTrade(id,mode){
+ const m=stkDo(id,mode,stkQtyVal());stkAfter(m?[m]:[],0);
+}
+function stkBatch(mode){
+ const ids=STOCKS.filter(x=>$("stkSel_"+x.id).checked).map(x=>x.id);
+ if(!ids.length){$("stkLast").innerHTML='<span style="color:#fca5a5">먼저 종목을 선택하세요 (체크박스)</span>';return}
+ const q=stkQtyVal(),msgs=[];let fail=0;
+ ids.forEach(id=>{const m=stkDo(id,mode,q);if(m)msgs.push(m);else fail++});
+ stkAfter(msgs,fail);
+}
+
 /* ============ 멀티플레이 (대결하기) ============ */
 const FAIR_DAMAGE=3;                         // 동일 조건 모드의 기본 데미지
 const mp={ws:null,id:0,code:"",players:[],hostId:0,fair:true,state:"lobby",active:false,startLocal:0,
@@ -1094,7 +1260,7 @@ const EVENT_SHOP=[
   {id:"perm_dmg",icon:"🗡️",name:"기본 데미지 +1 (영구)",desc:"최대 5회 구매 가능",price:100,max:5,perm:"dmg"}]}
 ];
 const maxStart=()=>hardMode?hardBest:eventMode?eventBest:highScore;
-const effDamage=()=>currentBall==="Gatling"?3:hardMode?50*dmgMul()*dmgShare:(damage+(runBuff.atk?3:0))*dmgMul()*dmgShare;   // 💀 하드 모드: 모든 구슬 50 고정(환생 배율은 적용)   // 🔫 Gatling: 데미지 3 고정
+const effDamage=()=>currentBall==="Gatling"?3:hardMode?50*dmgMul()*dmgShare:(damage+(runBuff.atk?3:0))*dmgMul()*dmgShare*(currentBall==="StockBall"?sbMul():1);   // 💀 하드 모드: 모든 구슬 50 고정(환생 배율은 적용)   // 🔫 Gatling: 데미지 3 고정
 function addCandy(n,x,y){
  candy+=n;runCandy+=n;
  if(x!==undefined)floatText(x,y,"+"+n+" 🍬","#fbbf24");
@@ -1642,7 +1808,7 @@ function fuseCost(f){const la=ballLv[f.a]||0,lb=ballLv[f.b]||0;return {base:f.ba
 function openFuse(){if(mpBlock())return;renderFuse();$("fuseMenu").classList.add("open")}
 function closeFuse(){$("fuseMenu").classList.remove("open");updateUI()}
 let craftSel=[];
-const craftPool=()=>ballTypes.filter(t=>owned[t.name]&&t.name!=="Normal"&&t.name!=="Rainbow"&&t.name!=="Gatling"&&t.name!=="Pickaxe"&&!t.hyb).map(t=>t.name);
+const craftPool=()=>ballTypes.filter(t=>owned[t.name]&&t.name!=="Normal"&&t.name!=="Rainbow"&&t.name!=="Gatling"&&t.name!=="Pickaxe"&&t.name!=="StockBall"&&!t.hyb).map(t=>t.name);
 function craftInfo(){
  const sel=craftSel.filter(n=>owned[n]),k=sel.length;
  const sorted=[...sel].sort(),name=sorted.join("+");
@@ -2122,7 +2288,7 @@ function updateUI(){
  $("topDev2").style.display=dev2Unlocked&&!mp.active?"":"none";
  $("topDev").style.display=devUnlocked&&!mp.active?"":"none";
  $("highScoreText").textContent=(cosGet("title")?cosGet("title").text+" · ":"")+(world>1?"🌍 세계 "+world+(world===2?" (5스테이지) · ":" · "):"")+(secretKeys>0?"🗝️×"+secretKeys+" · ":"")+"최고기록: STAGE "+highScore;
- $("damageText").textContent=currentBall==="Gatling"?"⚔️ DAMAGE: 총알당 최대체력의 "+Math.round(gatPct(useLv("Gatling"))*1000)/10+"% ("+(gatMode==="focus"?"🎯집중":"💦분사")+")":hardMode?"⚔️ DAMAGE: 50 (💀 고정"+(rebirth?" ×"+Math.round(dmgMul()*10)/10:"")+")":"⚔️ DAMAGE: "+damage+(rebirth?" (×"+f2(dmgMul())+")":"");
+ $("damageText").textContent=currentBall==="Gatling"?"⚔️ DAMAGE: 총알당 최대체력의 "+Math.round(gatPct(useLv("Gatling"))*1000)/10+"% ("+(gatMode==="focus"?"🎯집중":"💦분사")+")":(currentBall==="StockBall"&&!hardMode)?"⚔️ DAMAGE: "+Math.round(effDamage()*10)/10+" (📈 주식구슬 ×"+sbMul().toFixed(2)+")":hardMode?"⚔️ DAMAGE: 50 (💀 고정"+(rebirth?" ×"+Math.round(dmgMul()*10)/10:"")+")":"⚔️ DAMAGE: "+damage+(rebirth?" (×"+f2(dmgMul())+")":"");
  $("topRebirth").textContent="♻️ 환생"+(rebirth?" "+rebirth:"");
  $("damageValue").textContent=damage;
  $("upgradeCostValue").textContent=getUpgradeCost()+" GOLD";
@@ -2151,6 +2317,7 @@ function renderInventory(id){
   const b=document.createElement("button"),eq=currentBall===t.name,lv=ballLv[t.name]||0;
   b.className=eq?"equipped":"";
   b.innerHTML=`<strong>${t.icon} ${t.name}${lv?" Lv."+lv:""}</strong>${t.limited?`<span class="status" style="color:#fcd34d">${t.event?"🎃 이벤트 한정":"👑 한정판"}</span>`:""}<span class="status">${eq?"⭐ 장착 중":"장착하기"}</span><span class="ballDesc">${t.desc}</span>`;
+  if(t.name==="StockBall")b.insertAdjacentHTML("beforeend",`<span class="status sbLive" style="font-weight:bold">${sbText()}</span>`);
   b.onclick=()=>equipBall(t.name);
   box.appendChild(b);
  });
@@ -2359,6 +2526,7 @@ const P={
  Blizzard:lv=>({dmg:.2+lv*.015,every:Math.max(90,170-lv*4)}),
  Elemental:lv=>({r:90+lv*3,dmg:.4+lv*.03}),
  SkyPig:lv=>({dmg:1+lv*.08,r:100+lv*3,every:Math.max(70,130-lv*3)}),
+ StockBall:lv=>({}),
  Gyro:lv=>({mul:.5+lv*.04,every:Math.max(6,12-Math.floor(lv/4)),home:.012+lv*.0006}),
  Pickaxe:lv=>({chance:.05,every:7,max:3+Math.floor(lv/4),dmg:.8+lv*.06,life:480+lv*20}),
  Gatling:lv=>({rate:gatRate(lv),pct:gatPct(lv)}),   // 초당 발사 수 (Lv.20 = 80발/초)
@@ -2406,6 +2574,7 @@ function abilityText(n,lv){
   case "Pigeon":return `벽돌에 부딪힐 때마다 데미지 +${p.add} 누적 (이번 판 최대 +${p.cap}) · 새 판마다 초기화`;
   case "Rudolph":return `빨간 코 빛줄기: 가까운 벽돌 ${p.n}개를 꿰뚫음 (피해 ${pc(p.dmg)})`;
   case "Dream":return `2초마다 산타 썰매 출격! 지나가며 선물 ${p.n}개 투하 (폭발 반경 ${p.r} · 피해 ${pc(p.dmg)} · ${pc(p.gold)} 금빛 선물)`;
+  case "StockBall":return `데미지가 주가처럼 변동 (현재 ×${sbMul().toFixed(2)} · 범위 ×0.15~×5) · 인벤토리에 있어도 계속 변함 · 🔴상승 🔵하락`;
   case "Gyro":return `체력이 내 데미지보다 높은 벽돌에 달라붙어 회전하며 ${p.every}틱마다 피해 ${pc(p.mul)} · 약한 귀소본능 · 부순 뒤 랜덤 방향으로 튕겨 나감`;
   case "Pickaxe":return `충돌마다 ${pc(p.chance)} 확률로 골드 1~1,000,000 랜덤 지급 · ${p.every}번 타격마다 곡괭이 소환 (최대 ${p.max}개, 피해 ${pc(p.dmg)}, ${Math.round(p.life/60)}초 동안 벽돌 탐색)`;
   case "Gatling":return `초당 ${p.rate}발 연사 · 총알 1발 = 벽돌 최대 체력의 ${Math.round(p.pct*1000)/10}% (최소 1) · 🎯집중사격(한 벽돌 고정) / 💦분사사격(넓게 퍼짐 · 발사 ×1.3)`;
@@ -2516,6 +2685,7 @@ function applyEffect(t,b,d,lv){
    for(let i=0;i<p.snow&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];launch("snow",ball.x,ball.y,x,Math.max(1,d*p.dmg*.5),0,0)}
    for(let i=0;i<p.n&&pool.length;i++){const x=pool.splice(Math.floor(Math.random()*pool.length),1)[0];launch("gift",ball.x,ball.y,x,Math.max(1,d*p.dmg),p.r,Math.random()<p.gold?1:0)}
    break;}
+  case "StockBall":break;
   case "Gyro":break;   // 부착 회전은 hitBrick/stickTick 에서 처리
   case "Pickaxe":{
    if(!mp.active&&Math.random()<p.chance){const g=1+Math.floor(Math.random()*1000000);gold+=g;floatText(b.x+b.w/2,b.y,"⛏️ +"+g+"G","#fde047");burst(b.x+b.w/2,b.y+b.h/2,10,"#fde047");updateUI()}
@@ -2810,7 +2980,7 @@ function restartGame(startStage,force){
  if(mp.active&&!force)return;      // 대결 중에는 재시작 불가
  saveGame();
  clearInterval(countdownTimer);
- ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu","shopMenu","doorMenu","devMenu","dev2Menu","rebirthMenu","cosMenu","xmasMenu","fuseMenu","hardMenu","mineMenu"].forEach(id=>$(id).classList.remove("open"));
+ ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu","shopMenu","doorMenu","devMenu","dev2Menu","rebirthMenu","cosMenu","xmasMenu","fuseMenu","hardMenu","mineMenu","stockMenu"].forEach(id=>$(id).classList.remove("open"));
  // 클리어한 스테이지까지 건너뛰어 시작 가능
  stage=(typeof startStage==="number")?Math.max(1,Math.min(maxStart(),Math.floor(startStage))):1;
  gameOver=false;gameStarted=false;clearRewarded=false;bricksBroken=0;speedTimer=0;shake=0;
@@ -3198,6 +3368,11 @@ case "Rudolph":{
   c.fillStyle="#f472b6";c.beginPath();c.ellipse(0,3,6,4.2,0,0,Math.PI*2);c.fill();c.fillStyle="#9d174d";c.beginPath();c.arc(-2,3,1,0,Math.PI*2);c.arc(2,3,1,0,Math.PI*2);c.fill();
   c.fillStyle="#1f2937";c.beginPath();c.arc(-4.5,-3,1.5,0,Math.PI*2);c.arc(4.5,-3,1.5,0,Math.PI*2);c.fill();
   break;}
+ case "StockBall":{
+  const up=sb.p>=sb.last;sph(up?"#fecaca":"#bfdbfe",up?"#b91c1c":"#1d4ed8");
+  c.strokeStyle="#fff";c.lineWidth=2;c.lineJoin="round";c.beginPath();
+  const pts=[[-.7,.4],[-.3,-.1],[0,.25],[.35,-.35],[.7,-.1]];pts.forEach((q,i)=>{const x=q[0]*r,y=q[1]*r+Math.sin(t*3+i)*1.2;i?c.lineTo(x,y):c.moveTo(x,y)});c.stroke();
+  break;}
  case "Gyro":{
   sph("#99f6e4","#0f766e");
   c.save();c.rotate(t*5);c.strokeStyle="#ecfeff";c.lineWidth=2;c.lineCap="round";
@@ -3480,12 +3655,12 @@ canvas.addEventListener("pointermove",pointerMove);
 window.addEventListener("beforeunload",()=>saveGame());
 
 /* ============ 시작 ============ */
-loadGame();
+stkInit();loadGame();
 refreshMenus();
 restartGame();
 booting=false;
 animationId=requestAnimationFrame(loop);
 </script>
-<div id="verTag" style="position:fixed;right:8px;bottom:6px;z-index:99999;padding:3px 9px;border-radius:8px;background:rgba(0,0,0,.65);color:#fde047;font:bold 12px Arial;pointer-events:none">버전 11.18-E · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대</div>
+
 </body>
 </html>
