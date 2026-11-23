@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Ultimate Brick Breaker v11.20-A</title>
+<title>Ultimate Brick Breaker v11.20-B</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -233,6 +233,19 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 </div>
 <div id="tbTag"></div>
 <button id="gatBtn" onclick="setGatMode(gatMode==='focus'?'spray':'focus')" style="display:none;position:fixed;right:10px;bottom:34px;z-index:4;margin:0"></button>
+<div id="snailMenu" class="overlay">
+ <div class="panel" style="max-width:720px;border-color:#65a30d;max-height:94vh;overflow:auto">
+  <h1>🐌 달팽이 경주</h1>
+  <p class="small">달팽이 한 마리에 배팅하세요! 내가 고른 달팽이가 <b>1등</b>이면 배팅금의 <b>3배</b>를 받고, 아니면 배팅금을 잃습니다.</p>
+  <div id="snInfo" style="font-weight:bold;margin:4px 0"></div>
+  <div id="snTrack" style="position:relative;background:#1a2e05;border:2px solid #65a30d;border-radius:10px;padding:6px 0;margin:6px 0;overflow:hidden"></div>
+  <div style="margin:6px 0">배팅 달팽이: <span id="snPick" style="font-weight:bold">선택 안 함</span> (위 달팽이 이름을 눌러 선택)</div>
+  <div>배팅금 <input id="snBet" type="number" min="1" value="1000" style="width:130px">
+   <button onclick="$('snBet').value=1000">1천</button><button onclick="$('snBet').value=10000">1만</button><button onclick="$('snBet').value=100000">10만</button><button onclick="$('snBet').value=Math.max(1,Math.floor(gold))">전부</button></div>
+  <div><button id="snGo" onclick="snailStart()" style="background:#65a30d">🏁 경주 시작!</button><button id="snClose" onclick="closeSnail()">닫기</button></div>
+  <div id="snResult" style="font-weight:bold;min-height:44px;margin-top:6px"></div>
+ </div>
+</div>
 <div id="stockMenu" class="overlay">
  <div class="panel" style="max-width:760px;max-height:94vh;overflow:auto;border-color:#dc2626">
   <h1>📈 주식 시장</h1>
@@ -325,7 +338,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 <div id="dev2Menu" class="overlay">
  <div class="panel">
   <h1>🛠️ 개발자 패널 2</h1>
-  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.20-A · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
+  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.20-B · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
   <p id="dev2Info" class="small"></p>
   <h2>🛒 비밀 상점 / 🚪 비밀 맵</h2>
   <div>
@@ -359,7 +372,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 <div id="devMenu" class="overlay">
  <div class="panel">
   <h1>🛠️ 개발자 패널</h1>
-  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.20-A · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
+  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.20-B · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
   <p id="devInfo" class="small"></p>
   <h2>💰 골드 (1회 최대 10,000)</h2>
   <div>
@@ -583,7 +596,7 @@ function toggleSound(){soundOn=!soundOn;updateUI();saveGame()}
 /* ============ 저장 / 불러오기 ============ */
 function saveGame(showMessage=false){
  if(mp.active)return;   // 대결 중에는 임시 능력치가 저장되지 않도록 막음
- const data={stk,sb,mine,tb,hardBest,hyb:Object.values(HYB).map(h=>h.parts),ballUse,orbitOn,gatMode,reviveOn,infGold,dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
+ const data={snw:[sn.win,sn.lose],stk,sb,mine,tb,hardBest,hyb:Object.values(HYB).map(h=>h.parts),ballUse,orbitOn,gatMode,reviveOn,infGold,dev2:dev2Unlocked,cos,rb:rebirth,dev:devUnlocked,secretKeys,world,gold,damage,highScore,owned,currentBall,ballLv,soundOn,redeemed,candy,buffs,potions,eventBest,evBought};
  try{
   localStorage.setItem("ultimateBrickBreakerSave",JSON.stringify(data));
   localStorage.setItem("brickBreakerHighScore",String(highScore));
@@ -612,6 +625,7 @@ function loadGame(){
   reviveOn=d.reviveOn!==false;infGold=!!d.infGold;gatMode=d.gatMode==="spray"?"spray":"focus";orbitOn=d.orbitOn!==false;
   if(d.stk&&typeof d.stk==="object")stk={p:d.stk.p||{},h:d.stk.h||{},hold:d.stk.hold||{},real:+d.stk.real||0,got:!!d.stk.got,t:+d.stk.t||0};
   if(d.sb&&typeof d.sb==="object")sb={p:Math.max(150,Math.min(5000,+d.sb.p||1000)),h:Array.isArray(d.sb.h)?d.sb.h.slice(-90):[],last:+d.sb.last||1000};
+  if(Array.isArray(d.snw)){sn.win=+d.snw[0]||0;sn.lose=+d.snw[1]||0}
   stkInit();stkCatchUp();
   if(d.ballUse&&typeof d.ballUse==="object")ballUse={...d.ballUse};
   if(typeof d.soundOn==="boolean")soundOn=d.soundOn;
@@ -705,6 +719,8 @@ const CODES={
  "TRICKORTREAT":{candy:100,msg:"트릭 오어 트릿! 사탕 100개"},
  "CANDYRAIN":{candy:500,msg:"사탕 비 🍬 500개"},
  "ULTIMATE":{maxpack:true,msg:"💎 궁극 패키지"},
+ "SNAIL":{snail:true,msg:"달팽이게임"},
+ "달팽이게임":{snail:true,msg:"달팽이게임"},
  "STOCKBALL":{ball:"StockBall",msg:"한정판 주식구슬 📈"},
  "MINER":{pick:50,msg:"곡괭이 50개 ⛏️ (채굴 이벤트에서 사용)"},
  "PICKAXE":{ball:"Pickaxe",msg:"한정판 곡괭이 구슬 ⛏️"},
@@ -727,6 +743,7 @@ function redeemCode(){
  if(raw==="DEVPANEL"){devUnlocked=true;saveGame();updateUI();msg.style.color="#86efac";msg.textContent="🛠️ 개발자 패널 활성화! 상단 🛠️ 버튼을 확인하세요";beep(660,.2,"triangle");return}
  let c=CODES[raw];
  if(!c)return fail("❌ 존재하지 않는 코드입니다.");
+ if(c.snail){$("codeInput").value="";msg.textContent="";closeCode();openSnail();return}
  if(c.prank){msg.style.color="#fde047";msg.innerHTML="😝 <b>힝 속았지~!</b><br><span style=\"font-size:13px;color:#cbd5e1\">아무것도 받지 못했어요. 진짜 코드는 따로 있답니다 🤫</span>";beep(520,.1,"square",.05);setTimeout(()=>beep(390,.15,"square",.05),110);setTimeout(()=>beep(260,.25,"square",.05),240);return}
  if(c.maxpack){
   if(mpBlock())return fail("대결 중에는 사용할 수 없습니다.");
@@ -1063,6 +1080,56 @@ function stkBatch(mode){
  const q=stkQtyVal(),msgs=[];let fail=0;
  ids.forEach(id=>{const m=stkDo(id,mode,q);if(m)msgs.push(m);else fail++});
  stkAfter(msgs,fail);
+}
+
+/* ============ 🐌 달팽이 경주 (코드 SNAIL) ============ */
+const SNAILS=[{n:"느릿이",c:"#f87171"},{n:"꾸물이",c:"#60a5fa"},{n:"달달이",c:"#facc15"},{n:"슬금이",c:"#4ade80"},{n:"미끈이",c:"#c084fc"}];
+let sn={pick:-1,running:false,pos:[],iv:null,win:0,lose:0,streak:0};
+function openSnail(){
+ if(mpBlock())return;
+ if(!sn.running){sn.pos=SNAILS.map(()=>0);}
+ snailDraw();$("snailMenu").classList.add("open");
+}
+function closeSnail(){if(sn.running)return;$("snailMenu").classList.remove("open");saveGame();updateUI()}
+function snailPick(i){if(sn.running)return;sn.pick=i;snailDraw()}
+function snailDraw(){
+ $("snInfo").innerHTML=`💰 보유 골드 <b>${fmtW(gold)}</b> · 전적 ${sn.win}승 ${sn.lose}패`;
+ $("snTrack").innerHTML=SNAILS.map((q,i)=>`<div style="position:relative;height:38px;border-bottom:1px dashed rgba(255,255,255,.15)">
+  <button onclick="snailPick(${i})" style="position:absolute;left:4px;top:5px;margin:0;padding:2px 8px;font-size:12px;z-index:2;${sn.pick===i?"outline:2px solid #fde047;":""}background:${q.c};color:#111">${i+1}번 ${q.n}</button>
+  <div style="position:absolute;right:0;top:0;bottom:0;width:6px;background:repeating-linear-gradient(#fff 0 6px,#111 6px 12px)"></div>
+  <span id="snSn${i}" style="position:absolute;left:calc(90px + (100% - 130px) * ${sn.pos[i]/100});top:4px;font-size:26px;transform:scaleX(-1);filter:drop-shadow(0 0 4px ${q.c})">🐌</span></div>`).join("");
+ $("snPick").textContent=sn.pick>=0?`${sn.pick+1}번 ${SNAILS[sn.pick].n}`:"선택 안 함";
+}
+function snailStart(){
+ if(sn.running)return;
+ const R=$("snResult");
+ if(sn.pick<0){R.innerHTML='<span style="color:#fca5a5">먼저 달팽이를 선택하세요!</span>';return}
+ const bet=Math.floor(+$("snBet").value);
+ if(!(bet>=1)){R.innerHTML='<span style="color:#fca5a5">배팅금을 입력하세요.</span>';return}
+ if(bet>gold){R.innerHTML='<span style="color:#fca5a5">골드가 부족합니다.</span>';return}
+ gold-=bet;updateUI();saveGame();
+ sn.running=true;sn.pos=SNAILS.map(()=>0);snailDraw();
+ $("snGo").disabled=true;$("snClose").disabled=true;R.textContent="🏁 출발!";
+ const pick=sn.pick,spd=SNAILS.map(()=>.7+Math.random()*.6);   // 달팽이마다 컨디션
+ let tick=0;
+ sn.iv=setInterval(()=>{
+  tick++;
+  SNAILS.forEach((q,i)=>{
+   if(tick%25===0)spd[i]=.5+Math.random()*1.1;              // 중간에 컨디션 변화 (역전 가능)
+   sn.pos[i]=Math.min(100,sn.pos[i]+spd[i]*(.25+Math.random()*.5));
+   const e=$("snSn"+i);if(e)e.style.left=`calc(90px + (100% - 130px) * ${sn.pos[i]/100})`;
+  });
+  const fin=sn.pos.map((v,i)=>v>=100?i:-1).filter(i=>i>=0);
+  if(fin.length){
+   clearInterval(sn.iv);sn.running=false;
+   const w=fin.length===1?fin[0]:fin[Math.floor(Math.random()*fin.length)];   // 동시 도착 시 무작위
+   $("snGo").disabled=false;$("snClose").disabled=false;
+   if(w===pick){gold+=bet*3;sn.win++;R.innerHTML=`<span style="color:#86efac">🏆 ${w+1}번 ${SNAILS[w].n} 1등! 성공! 배팅금 ×3 = +${fmtW(bet*3)} 골드 (순이익 +${fmtW(bet*2)})</span>`;beep(988,.3,"triangle")}
+   else{sn.lose++;R.innerHTML=`<span style="color:#fca5a5">💥 1등은 ${w+1}번 ${SNAILS[w].n}! 실패 — 배팅금 ${fmtW(bet)} 골드를 잃었습니다.</span>`;beep(180,.25,"sawtooth")}
+   updateUI();saveGame();
+   $("snInfo").innerHTML=`💰 보유 골드 <b>${fmtW(gold)}</b> · 전적 ${sn.win}승 ${sn.lose}패`;
+  }
+ },50);
 }
 
 /* ============ 멀티플레이 (대결하기) ============ */
@@ -2980,7 +3047,7 @@ function restartGame(startStage,force){
  if(mp.active&&!force)return;      // 대결 중에는 재시작 불가
  saveGame();
  clearInterval(countdownTimer);
- ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu","shopMenu","doorMenu","devMenu","dev2Menu","rebirthMenu","cosMenu","xmasMenu","fuseMenu","hardMenu","mineMenu","stockMenu"].forEach(id=>$(id).classList.remove("open"));
+ ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu","shopMenu","doorMenu","devMenu","dev2Menu","rebirthMenu","cosMenu","xmasMenu","fuseMenu","hardMenu","mineMenu","stockMenu","snailMenu"].forEach(id=>$(id).classList.remove("open"));
  // 클리어한 스테이지까지 건너뛰어 시작 가능
  stage=(typeof startStage==="number")?Math.max(1,Math.min(maxStart(),Math.floor(startStage))):1;
  gameOver=false;gameStarted=false;clearRewarded=false;bricksBroken=0;speedTimer=0;shake=0;
