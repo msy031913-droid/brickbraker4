@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Ultimate Brick Breaker v11.20-B</title>
+<title>Ultimate Brick Breaker v11.24-A</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -233,6 +233,27 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 </div>
 <div id="tbTag"></div>
 <button id="gatBtn" onclick="setGatMode(gatMode==='focus'?'spray':'focus')" style="display:none;position:fixed;right:10px;bottom:34px;z-index:4;margin:0"></button>
+<div id="casinoMenu" class="overlay">
+ <style>
+  .csChip{display:inline-block;min-width:34px;padding:2px 6px;border-radius:50%;border:2px dashed #fff;color:#111;font-size:11px;font-weight:bold;text-align:center;margin:1px}
+  .csBox{background:rgba(0,0,0,.35);border:1px solid #854d0e;border-radius:10px;padding:8px;margin:6px 0}
+  .csGame{display:inline-block;width:30%;min-width:170px;margin:4px;padding:14px 6px;font-size:16px;background:linear-gradient(#7f1d1d,#450a0a);border:2px solid #eab308}
+  .csGame:disabled{opacity:.4}
+  .csBoard{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin:6px 0}
+  .csBoard button,.csOut button{margin:0;padding:6px 0;font-size:13px;min-height:0;border:1px solid #d1d5db;position:relative}
+  .csOut{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin:4px 0}
+  .csBet{position:absolute;right:1px;top:-1px;font-size:9px;background:#fde047;color:#111;border-radius:6px;padding:0 3px}
+  .pkCard{display:inline-block;min-width:34px;padding:6px 3px;margin:2px;border-radius:6px;background:#fff;font:bold 15px Arial;text-align:center;border:1px solid #888}
+  .pkBack{background:repeating-linear-gradient(45deg,#1d4ed8 0 5px,#1e3a8a 5px 10px);color:transparent;border-color:#fff}
+  .pkSeat{display:inline-block;vertical-align:top;min-width:120px;margin:3px;padding:6px;border-radius:10px;background:rgba(0,0,0,.35);font-size:12px}
+  .pkSeat.turn{outline:2px solid #fde047}
+  .pkSeat.fold{opacity:.45}
+  .slReel{display:inline-block;width:92px;height:92px;line-height:92px;margin:4px;font-size:54px;background:#fff;border:4px solid #eab308;border-radius:12px;color:#111}
+ </style>
+ <div class="panel" style="max-width:900px;max-height:96vh;overflow:auto;border-color:#eab308;background:linear-gradient(#1a0b0b,#0d1a0d)">
+  <div id="csBody"></div>
+ </div>
+</div>
 <div id="snailMenu" class="overlay">
  <div class="panel" style="max-width:720px;border-color:#65a30d;max-height:94vh;overflow:auto">
   <h1>🐌 달팽이 경주</h1>
@@ -338,7 +359,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 <div id="dev2Menu" class="overlay">
  <div class="panel">
   <h1>🛠️ 개발자 패널 2</h1>
-  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.20-B · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
+  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.24-A · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
   <p id="dev2Info" class="small"></p>
   <h2>🛒 비밀 상점 / 🚪 비밀 맵</h2>
   <div>
@@ -372,7 +393,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 <div id="devMenu" class="overlay">
  <div class="panel">
   <h1>🛠️ 개발자 패널</h1>
-  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.20-B · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
+  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.24-A · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
   <p id="devInfo" class="small"></p>
   <h2>💰 골드 (1회 최대 10,000)</h2>
   <div>
@@ -719,6 +740,7 @@ const CODES={
  "TRICKORTREAT":{candy:100,msg:"트릭 오어 트릿! 사탕 100개"},
  "CANDYRAIN":{candy:500,msg:"사탕 비 🍬 500개"},
  "ULTIMATE":{maxpack:true,msg:"💎 궁극 패키지"},
+ "CASINO":{casino:true,msg:"카지노"},
  "SNAIL":{snail:true,msg:"달팽이게임"},
  "달팽이게임":{snail:true,msg:"달팽이게임"},
  "STOCKBALL":{ball:"StockBall",msg:"한정판 주식구슬 📈"},
@@ -743,6 +765,7 @@ function redeemCode(){
  if(raw==="DEVPANEL"){devUnlocked=true;saveGame();updateUI();msg.style.color="#86efac";msg.textContent="🛠️ 개발자 패널 활성화! 상단 🛠️ 버튼을 확인하세요";beep(660,.2,"triangle");return}
  let c=CODES[raw];
  if(!c)return fail("❌ 존재하지 않는 코드입니다.");
+ if(c.casino){$("codeInput").value="";msg.textContent="";closeCode();openCasino();return}
  if(c.snail){$("codeInput").value="";msg.textContent="";closeCode();openSnail();return}
  if(c.prank){msg.style.color="#fde047";msg.innerHTML="😝 <b>힝 속았지~!</b><br><span style=\"font-size:13px;color:#cbd5e1\">아무것도 받지 못했어요. 진짜 코드는 따로 있답니다 🤫</span>";beep(520,.1,"square",.05);setTimeout(()=>beep(390,.15,"square",.05),110);setTimeout(()=>beep(260,.25,"square",.05),240);return}
  if(c.maxpack){
@@ -1081,6 +1104,416 @@ function stkBatch(mode){
  ids.forEach(id=>{const m=stkDo(id,mode,q);if(m)msgs.push(m);else fail++});
  stkAfter(msgs,fail);
 }
+
+/* ============ 🎰 카지노 (코드 CASINO) ============ */
+const CS_KEY="ubbCasinoAccounts2";
+const CHIPS=[10000,100000,1000000,10000000,100000000,1000000000];
+const CHIP_COL=["#e5e7eb","#f87171","#60a5fa","#4ade80","#c084fc","#fbbf24"];
+const CHIP_NAME=["1만","10만","100만","1천만","1억","10억"];
+const VIP_NEED=50000000;                       // 카지노 누적 순이익이 이 이상이면 VIP
+let csAcc={};try{csAcc=JSON.parse(localStorage.getItem(CS_KEY))||{}}catch(e){csAcc={}}
+if(typeof csAcc!=="object"||!csAcc.u)csAcc={u:{}};
+const csSave=()=>{try{localStorage.setItem(CS_KEY,JSON.stringify(csAcc))}catch(e){}};
+const cs={id:null,view:"login",room:"normal",msg:"",den:0};
+const csA=()=>cs.id?csAcc.u["u_"+cs.id]:null;
+const csHash=(pw,salt)=>{let h1=0xdeadbeef,h2=0x41c6ce57;const str=salt+"|"+pw+"|"+salt;
+ for(let r=0;r<1500;r++){for(let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677)}
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909)}
+ return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)};
+const csLim=()=>cs.room==="vip"?{min:1000000,max:1000000000,sb:500000,bb:1000000,ai:4,name:"VIP"}:{min:10000,max:10000000,sb:10000,bb:20000,ai:3,name:"일반"};
+const AI_NAMES=["민준","서연","도윤","하은","지호","수아","예준","지우","시우","채원","현우","다은"];
+const VIP_AI=["🎩 마에스트로","🕶️ 블랙잭킴","💎 다이아","🦈 샤크","👑 킹슬레이어","🐺 울프"];
+const csFmt=n=>fmtW(n);
+function csChipStr(v){let t="";for(let i=5;i>=0;i--){const c=Math.floor(v/CHIPS[i]);if(c>0){t+=`<span class="csChip" style="background:${CHIP_COL[i]}">${CHIP_NAME[i]}</span>×${csFmt(c)} `;v-=c*CHIPS[i]}}return t||"<span class='small'>칩 없음</span>"}
+function csResult(net){   // 게임 결과(순이익)를 계정에 반영
+ const a=csA();if(!a||!net)return;a.net=(a.net||0)+net;
+ if(!a.vip&&a.net>=VIP_NEED){a.vip=true;toast("👑 VIP 달성! VIP 룸이 열렸습니다");beep(988,.3,"triangle")}
+ csSave();
+}
+function openCasino(){if(mpBlock())return;cs.view=cs.id?"lobby":"login";csRender();$("casinoMenu").classList.add("open")}
+function closeCasino(){
+ if(pk.on||rl.spinning||sl.spinning){toast("게임 진행 중에는 나갈 수 없습니다 (포커는 테이블 나가기)");return}
+ cs.id=null;cs.view="login";cs.msg="";$("casinoMenu").classList.remove("open");saveGame();updateUI();
+}
+function csRender(){
+ const b=$("csBody");if(!b)return;
+ const v=cs.view;
+ b.innerHTML=v==="login"?csViewLogin():v==="register"?csViewReg():v==="lobby"?csViewLobby():v==="roulette"?rlView():v==="slots"?slView():pkView();
+ if(v==="roulette")rlDraw(rl.angle,-Math.PI/2);
+}
+function csViewLogin(){return `<h1>🎰 카지노</h1><p class="small">입장하려면 로그인이 필요합니다. · 게임 속 가상 골드로만 즐기는 게임입니다.</p>
+ <div class="csBox"><div>ID <input id="csId" type="text" maxlength="12" style="width:150px" autocomplete="off"></div>
+ <div>비밀번호 <input id="csPw" type="password" maxlength="30" style="width:150px" onkeydown="if(event.key==='Enter')csLogin()"></div>
+ <div style="color:#fca5a5;min-height:20px">${cs.msg}</div>
+ <button onclick="csLogin()" style="background:#b45309">🔑 로그인</button><button onclick="cs.view='register';cs.msg='';csRender()">📝 회원가입</button><button onclick="closeCasino()">나가기</button></div>
+ <p class="small">※ 계정은 이 브라우저(기기)에만 저장됩니다. 다른 기기에서는 다시 가입해야 합니다.</p>`}
+function csViewReg(){return `<h1>📝 회원가입</h1>
+ <div class="csBox"><div>ID <input id="csId" type="text" maxlength="12" style="width:150px" autocomplete="off"> <span class="small">(3~12자 · 한글/영문/숫자/_)</span></div>
+ <div>비밀번호 <input id="csPw" type="password" maxlength="30" style="width:150px"> <span class="small">(4자 이상)</span></div>
+ <div>비밀번호 확인 <input id="csPw2" type="password" maxlength="30" style="width:150px" onkeydown="if(event.key==='Enter')csRegister()"></div>
+ <div style="color:#fca5a5;min-height:20px">${cs.msg}</div>
+ <button onclick="csRegister()" style="background:#15803d">✅ 가입하기</button><button onclick="cs.view='login';cs.msg='';csRender()">← 로그인으로</button></div>`}
+function csLogin(){
+ const id=$("csId").value.trim(),pw=$("csPw").value,a=csAcc.u["u_"+id];
+ if(!a||a.pw!==csHash(pw,a.salt)){cs.msg="ID 또는 비밀번호가 올바르지 않습니다.";csRender();return}
+ cs.id=id;cs.view="lobby";cs.msg="";cs.room="normal";csRender();
+}
+function csRegister(){
+ const id=$("csId").value.trim(),pw=$("csPw").value,pw2=$("csPw2").value;
+ if(!/^[A-Za-z0-9가-힣_]{3,12}$/.test(id))cs.msg="ID는 3~12자의 한글/영문/숫자/_ 만 가능합니다.";
+ else if(csAcc.u["u_"+id])cs.msg="이미 사용 중인 ID입니다.";
+ else if(pw.length<4)cs.msg="비밀번호는 4자 이상이어야 합니다.";
+ else if(pw!==pw2)cs.msg="비밀번호 확인이 일치하지 않습니다.";
+ else{
+  const salt=Math.random().toString(36).slice(2,10);
+  csAcc.u["u_"+id]={salt,pw:csHash(pw,salt),chips:0,net:0,vip:false};csSave();
+  cs.id=id;cs.view="lobby";cs.msg="";cs.room="normal";toast("🎉 가입 완료! 환영합니다, "+id);csRender();return;
+ }
+ csRender();
+}
+function csLogout(){if(pk.on)return;cs.id=null;cs.view="login";cs.msg="";csRender()}
+function csViewLobby(){
+ const a=csA(),L=csLim(),pg=Math.max(0,Math.min(1,(a.net||0)/VIP_NEED));
+ return `<h1>🎰 카지노 로비</h1>
+ <div class="csBox">👤 <b>${esc(cs.id)}</b> ${a.vip?"<b style='color:#fde047'>👑 VIP</b>":""} · 보유 골드 <b>${csFmt(gold)}</b><br>
+ 🎫 내 칩: <b>${csFmt(a.chips)}</b>원 &nbsp; ${csChipStr(a.chips)}<br>
+ <span class="small">카지노 누적 손익 <b style="color:${(a.net||0)>=0?"#86efac":"#fca5a5"}">${(a.net||0)>=0?"+":""}${csFmt(a.net||0)}</b>원 · VIP 조건: 누적 순이익 ${csFmt(VIP_NEED)}원 ${a.vip?"✅ 달성":`(${(pg*100).toFixed(0)}%)`}</span>
+ <div class="bar" style="height:6px;border-radius:4px;background:#1e293b;overflow:hidden;margin-top:3px"><i style="display:block;height:100%;width:${(a.vip?1:pg)*100}%;background:#eab308"></i></div></div>
+ <div class="csBox"><b>💱 칩 교환소</b> <span class="small">(골드 ↔ 칩 · 1원 = 1골드)</span><br>
+  <select id="csDen" onchange="cs.den=+this.value">${CHIPS.map((c,i)=>`<option value="${i}" ${cs.den===i?"selected":""}>${CHIP_NAME[i]} 칩 (${csFmt(c)}원)</option>`).join("")}</select>
+  × <input id="csCnt" type="number" min="1" value="1" style="width:90px">
+  <button onclick="csBuy()" style="background:#15803d">골드 → 칩 구매</button>
+  <button onclick="csSell()" style="background:#1d4ed8">칩 → 골드 환전</button>
+  <button onclick="csSellAll()" style="background:#1e40af">칩 전액 환전</button></div>
+ <div class="csBox"><b>🚪 입장 룸</b>
+  <button onclick="cs.room='normal';csRender()" style="background:${cs.room==="normal"?"#16a34a":"#4b5563"}">일반 룸 (최소 ${csFmt(10000)})</button>
+  <button onclick="csVip()" style="background:${cs.room==="vip"?"#ca8a04":"#4b5563"}">👑 VIP 룸 (최소 ${csFmt(1000000)}) ${a.vip?"":"🔒"}</button>
+  <div class="small">${cs.room==="vip"?"VIP 룸: 고액 테이블 · 프로 딜러 · 실력 있는 상대(포커 AI가 훨씬 강해집니다)":"일반 룸: 초보 딜러 · 보통 실력의 상대"}</div></div>
+ <div style="text-align:center"><button class="csGame" onclick="rlOpen()">🎡 룰렛</button><button class="csGame" onclick="slOpen()">🎰 777 슬롯머신</button><button class="csGame" onclick="pkOpen()">🃏 포커</button></div>
+ <div style="color:#fde047;min-height:20px">${cs.msg}</div>
+ <div><button onclick="csLogout()">로그아웃</button><button onclick="closeCasino()">카지노 나가기</button></div>`;
+}
+function csVip(){if(!csA().vip){cs.msg="🔒 VIP 룸은 카지노 누적 순이익 "+csFmt(VIP_NEED)+"원 이상부터 입장할 수 있습니다.";csRender();return}cs.room="vip";cs.msg="";csRender()}
+function csBuy(){const i=+$("csDen").value,n=Math.floor(+$("csCnt").value),cost=CHIPS[i]*n;cs.den=i;
+ if(!(n>=1)){cs.msg="수량을 입력하세요.";csRender();return}
+ if(gold<cost){cs.msg="골드가 부족합니다. (필요 "+csFmt(cost)+")";csRender();return}
+ gold-=cost;csA().chips+=cost;csSave();saveGame();updateUI();cs.msg=`${CHIP_NAME[i]} 칩 ${csFmt(n)}개 구매 (-${csFmt(cost)}골드)`;beep(600,.1,"triangle");csRender()}
+function csSell(){const i=+$("csDen").value,n=Math.floor(+$("csCnt").value),v=CHIPS[i]*n,a=csA();cs.den=i;
+ if(!(n>=1)||a.chips<v){cs.msg="환전할 칩이 부족합니다.";csRender();return}
+ a.chips-=v;gold+=v;csSave();saveGame();updateUI();cs.msg=`${CHIP_NAME[i]} 칩 ${csFmt(n)}개 환전 (+${csFmt(v)}골드)`;beep(800,.1,"triangle");csRender()}
+function csSellAll(){const a=csA(),v=a.chips;if(v<=0){cs.msg="환전할 칩이 없습니다.";csRender();return}
+ a.chips=0;gold+=v;csSave();saveGame();updateUI();cs.msg=`칩 전액 환전 (+${csFmt(v)}골드)`;beep(800,.1,"triangle");csRender()}
+const csBack=()=>{if(pk.on||rl.spinning||sl.spinning)return;cs.view="lobby";csRender()};
+
+/* ---------- 🎡 룰렛 (아메리칸: 0, 00) ---------- */
+const RL_ORDER=["0","28","9","26","30","11","7","20","32","17","5","22","34","15","3","24","36","13","1","00","27","10","25","29","12","8","19","31","18","6","21","33","16","4","23","35","14","2"];
+const RL_RED=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const rlColor=p=>p==="0"||p==="00"?"#15803d":RL_RED.has(+p)?"#dc2626":"#111827";
+const rl={bets:{},chip:0,spinning:false,angle:0,log:"",aiLog:[]};
+function rlOpen(){const L=csLim();rl.bets={};rl.chip=CHIPS.findIndex(c=>c>=L.min);rl.log="";rl.aiLog=[];cs.view="roulette";csRender()}
+const rlTotal=()=>Object.values(rl.bets).reduce((a,b)=>a+b,0);
+function rlView(){
+ const a=csA(),L=csLim(),tot=rlTotal();
+ const num=n=>{const k="n:"+n;return `<button onclick="rlBet('${k}')" style="background:${rlColor(n)};color:#fff">${n}${rl.bets[k]?`<span class="csBet">${csFmt(rl.bets[k])}</span>`:""}</button>`};
+ const out=(k,t,bg)=>`<button onclick="rlBet('${k}')" style="background:${bg||"#334155"};color:#fff">${t}${rl.bets[k]?`<span class="csBet">${csFmt(rl.bets[k])}</span>`:""}</button>`;
+ let rows="";for(let r=0;r<3;r++){for(let c=0;c<12;c++)rows+=num(String(c*3+(3-r)))}
+ return `<h1>🎡 룰렛 ${cs.room==="vip"?"<span style='color:#fde047'>👑 VIP</span>":""}</h1>
+ <div class="small">${cs.room==="vip"?"👑 VIP 전담 프로 딜러 '레오'":"🙂 딜러 '모모' (초보)"} · 칸당 ${csFmt(L.min)} ~ ${csFmt(L.max)}원 · 숫자 ×36 · 12칸 ×3 · 색/홀짝/반 ×2 (0, 00은 하우스)</div>
+ <div class="csBox">🎫 칩 ${csFmt(a.chips-tot)}원 (배팅 ${csFmt(tot)}원) &nbsp; 배팅 단위:
+  ${CHIPS.map((c,i)=>c<L.min||c>L.max?"":`<button onclick="rl.chip=${i};csRender()" style="margin:1px;padding:2px 6px;background:${rl.chip===i?"#ca8a04":"#4b5563"}"><span class="csChip" style="background:${CHIP_COL[i]}">${CHIP_NAME[i]}</span></button>`).join("")}</div>
+ <div style="text-align:center"><canvas id="rlCv" width="300" height="300"></canvas></div>
+ <div id="rlRes" style="text-align:center;font-weight:bold;min-height:26px">${rl.log}</div>
+ <div class="csBoard" style="grid-template-columns:repeat(2,1fr);max-width:200px;margin:0 auto">${num("0")}${num("00")}</div>
+ <div class="csBoard">${rows}</div>
+ <div class="csOut">${out("d:1","1~12 (×3)")}${out("d:2","13~24 (×3)")}${out("d:3","25~36 (×3)")}</div>
+ <div class="csOut" style="grid-template-columns:repeat(6,1fr)">${out("low","1~18")}${out("even","짝")}${out("red","빨강","#dc2626")}${out("black","검정","#111827")}${out("odd","홀")}${out("high","19~36")}</div>
+ <div><button id="rlGo" onclick="rlSpin()" style="background:#b45309" ${rl.spinning?"disabled":""}>🎡 스핀!</button><button onclick="rl.bets={};csRender()" ${rl.spinning?"disabled":""}>배팅 취소</button><button onclick="csBack()" ${rl.spinning?"disabled":""}>← 로비</button></div>
+ <div class="csBox small">👥 같은 테이블 (AI): ${rl.aiLog.length?rl.aiLog.join("<br>"):"AI 플레이어 "+L.ai+"명이 함께 배팅합니다"}</div>`;
+}
+function rlBet(k){
+ if(rl.spinning)return;
+ const a=csA(),L=csLim(),c=CHIPS[rl.chip];
+ if(a.chips-rlTotal()<c){toast("칩이 부족합니다");return}
+ if((rl.bets[k]||0)+c>L.max){toast("칸당 최대 배팅 한도입니다");return}
+ rl.bets[k]=(rl.bets[k]||0)+c;beep(500,.04,"square");csRender();
+}
+function rlDraw(ang,ballAng,ballR){
+ const cv=$("rlCv");if(!cv)return;const c=cv.getContext("2d"),R=140,cx=150,cy=150,n=38,st=Math.PI*2/n;
+ c.clearRect(0,0,300,300);
+ c.fillStyle="#5b2c0e";c.beginPath();c.arc(cx,cy,R+8,0,7);c.fill();
+ for(let i=0;i<n;i++){
+  const a0=ang+i*st-Math.PI/2-st/2;
+  c.beginPath();c.moveTo(cx,cy);c.arc(cx,cy,R,a0,a0+st);c.closePath();c.fillStyle=rlColor(RL_ORDER[i]);c.fill();c.strokeStyle="#eab308";c.lineWidth=1;c.stroke();
+  c.save();c.translate(cx,cy);c.rotate(ang+i*st);c.fillStyle="#fff";c.font="bold 11px Arial";c.textAlign="center";c.fillText(RL_ORDER[i],0,-R+16);c.restore();
+ }
+ c.fillStyle="#7c3a10";c.beginPath();c.arc(cx,cy,R*.55,0,7);c.fill();c.strokeStyle="#eab308";c.lineWidth=3;c.stroke();
+ c.fillStyle="#eab308";c.beginPath();c.arc(cx,cy,12,0,7);c.fill();
+ const br=ballR||R-26,bx=cx+Math.cos(ballAng)*br,by=cy+Math.sin(ballAng)*br;
+ c.fillStyle="#fff";c.shadowBlur=6;c.shadowColor="#fff";c.beginPath();c.arc(bx,by,5,0,7);c.fill();c.shadowBlur=0;
+ c.fillStyle="#fde047";c.beginPath();c.moveTo(cx-8,6);c.lineTo(cx+8,6);c.lineTo(cx,22);c.closePath();c.fill();
+}
+function rlPay(bets,p){   // 총 반환금
+ const n=p==="00"?-1:+p;let ret=0;
+ for(const k in bets){const v=bets[k];let m=0;
+  if(k[0]==="n")m=k.slice(2)===p?36:0;
+  else if(k[0]==="d")m=(n>=1&&n>12*(+k[2]-1)&&n<=12*(+k[2]))?3:0;
+  else if(k==="low")m=n>=1&&n<=18?2:0;else if(k==="high")m=n>=19?2:0;
+  else if(k==="even")m=n>0&&n%2===0?2:0;else if(k==="odd")m=n>0&&n%2===1?2:0;
+  else if(k==="red")m=n>0&&RL_RED.has(n)?2:0;else if(k==="black")m=n>0&&!RL_RED.has(n)?2:0;
+  ret+=v*m}
+ return ret;
+}
+function rlSpin(){
+ if(rl.spinning)return;const a=csA(),tot=rlTotal();
+ if(tot<=0){toast("먼저 배팅하세요 (숫자/칸을 누르세요)");return}
+ if(tot>a.chips){toast("칩이 부족합니다");return}
+ a.chips-=tot;csSave();rl.spinning=true;rl.log="🎡 스핀 중...";
+ $("rlGo").disabled=true;$("rlRes").textContent=rl.log;
+ const res=Math.floor(Math.random()*38),st=Math.PI*2/38,start=rl.angle;
+ const delta=(((-res*st-start)%(Math.PI*2))+Math.PI*2)%(Math.PI*2)+Math.PI*2*5,t0=performance.now(),D=4200;
+ const ease=t=>1-Math.pow(1-t,3);
+ const frame=now=>{
+  const t=Math.min(1,(now-t0)/D);rl.angle=start+delta*ease(t);
+  rlDraw(rl.angle,-Math.PI/2-Math.PI*2*6*(1-ease(t)),140-26+ (1-t)*0);
+  if(t<1)requestAnimationFrame(frame);else rlFinish(res,tot);
+ };
+ requestAnimationFrame(frame);
+}
+function rlFinish(res,tot){
+ const a=csA(),p=RL_ORDER[res],ret=rlPay(rl.bets,p);
+ a.chips+=ret;csResult(ret-tot);csSave();rl.spinning=false;
+ const L=csLim(),kinds=[["red","빨강"],["black","검정"],["odd","홀"],["even","짝"],["low","1~18"],["high","19~36"]];
+ rl.aiLog=[];
+ for(let i=0;i<L.ai;i++){   // 같은 테이블의 AI도 실제 결과로 정산
+  const nm=cs.room==="vip"?VIP_AI[i]:"🤖 "+AI_NAMES[(Math.floor(Math.random()*6)+i)%AI_NAMES.length],k=kinds[Math.floor(Math.random()*6)],amt=L.min*(1+Math.floor(Math.random()*5)),won=rlPay({[k[0]]:amt},p)>0;
+  rl.aiLog.push(`${nm}: ${k[1]} ${csFmt(amt)}원 → ${won?"✅ 적중":"❌ 실패"}`);
+ }
+ rl.log=`<span style="color:${ret-tot>=0?"#86efac":"#fca5a5"}">결과 <span style="background:${rlColor(p)};padding:2px 10px;border-radius:12px;color:#fff">${p}</span> · 반환 ${csFmt(ret)}원 (${ret-tot>=0?"+":""}${csFmt(ret-tot)})</span>`;
+ rl.bets={};beep(ret>tot?988:200,.25,ret>tot?"triangle":"sawtooth");updateUI();csRender();$("rlRes").innerHTML=rl.log;
+}
+
+/* ---------- 🎰 777 슬롯머신 ---------- */
+const SL_SYM=["🍒","🍋","🔔","⭐","💎","7️⃣"],SL_W=[30,26,20,13,7,4],SL_PAY=[5,9,17,32,85,250];   // 같은 그림 3개 배당
+const sl={chip:0,spinning:false,reels:[0,1,2],log:"",aiLog:[]};
+const slPick=()=>{let r=Math.random()*100,i=0;while(i<5&&r>=SL_W[i]){r-=SL_W[i];i++}return i};
+function slMult(r){if(r[0]===r[1]&&r[1]===r[2])return SL_PAY[r[0]];const ch=r.filter(x=>x===0).length;return ch===2?2:0}
+function slOpen(){const L=csLim();sl.chip=CHIPS.findIndex(c=>c>=L.min);sl.log="";sl.aiLog=[];cs.view="slots";csRender()}
+function slView(){
+ const a=csA(),L=csLim();
+ return `<h1>🎰 777 슬롯머신 ${cs.room==="vip"?"<span style='color:#fde047'>👑 VIP</span>":""}</h1>
+ <div class="small">${cs.room==="vip"?"👑 VIP 전용 기계":"일반 기계"} · 배팅 ${csFmt(L.min)} ~ ${csFmt(L.max)}원 · 같은 그림 3개: 🍒×5 🍋×9 🔔×17 ⭐×32 💎×85 <b>7️⃣7️⃣7️⃣ ×250</b> · 🍒 2개 ×2</div>
+ <div class="csBox">🎫 칩 ${csFmt(a.chips)}원 &nbsp; 1회 배팅:
+  ${CHIPS.map((c,i)=>c<L.min||c>L.max?"":`<button onclick="sl.chip=${i};csRender()" style="margin:1px;padding:2px 6px;background:${sl.chip===i?"#ca8a04":"#4b5563"}"><span class="csChip" style="background:${CHIP_COL[i]}">${CHIP_NAME[i]}</span></button>`).join("")}</div>
+ <div style="text-align:center;background:linear-gradient(#7f1d1d,#450a0a);border:4px solid #eab308;border-radius:16px;padding:14px">
+  <div id="slReels">${sl.reels.map((x,i)=>`<span class="slReel" id="slR${i}">${SL_SYM[x]}</span>`).join("")}</div>
+  <div id="slRes" style="font-weight:bold;min-height:26px;margin-top:6px">${sl.log}</div>
+  <button onclick="slSpin()" id="slGo" style="background:#b45309;font-size:18px" ${sl.spinning?"disabled":""}>🎰 SPIN (${csFmt(CHIPS[sl.chip])}원)</button></div>
+ <div><button onclick="csBack()" ${sl.spinning?"disabled":""}>← 로비</button></div>
+ <div class="csBox small">👥 옆자리 (AI): ${sl.aiLog.length?sl.aiLog.join("<br>"):"AI 플레이어 "+L.ai+"명이 옆 기계에서 돌리는 중"}</div>`;
+}
+function slSpin(){
+ if(sl.spinning)return;const a=csA(),bet=CHIPS[sl.chip];
+ if(a.chips<bet){toast("칩이 부족합니다");return}
+ a.chips-=bet;csSave();sl.spinning=true;$("slGo").disabled=true;$("slRes").textContent="🎰 ...";
+ const fin=[slPick(),slPick(),slPick()],stopAt=[900,1500,2100],t0=performance.now();let done=0;
+ const iv=setInterval(()=>{
+  const el=performance.now()-t0;
+  for(let i=0;i<3;i++){if(el<stopAt[i]){const e=$("slR"+i);if(e)e.textContent=SL_SYM[Math.floor(Math.random()*6)]}else if(!sl["d"+i]){sl["d"+i]=true;const e=$("slR"+i);if(e)e.textContent=SL_SYM[fin[i]];beep(500+i*150,.06,"square");done++}}
+  if(done>=3){clearInterval(iv);for(let i=0;i<3;i++)delete sl["d"+i];slFinish(fin,bet)}
+ },70);
+}
+function slFinish(r,bet){
+ const a=csA(),m=slMult(r),ret=bet*m;a.chips+=ret;csResult(ret-bet);csSave();sl.reels=r;sl.spinning=false;
+ const L=csLim();sl.aiLog=[];
+ for(let i=0;i<L.ai;i++){const nm=cs.room==="vip"?VIP_AI[i]:"🤖 "+AI_NAMES[(Math.floor(Math.random()*6)+i)%AI_NAMES.length],rr=[slPick(),slPick(),slPick()],mm=slMult(rr);sl.aiLog.push(`${nm}: ${rr.map(x=>SL_SYM[x]).join("")} ${mm?`✅ ×${mm}`:"❌"}`)}
+ sl.log=m?`<span style="color:#86efac">🎉 ×${m} 당첨! +${csFmt(ret)}원 (순이익 ${csFmt(ret-bet)})</span>`:`<span style="color:#fca5a5">꽝! -${csFmt(bet)}원</span>`;
+ beep(m?988:200,.25,m?"triangle":"sawtooth");updateUI();csRender();
+}
+
+/* ---------- 🃏 텍사스 홀덤 포커 (AI 상대) ---------- */
+const pk={on:false,pl:[],deck:[],board:[],pot:0,dealer:0,phase:"",curBet:0,minRaise:0,toAct:0,log:[],timer:0,buyin:0,start:0,raises:0,msg:"",sel:0};
+const PK_NAMES=["하이카드","원페어","투페어","트리플","스트레이트","플러시","풀하우스","포카드","스트레이트 플러시"];
+function pkDeck(){const d=[];for(let s=0;s<4;s++)for(let r=2;r<=14;r++)d.push({r,s});for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]]}return d}
+const pkCard=c=>`<span class="pkCard" style="color:${c.s%2?"#111":"#dc2626"}">${"23456789TJQKA"[c.r-2]}${"♥♠♦♣"[c.s]}</span>`;
+const pkBack=()=>`<span class="pkCard pkBack">??</span>`;
+function pkEval5(c){
+ const rs=c.map(x=>x.r).sort((a,b)=>b-a),flush=c.every(x=>x.s===c[0].s);let straight=false,hi=rs[0];
+ if(new Set(rs).size===5){if(rs[0]-rs[4]===4)straight=true;else if(rs[0]===14&&rs[1]===5){straight=true;hi=5}}
+ const cnt={};rs.forEach(r=>cnt[r]=(cnt[r]||0)+1);
+ const g=Object.entries(cnt).map(([r,n])=>[+r,n]).sort((a,b)=>b[1]-a[1]||b[0]-a[0]);let cat,k;
+ if(straight&&flush){cat=8;k=[hi]}else if(g[0][1]===4){cat=7;k=[g[0][0],g[1][0]]}else if(g[0][1]===3&&g[1][1]===2){cat=6;k=[g[0][0],g[1][0]]}
+ else if(flush){cat=5;k=rs}else if(straight){cat=4;k=[hi]}else if(g[0][1]===3){cat=3;k=g.map(x=>x[0])}
+ else if(g[0][1]===2&&g[1][1]===2){cat=2;k=g.map(x=>x[0])}else if(g[0][1]===2){cat=1;k=g.map(x=>x[0])}else{cat=0;k=rs}
+ let sc=cat;for(let i=0;i<5;i++)sc=sc*15+(k[i]||0);return sc;
+}
+function pkBest(cards){let best=-1;const n=cards.length;
+ for(let a=0;a<n-4;a++)for(let b=a+1;b<n-3;b++)for(let c=b+1;c<n-2;c++)for(let d=c+1;d<n-1;d++)for(let e=d+1;e<n;e++){const v=pkEval5([cards[a],cards[b],cards[c],cards[d],cards[e]]);if(v>best)best=v}
+ return best}
+const pkCat=sc=>Math.floor(sc/759375);   // 15^5
+function pkOpen(){
+ const a=csA(),L=csLim(),min=L.bb*20;
+ pk.buyin=Math.min(a.chips,Math.max(min,L.bb*50));pk.msg="";cs.view="poker";pk.on=false;csRender();
+}
+function pkView(){
+ if(!pk.on){
+  const a=csA(),L=csLim(),min=L.bb*20,max=L.bb*200;
+  return `<h1>🃏 텍사스 홀덤 ${cs.room==="vip"?"<span style='color:#fde047'>👑 VIP</span>":""}</h1>
+  <div class="small">${cs.room==="vip"?"👑 VIP 테이블 · 프로 딜러 · 실력 있는 AI "+L.ai+"명 (팟오즈 계산, 블러프, 약한 패 폴드)":"일반 테이블 · 초보 딜러 · 보통 실력의 AI "+L.ai+"명 (이따금 실수)"} · 블라인드 ${csFmt(L.sb)}/${csFmt(L.bb)}</div>
+  <div class="csBox">🎫 내 칩 ${csFmt(a.chips)}원<br>바이인(테이블에 가져갈 칩): <input id="pkBuy" type="number" value="${pk.buyin}" style="width:150px"> <span class="small">(${csFmt(min)} ~ ${csFmt(max)})</span>
+  <div style="color:#fca5a5;min-height:20px">${pk.msg}</div>
+  <button onclick="pkSit()" style="background:#15803d">🪑 착석하기</button><button onclick="csBack()">← 로비</button></div>
+  <div class="small">※ 사람이 없어도 AI가 자리를 채우므로 언제든 플레이할 수 있습니다.</div>`;
+ }
+ const L=csLim(),me=pk.pl[0],end=pk.phase==="end",myTurn=!end&&pk.toAct===0&&!me.folded&&!me.allin;
+ const need=Math.min(pk.curBet-me.bet,me.stack),minTo=pk.curBet+pk.minRaise;
+ const seats=pk.pl.map((p,i)=>{const show=i===0||(end&&pk.showdown&&!p.folded);
+  return `<div class="pkSeat ${pk.toAct===i&&!end?"turn":""} ${p.folded?"fold":""}"><b>${esc(p.name)}</b> ${i===pk.dealer?"<span class='csChip' style='background:#fff;min-width:16px;padding:0 4px'>D</span>":""}<br>💰 ${csFmt(p.stack)} ${p.allin?"<b style='color:#f87171'>올인</b>":""}<br>배팅 ${csFmt(p.bet)}<br>${p.cards.length?(show?p.cards.map(pkCard).join(""):(p.folded?"":p.cards.map(pkBack).join(""))):""}${p.folded?"<br>폴드":""}${end&&pk.showdown&&!p.folded&&p.sc!=null?`<br><span class="small">${PK_NAMES[pkCat(p.sc)]}</span>`:""}</div>`}).join("");
+ return `<h1>🃏 텍사스 홀덤 ${cs.room==="vip"?"<span style='color:#fde047'>👑 VIP</span>":""}</h1>
+ <div style="background:radial-gradient(#166534,#14532d);border:6px solid #7c3a10;border-radius:40px;padding:10px;text-align:center">
+  <div>${seats}</div>
+  <div style="margin:8px 0"><b>🏆 팟 ${csFmt(pk.pot)}</b> · ${({pre:"프리플랍",flop:"플랍",turn:"턴",river:"리버",end:"종료"})[pk.phase]||""}<br>
+  ${[0,1,2,3,4].map(i=>pk.board[i]?pkCard(pk.board[i]):`<span class="pkCard" style="opacity:.25">&nbsp;&nbsp;</span>`).join("")}</div>
+  <div style="min-height:70px;text-align:left;font-size:12px;background:rgba(0,0,0,.35);border-radius:8px;padding:6px">${pk.log.slice(-6).join("<br>")}</div></div>
+ <div class="csBox">${myTurn?`<b>내 차례!</b> ${need>0?`콜 ${csFmt(need)}`:"체크 가능"}
+  <button onclick="pkHuman('fold')" style="background:#4b5563">폴드</button>
+  <button onclick="pkHuman('call')" style="background:#1d4ed8">${need>0?"콜 "+csFmt(need):"체크"}</button>
+  ${me.stack>need?`<br>레이즈(총 배팅액) <input id="pkRaise" type="number" value="${Math.min(minTo,me.bet+me.stack)}" style="width:130px">
+  <button onclick="pkRaiseSet(0)">최소</button><button onclick="pkRaiseSet(1)">½팟</button><button onclick="pkRaiseSet(2)">팟</button><button onclick="pkRaiseSet(3)">올인</button>
+  <button onclick="pkHuman('raise')" style="background:#dc2626">⬆ 레이즈</button>`:""}`
+  :end?`<b style="color:#fde047">${pk.msg}</b><br>
+  <button onclick="pkNewHand()" ${me.stack<L.bb?"disabled":""} style="background:#15803d">▶ 다음 핸드</button><button onclick="pkLeave()">🚪 테이블 나가기 (칩 ${csFmt(me.stack)} 회수)</button>`
+  :`상대 차례를 기다리는 중...`}</div>`;
+}
+function pkRaiseSet(m){
+ const me=pk.pl[0],minTo=pk.curBet+pk.minRaise,all=me.bet+me.stack,callTo=pk.curBet;
+ let v=m===0?minTo:m===1?callTo+Math.floor((pk.pot+(callTo-me.bet))/2):m===2?callTo+pk.pot+(callTo-me.bet):all;
+ $("pkRaise").value=Math.max(Math.min(all,v),Math.min(minTo,all));
+}
+function pkSit(){
+ const a=csA(),L=csLim(),min=L.bb*20,max=L.bb*200,b=Math.floor(+$("pkBuy").value);
+ if(!(b>=min)||b>max){pk.msg=`바이인은 ${csFmt(min)} ~ ${csFmt(max)}원 사이여야 합니다.`;csRender();return}
+ if(b>a.chips){pk.msg="칩이 부족합니다. 칩 교환소에서 칩을 구매하세요.";csRender();return}
+ a.chips-=b;csSave();pk.buyin=b;pk.start=b;pk.on=true;
+ const names=cs.room==="vip"?VIP_AI.slice().sort(()=>Math.random()-.5).slice(0,L.ai):AI_NAMES.slice().sort(()=>Math.random()-.5).slice(0,L.ai).map(n=>"🤖 "+n);
+ pk.pl=[{name:cs.id,ai:false,stack:b},...names.map(n=>({name:n,ai:true,stack:b}))];
+ pk.dealer=Math.floor(Math.random()*pk.pl.length);pk.log=["🪑 착석! "+(cs.room==="vip"?"VIP 프로 딜러가 카드를 돌립니다":"딜러 '모모'가 카드를 돌립니다")];
+ pkNewHand();
+}
+function pkNewHand(){
+ const L=csLim(),n=pk.pl.length;
+ pk.pl.forEach(p=>{if(p.ai&&p.stack<L.bb*2)p.stack=pk.buyin});   // AI는 칩이 떨어지면 리바이
+ if(pk.pl[0].stack<L.bb){pkLeave();return}
+ pk.deck=pkDeck();pk.board=[];pk.pot=0;pk.showdown=false;pk.msg="";
+ pk.pl.forEach(p=>{p.bet=0;p.total=0;p.folded=false;p.allin=false;p.acted=false;p.sc=null;p.cards=[pk.deck.pop(),pk.deck.pop()]});
+ pk.dealer=(pk.dealer+1)%n;const sb=(pk.dealer+1)%n,bb=(pk.dealer+2)%n;
+ pkPost(sb,L.sb);pkPost(bb,L.bb);pk.curBet=L.bb;pk.minRaise=L.bb;pk.raises=0;pk.phase="pre";pk.toAct=(bb+1)%n;
+ pk.log.push(`── 새 핸드 ── (SB ${esc(pk.pl[sb].name)} / BB ${esc(pk.pl[bb].name)})`);
+ pkLoop();
+}
+function pkPost(i,amt){const p=pk.pl[i];amt=Math.min(Math.floor(amt),p.stack);p.stack-=amt;p.bet+=amt;p.total+=amt;pk.pot+=amt;if(p.stack<=0)p.allin=true}
+function pkRoundDone(){
+ const live=pk.pl.filter(p=>!p.folded&&!p.allin);
+ if(live.length===0)return true;
+ if(live.length===1&&live[0].bet>=pk.curBet)return true;
+ return live.every(p=>p.acted&&p.bet===pk.curBet);
+}
+function pkLoop(){
+ if(pk.timer){clearTimeout(pk.timer);pk.timer=0}
+ const alive=pk.pl.filter(p=>!p.folded);
+ if(alive.length===1){pkAwardAll(alive[0]);return}
+ if(pkRoundDone()){pkNextPhase();return}
+ const n=pk.pl.length;let i=pk.toAct,g=0;
+ while(g++<n){const p=pk.pl[i];if(!p.folded&&!p.allin)break;i=(i+1)%n}
+ pk.toAct=i;pkRender();
+ if(pk.pl[i].ai)pk.timer=setTimeout(()=>pkAi(i),650+Math.random()*450);
+}
+function pkRender(){if(cs.view==="poker")csRender()}
+function pkNextPhase(){
+ pk.pl.forEach(p=>{p.bet=0;p.acted=false});pk.curBet=0;pk.minRaise=csLim().bb;pk.raises=0;
+ const nx={pre:"flop",flop:"turn",turn:"river",river:"show"}[pk.phase];
+ if(nx==="flop"){pk.board.push(pk.deck.pop(),pk.deck.pop(),pk.deck.pop())}
+ else if(nx==="turn"||nx==="river"){pk.board.push(pk.deck.pop())}
+ else{pkShowdown();return}
+ pk.phase=nx;pk.toAct=(pk.dealer+1)%pk.pl.length;pk.log.push(`── ${({flop:"플랍",turn:"턴",river:"리버"})[nx]} ──`);
+ pkLoop();
+}
+function pkAct(i,type,amt){
+ const p=pk.pl[i],need=pk.curBet-p.bet;
+ if(type==="fold"){p.folded=true;pk.log.push(`${esc(p.name)} 폴드`)}
+ else if(type==="call"){const a=Math.min(need,p.stack);pkPost(i,a);p.acted=true;pk.log.push(need>0?`${esc(p.name)} 콜 ${csFmt(a)}${p.allin?" (올인)":""}`:`${esc(p.name)} 체크`)}
+ else{
+  const all=p.bet+p.stack,minTo=pk.curBet+pk.minRaise;let to=Math.min(Math.floor(amt)||minTo,all);
+  if(to<minTo&&to<all)to=Math.min(minTo,all);
+  if(to<=pk.curBet){pkAct(i,"call");return}
+  pkPost(i,to-p.bet);const inc=to-pk.curBet;if(inc>=pk.minRaise)pk.minRaise=inc;
+  pk.curBet=to;pk.raises++;pk.pl.forEach((q,j)=>{if(j!==i)q.acted=false});p.acted=true;
+  pk.log.push(`${esc(p.name)} 레이즈 → ${csFmt(to)}${p.allin?" (올인)":""}`);
+ }
+ pk.toAct=(i+1)%pk.pl.length;pkLoop();
+}
+function pkHuman(type){
+ if(pk.toAct!==0||pk.phase==="end")return;
+ let amt=0;if(type==="raise")amt=+($("pkRaise")&&$("pkRaise").value);
+ pkAct(0,type,amt);
+}
+function pkStrength(p){
+ const c=p.cards;
+ if(!pk.board.length){
+  const hi=Math.max(c[0].r,c[1].r),lo=Math.min(c[0].r,c[1].r);
+  if(hi===lo)return .5+hi/14*.42;
+  let v=(hi+lo)/28*.55+(hi>=12?.1:0);if(c[0].s===c[1].s)v+=.05;if(hi-lo<=2)v+=.04;return Math.min(.85,v);
+ }
+ const sc=pkBest(c.concat(pk.board)),cat=pkCat(sc),base=[.2,.45,.7,.8,.88,.9,.96,.99,1][cat];
+ return cat===0?base+Math.max(c[0].r,c[1].r)/14*.12:base;
+}
+function pkAi(i){
+ if(pk.toAct!==i||pk.phase==="end")return;
+ const p=pk.pl[i],vip=cs.room==="vip",need=Math.min(pk.curBet-p.bet,p.stack),L=csLim();
+ const st=pkStrength(p),s=Math.max(0,Math.min(1,st+(Math.random()-.5)*(vip?.1:.5)));
+ const odds=need/(pk.pot+need||1),bluff=Math.random()<(vip?.08:.03);
+ let act;
+ const canRaise=p.stack>need&&pk.raises<3;
+ if(need===0)act=(canRaise&&(s>(vip?.6:.7)||bluff))?"raise":"call";
+ else if(canRaise&&(s>.82||(bluff&&s>.3)))act="raise";
+ else if(s>odds*(vip?1.15:.8)+(vip?.1:.05)||need>=p.stack&&s>.7)act="call";
+ else act="fold";
+ if(act==="raise"){
+  const sz=Math.max(pk.minRaise,Math.floor(pk.pot*(.45+Math.random()*(vip?.6:.4))/L.sb)*L.sb);
+  pkAct(i,"raise",pk.curBet+sz);
+ }else pkAct(i,act);
+}
+function pkShowdown(){
+ pk.showdown=true;const alive=pk.pl.filter(p=>!p.folded);alive.forEach(p=>{p.sc=pkBest(p.cards.concat(pk.board))});
+ const res=pkSplit();
+ pk.log.push("── 쇼다운 ──");alive.forEach(p=>pk.log.push(`${esc(p.name)}: ${PK_NAMES[pkCat(p.sc)]}`));
+ pkFinish(res);
+}
+function pkSplit(){   // 사이드 팟 계산 → {name:획득액}
+ const won=pk.pl.map(()=>0),levels=[...new Set(pk.pl.filter(p=>p.total>0).map(p=>p.total))].sort((a,b)=>a-b);let prev=0;
+ levels.forEach(Lv=>{
+  const lo=prev,contrib=pk.pl.map((p,i)=>i).filter(i=>pk.pl[i].total>lo),part=contrib.reduce((s,i)=>s+Math.min(pk.pl[i].total,Lv)-lo,0);
+  const elig=contrib.filter(i=>!pk.pl[i].folded&&pk.pl[i].total>=Lv);prev=Lv;
+  if(!elig.length){contrib.forEach(i=>won[i]+=Math.min(pk.pl[i].total,Lv)-lo);return}   // 남은 사람이 없으면 초과분 환급
+  const best=Math.max(...elig.map(i=>pk.pl[i].sc)),w=elig.filter(i=>pk.pl[i].sc===best),share=Math.floor(part/w.length);
+  w.forEach(i=>won[i]+=share);won[w[0]]+=part-share*w.length;
+ });
+ return won;
+}
+function pkAwardAll(w){const won=pk.pl.map(p=>p===w?pk.pot:0);pk.log.push(`${esc(w.name)} 이외 모두 폴드`);pkFinish(won)}
+function pkFinish(won){
+ pk.phase="end";const parts=[];
+ pk.pl.forEach((p,i)=>{if(won[i]>0){p.stack+=won[i];parts.push(`${esc(p.name)} +${csFmt(won[i])}`)}});
+ pk.log.push("🏆 "+parts.join(" · "));
+ pk.msg=won[0]>0?`🎉 이겼습니다! +${csFmt(won[0])} (이번 핸드 순익 ${csFmt(won[0]-pk.pl[0].total)})`:`😢 졌습니다. -${csFmt(pk.pl[0].total)}`;
+ pk.toAct=-1;beep(won[0]>0?988:200,.25,won[0]>0?"triangle":"sawtooth");pkRender();
+}
+function pkLeave(){
+ if(!pk.on)return;if(pk.timer){clearTimeout(pk.timer);pk.timer=0}
+ const a=csA(),me=pk.pl[0];a.chips+=me.stack;csResult(me.stack-pk.start);csSave();
+ toast(`🪑 테이블 퇴장: 칩 ${csFmt(me.stack)} 회수 (${me.stack-pk.start>=0?"+":""}${csFmt(me.stack-pk.start)})`);
+ pk.on=false;pk.pl=[];cs.view="lobby";csRender();
+}
+window.addEventListener("beforeunload",()=>{if(pk.on&&pk.pl.length&&csA()){const a=csA(),me=pk.pl[0];a.chips+=me.stack;csResult(me.stack-pk.start);csSave();pk.on=false}});
 
 /* ============ 🐌 달팽이 경주 (코드 SNAIL) ============ */
 const SNAILS=[{n:"느릿이",c:"#f87171"},{n:"꾸물이",c:"#60a5fa"},{n:"달달이",c:"#facc15"},{n:"슬금이",c:"#4ade80"},{n:"미끈이",c:"#c084fc"}];
@@ -3047,7 +3480,7 @@ function restartGame(startStage,force){
  if(mp.active&&!force)return;      // 대결 중에는 재시작 불가
  saveGame();
  clearInterval(countdownTimer);
- ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu","shopMenu","doorMenu","devMenu","dev2Menu","rebirthMenu","cosMenu","xmasMenu","fuseMenu","hardMenu","mineMenu","stockMenu","snailMenu"].forEach(id=>$(id).classList.remove("open"));
+ ["gameOver","upgradeMenu","inventoryMenu","pauseMenu","codeMenu","stageMenu","vsMenu","eventMenu","portalMenu","shopMenu","doorMenu","devMenu","dev2Menu","rebirthMenu","cosMenu","xmasMenu","fuseMenu","hardMenu","mineMenu","stockMenu","snailMenu","casinoMenu"].forEach(id=>$(id).classList.remove("open"));
  // 클리어한 스테이지까지 건너뛰어 시작 가능
  stage=(typeof startStage==="number")?Math.max(1,Math.min(maxStart(),Math.floor(startStage))):1;
  gameOver=false;gameStarted=false;clearRewarded=false;bricksBroken=0;speedTimer=0;shake=0;
