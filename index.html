@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Ultimate Brick Breaker v11.24-A</title>
+<title>Ultimate Brick Breaker v11.24-C</title>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -359,7 +359,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 <div id="dev2Menu" class="overlay">
  <div class="panel">
   <h1>🛠️ 개발자 패널 2</h1>
-  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.24-A · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
+  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.24-C · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
   <p id="dev2Info" class="small"></p>
   <h2>🛒 비밀 상점 / 🚪 비밀 맵</h2>
   <div>
@@ -393,7 +393,7 @@ hr{border:0;border-top:1px solid #34407a;margin:16px 0}
 <div id="devMenu" class="overlay">
  <div class="panel">
   <h1>🛠️ 개발자 패널</h1>
-  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.24-A · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
+  <p class="verNote" style="color:#fde047;font:bold 12px Arial;margin:4px 0;padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.45)">📌 업데이트 정보 · 버전 11.24-C · 코드 변경(EVERYTHING=장난) · 스타 플래티나 · 기관총 · 조합대 · 📈주식 시스템 · 주식구슬</p>
   <p id="devInfo" class="small"></p>
   <h2>💰 골드 (1회 최대 10,000)</h2>
   <div>
@@ -561,7 +561,7 @@ const ballTypes=[
 {name:"Elemental",icon:"☯️",price:0,limited:true,desc:"🧪 합성 한정(불+얼음) · 충돌마다 불꽃/냉기 폭발이 번갈아 터짐"},
 {name:"SkyPig",icon:"🐖",price:0,limited:true,desc:"🧪 합성 한정(돼지+비둘기) · 하늘에서 거대 발도장이 주기적으로 쾅!"},
 {name:"StockBall",icon:"📈",price:0,limited:true,desc:"데미지가 주가처럼 실시간으로 오르내림 (인벤토리에서도 변동) · 주식으로 10,000,000원 이익 시 지급"},
-{name:"Gyro",icon:"🌀",price:150,desc:"체력이 내 데미지보다 높은 벽돌에 달라붙어 회전하며 부술 때까지 공격 · 약한 귀소본능 · 부순 뒤엔 랜덤 방향으로 튕김"},
+{name:"Gyro",icon:"🌀",price:150,desc:"체력이 내 데미지보다 높은 벽돌에 달라붙어 제자리에서 회전하며 부술 때까지 공격 · 확률적으로 벽돌 쪽으로 휨 · 부순 뒤엔 랜덤 방향으로 튕김"},
 {name:"Pickaxe",icon:"⛏️",price:0,limited:true,desc:"충돌마다 5% 확률로 1~1,000,000 골드 · 7번 타격마다 벽돌을 찾아 부수는 곡괭이 소환 (채굴 100회 보상)"},
 {name:"Gatling",icon:"🔫",price:0,limited:true,desc:"레벨이 오를수록 총알 증가 · 총알 1발 = 벽돌 최대 체력의 0.1%~3% · 집중/분사 사격 모드 (코드 MACHINEGUN)"},
 {name:"Tempest",icon:"🌩️",price:0,limited:true,desc:"🧪 합성 한정(전기+바람) · 충돌마다 번개가 여러 벽돌에 연쇄 + 가속"},
@@ -1218,7 +1218,7 @@ function rlView(){
  const out=(k,t,bg)=>`<button onclick="rlBet('${k}')" style="background:${bg||"#334155"};color:#fff">${t}${rl.bets[k]?`<span class="csBet">${csFmt(rl.bets[k])}</span>`:""}</button>`;
  let rows="";for(let r=0;r<3;r++){for(let c=0;c<12;c++)rows+=num(String(c*3+(3-r)))}
  return `<h1>🎡 룰렛 ${cs.room==="vip"?"<span style='color:#fde047'>👑 VIP</span>":""}</h1>
- <div class="small">${cs.room==="vip"?"👑 VIP 전담 프로 딜러 '레오'":"🙂 딜러 '모모' (초보)"} · 칸당 ${csFmt(L.min)} ~ ${csFmt(L.max)}원 · 숫자 ×36 · 12칸 ×3 · 색/홀짝/반 ×2 (0, 00은 하우스)</div>
+ <div class="small">${cs.room==="vip"?"👑 VIP 전담 프로 딜러 '레오'":"🙂 딜러 '모모' (초보)"} · 칸당 ${csFmt(L.min)} ~ ${csFmt(L.max)}원 · 한 곳에만 배팅 가능 · 숫자 ×36 · 12칸 ×3 · 색/홀짝/반 ×2 (0, 00은 하우스)</div>
  <div class="csBox">🎫 칩 ${csFmt(a.chips-tot)}원 (배팅 ${csFmt(tot)}원) &nbsp; 배팅 단위:
   ${CHIPS.map((c,i)=>c<L.min||c>L.max?"":`<button onclick="rl.chip=${i};csRender()" style="margin:1px;padding:2px 6px;background:${rl.chip===i?"#ca8a04":"#4b5563"}"><span class="csChip" style="background:${CHIP_COL[i]}">${CHIP_NAME[i]}</span></button>`).join("")}</div>
  <div style="text-align:center"><canvas id="rlCv" width="300" height="300"></canvas></div>
@@ -1233,6 +1233,7 @@ function rlView(){
 function rlBet(k){
  if(rl.spinning)return;
  const a=csA(),L=csLim(),c=CHIPS[rl.chip];
+ if(Object.keys(rl.bets).some(x=>x!==k)){toast("🎡 한 곳에만 배팅할 수 있습니다 (다른 곳은 '배팅 취소' 후 선택)");return}
  if(a.chips-rlTotal()<c){toast("칩이 부족합니다");return}
  if((rl.bets[k]||0)+c>L.max){toast("칸당 최대 배팅 한도입니다");return}
  rl.bets[k]=(rl.bets[k]||0)+c;beep(500,.04,"square");csRender();
@@ -3027,7 +3028,7 @@ const P={
  Elemental:lv=>({r:90+lv*3,dmg:.4+lv*.03}),
  SkyPig:lv=>({dmg:1+lv*.08,r:100+lv*3,every:Math.max(70,130-lv*3)}),
  StockBall:lv=>({}),
- Gyro:lv=>({mul:.5+lv*.04,every:Math.max(6,12-Math.floor(lv/4)),home:.012+lv*.0006}),
+ Gyro:lv=>({mul:.5+lv*.04,every:Math.max(6,12-Math.floor(lv/4)),chance:.3+lv*.01,home:.035+lv*.0015}),
  Pickaxe:lv=>({chance:.05,every:7,max:3+Math.floor(lv/4),dmg:.8+lv*.06,life:480+lv*20}),
  Gatling:lv=>({rate:gatRate(lv),pct:gatPct(lv)}),   // 초당 발사 수 (Lv.20 = 80발/초)
  Tempest:lv=>({n:3+Math.floor(lv/3),dmg:.7+lv*.05,spd:.15+lv*.01}),
@@ -3075,7 +3076,7 @@ function abilityText(n,lv){
   case "Rudolph":return `빨간 코 빛줄기: 가까운 벽돌 ${p.n}개를 꿰뚫음 (피해 ${pc(p.dmg)})`;
   case "Dream":return `2초마다 산타 썰매 출격! 지나가며 선물 ${p.n}개 투하 (폭발 반경 ${p.r} · 피해 ${pc(p.dmg)} · ${pc(p.gold)} 금빛 선물)`;
   case "StockBall":return `데미지가 주가처럼 변동 (현재 ×${sbMul().toFixed(2)} · 범위 ×0.15~×5) · 인벤토리에 있어도 계속 변함 · 🔴상승 🔵하락`;
-  case "Gyro":return `체력이 내 데미지보다 높은 벽돌에 달라붙어 회전하며 ${p.every}틱마다 피해 ${pc(p.mul)} · 약한 귀소본능 · 부순 뒤 랜덤 방향으로 튕겨 나감`;
+  case "Gyro":return `체력이 내 데미지보다 높은 벽돌에 달라붙어 회전하며 ${p.every}틱마다 피해 ${pc(p.mul)} · 붙은 자리에서 제자리 회전 · 매 순간 ${pc(p.chance)} 확률로 벽돌 쪽으로 휨 · 부순 뒤 랜덤 방향으로 튕겨 나감`;
   case "Pickaxe":return `충돌마다 ${pc(p.chance)} 확률로 골드 1~1,000,000 랜덤 지급 · ${p.every}번 타격마다 곡괭이 소환 (최대 ${p.max}개, 피해 ${pc(p.dmg)}, ${Math.round(p.life/60)}초 동안 벽돌 탐색)`;
   case "Gatling":return `초당 ${p.rate}발 연사 · 총알 1발 = 벽돌 최대 체력의 ${Math.round(p.pct*1000)/10}% (최소 1) · 🎯집중사격(한 벽돌 고정) / 💦분사사격(넓게 퍼짐 · 발사 ×1.3)`;
   case "Tempest":return `충돌마다 번개가 가까운 벽돌 ${p.n}개에 연쇄 (피해 ${pc(p.dmg)}) + 가속`;
@@ -3232,7 +3233,7 @@ function applyEffect(t,b,d,lv){
 /* ===== 🌀 회전구슬 ===== */
 function gyroAttach(b){
  const cx=b.x+b.w/2,cy=b.y+b.h/2;
- ball.sp={b,ang:Math.atan2(ball.y-cy,ball.x-cx),spd:Math.max(MIN_SPEED+1,Math.hypot(ball.dx,ball.dy)),t:0};
+ ball.sp={b,ox:null,oy:null,spd:Math.max(MIN_SPEED+1,Math.hypot(ball.dx,ball.dy)),t:0};
  ball.dx=0;ball.dy=0;floatText(cx,b.y-4,"🌀 부착!","#99f6e4");beep(520,.08,"triangle");
 }
 function gyroHome(){   // 약한 귀소본능: 가까운 벽돌 쪽으로 살짝 방향을 튼다
@@ -3240,7 +3241,8 @@ function gyroHome(){   // 약한 귀소본능: 가까운 벽돌 쪽으로 살짝
  const sp=Math.hypot(ball.dx,ball.dy);if(sp<.1)return;
  const want=Math.atan2(tg.y+tg.h/2-ball.y,tg.x+tg.w/2-ball.x),cur=Math.atan2(ball.dy,ball.dx);
  let d=want-cur;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;
- const k=Math.max(-1,Math.min(1,d))*P.Gyro(useLv("Gyro")).home,a=cur+k;
+ const gp=P.Gyro(useLv("Gyro"));if(Math.random()>=gp.chance)return;   // 확률적으로만 방향을 튼다
+ const k=Math.max(-1,Math.min(1,d))*gp.home,a=cur+k;
  ball.dx=Math.cos(a)*sp;ball.dy=Math.sin(a)*sp;
 }
 function stickTick(){
@@ -3255,9 +3257,9 @@ function stickTick(){
   return;
  }
  const lv=useLv("Gyro"),pp=P.Gyro(lv),cx=b.x+b.w/2,cy=b.y+b.h/2;
- q.ang+=.24;q.t++;
- const rx=b.w/2+ball.r+3,ry=b.h/2+ball.r+3;
- ball.x=cx+Math.cos(q.ang)*rx;ball.y=cy+Math.sin(q.ang)*ry;
+ q.t++;
+ if(q.ox===null){q.ox=ball.x-cx;q.oy=ball.y-cy}      // 처음 닿은 자리에 고정 (벽돌이 움직이면 같이 이동)
+ ball.x=cx+q.ox;ball.y=cy+q.oy;
  if(q.t%pp.every===0){
   b.hp-=Math.max(1,effDamage()*pp.mul);b.flash=5;burst(ball.x,ball.y,4,"#5eead4");beep(400+Math.random()*100,.03,"triangle",.02);
   reap();
@@ -3370,6 +3372,7 @@ function moveBall(){
  }
  speedTimer++;
  if(speedTimer>=600){addSpeed(.12);speedTimer=0}
+ if(currentBall==="Gyro")ball.gy=(ball.gy||0)+(ball.sp?.7:.12);   // 구슬 자체 회전 (붙으면 빠르게)
  if(ball.sp){stickTick();return}
  if(currentBall==="Gyro")gyroHome();
 
@@ -3875,7 +3878,7 @@ case "Rudolph":{
   break;}
  case "Gyro":{
   sph("#99f6e4","#0f766e");
-  c.save();c.rotate(t*5);c.strokeStyle="#ecfeff";c.lineWidth=2;c.lineCap="round";
+  c.save();c.rotate(bodyMain?(ball.gy||0):t*5);c.strokeStyle="#ecfeff";c.lineWidth=2;c.lineCap="round";
   for(let i=0;i<3;i++){c.rotate(Math.PI*2/3);c.beginPath();c.arc(r*.3,0,r*.55,-1.2,1.6);c.stroke()}
   c.restore();
   break;}
